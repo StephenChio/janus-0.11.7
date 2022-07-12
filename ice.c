@@ -831,7 +831,14 @@ janus_ice_trickle *janus_ice_trickle_new(const char *transaction, json_t *candid
 	trickle->candidate = json_deep_copy(candidate);
 	return trickle;
 }
-
+/**
+ * @brief 解析candidate
+ * 
+ * @param handle 
+ * @param candidate 
+ * @param error 
+ * @return gint 
+ */
 gint janus_ice_trickle_parse(janus_ice_handle *handle, json_t *candidate, const char **error) {
 	const char *ignore_error = NULL;
 	if(error == NULL) {
@@ -841,32 +848,40 @@ gint janus_ice_trickle_parse(janus_ice_handle *handle, json_t *candidate, const 
 		*error = "Invalid handle";
 		return JANUS_ERROR_HANDLE_NOT_FOUND;
 	}
-	/* Parse trickle candidate */
+	/* Parse trickle candidate 解析candidate */
 	if(!json_is_object(candidate) || json_object_get(candidate, "completed") != NULL) {
+		/*如果candidate不是一个json对象，或者candidate的completed的值不等于空*/
 		JANUS_LOG(LOG_VERB, "No more remote candidates for handle %"SCNu64"!\n", handle->handle_id);
 		janus_flags_set(&handle->webrtc_flags, JANUS_ICE_HANDLE_WEBRTC_ALL_TRICKLES);
 	} else {
-		/* Handle remote candidate */
+		/* Handle remote candidate 获取sdpMid*/
 		json_t *mid = json_object_get(candidate, "sdpMid");
 		if(mid && !json_is_string(mid)) {
+			/*如果sdpMid不是一个字符串*/
 			*error = "Trickle error: invalid element type (sdpMid should be a string)";
 			return JANUS_ERROR_INVALID_ELEMENT_TYPE;
 		}
+		/*获取sdpMLineIndex*/
 		json_t *mline = json_object_get(candidate, "sdpMLineIndex");
 		if(mline && (!json_is_integer(mline) || json_integer_value(mline) < 0)) {
+			/*如果sdpMLineIndex不是数字或者sdpMLineIndex为负数*/
 			*error = "Trickle error: invalid element type (sdpMLineIndex should be a positive integer)";
 			return JANUS_ERROR_INVALID_ELEMENT_TYPE;
 		}
 		if(!mid && !mline) {
+			/*缺失sdpMid or sdpMLineIndex*/
 			*error = "Trickle error: missing mandatory element (sdpMid or sdpMLineIndex)";
 			return JANUS_ERROR_MISSING_MANDATORY_ELEMENT;
 		}
+		/*获取candidate*/
 		json_t *rc = json_object_get(candidate, "candidate");
 		if(!rc) {
+			/*缺失candidate*/
 			*error = "Trickle error: missing mandatory element (candidate)";
 			return JANUS_ERROR_MISSING_MANDATORY_ELEMENT;
 		}
 		if(!json_is_string(rc)) {
+			/*如果candidate不是一个字符串*/
 			*error = "Trickle error: invalid element type (candidate should be a string)";
 			return JANUS_ERROR_INVALID_ELEMENT_TYPE;
 		}
@@ -875,7 +890,8 @@ gint janus_ice_trickle_parse(janus_ice_handle *handle, json_t *candidate, const 
 		int sdpMLineIndex = mline ? json_integer_value(mline) : -1;
 		const char *sdpMid = json_string_value(mid);
 		if(sdpMLineIndex > 0 || (handle->stream_mid && sdpMid && strcmp(handle->stream_mid, sdpMid))) {
-			/* FIXME We bundle everything, so we ignore candidates for anything beyond the first m-line */
+			/* FIXME We bundle everything, so we ignore candidates for anything beyond the first m-line 
+			我们做了一些限制，所以我们忽略了m-line以外的任何候选对象*/
 			JANUS_LOG(LOG_VERB, "[%"SCNu64"] Got a mid='%s' candidate (index %d) but we're bundling, ignoring...\n",
 				handle->handle_id, json_string_value(mid), sdpMLineIndex);
 			return 0;
@@ -885,6 +901,7 @@ gint janus_ice_trickle_parse(janus_ice_handle *handle, json_t *candidate, const 
 			*error = "Trickle error: invalid element type (no such stream)";
 			return JANUS_ERROR_TRICKE_INVALID_STREAM;
 		}
+		/*解析candidate到handle->stream*/
 		int res = janus_sdp_parse_candidate(stream, json_string_value(rc), 1);
 		if(res != 0) {
 			JANUS_LOG(LOG_ERR, "[%"SCNu64"] Failed to parse candidate... (%d)\n", handle->handle_id, res);
@@ -1254,6 +1271,10 @@ static void *janus_ice_handle_thread(void *data) {
 	return NULL;
 }
 
+/**
+ * @brief 给当前session创建插件
+ * 
+ */
 janus_ice_handle *janus_ice_handle_create(void *core_session, const char *opaque_id, const char *token) {
 	if(core_session == NULL)
 		return NULL;
@@ -1289,6 +1310,15 @@ janus_ice_handle *janus_ice_handle_create(void *core_session, const char *opaque
 	return handle;
 }
 
+/**
+ * @brief 加载插件到session
+ * 
+ * @param core_session 
+ * @param handle 
+ * @param plugin 
+ * @param loop_index 
+ * @return gint 
+ */
 gint janus_ice_handle_attach_plugin(void *core_session, janus_ice_handle *handle, janus_plugin *plugin, int loop_index) {
 	if(core_session == NULL)
 		return JANUS_ERROR_SESSION_NOT_FOUND;
@@ -1496,6 +1526,12 @@ static void janus_ice_plugin_session_free(const janus_refcount *app_handle_ref) 
 	g_free(app_handle);
 }
 
+/**
+ * @brief 挂断
+ * 
+ * @param handle 
+ * @param reason 
+ */
 void janus_ice_webrtc_hangup(janus_ice_handle *handle, const char *reason) {
 	if(handle == NULL)
 		return;
@@ -1509,11 +1545,14 @@ void janus_ice_webrtc_hangup(janus_ice_handle *handle, const char *reason) {
 	janus_flags_clear(&handle->webrtc_flags, JANUS_ICE_HANDLE_WEBRTC_NEGOTIATED);
 	janus_flags_clear(&handle->webrtc_flags, JANUS_ICE_HANDLE_WEBRTC_HAS_AUDIO);
 	janus_flags_clear(&handle->webrtc_flags, JANUS_ICE_HANDLE_WEBRTC_HAS_VIDEO);
-	/* User will be notified only after the actual hangup */
+	/* User will be notified only after the actual hangup 
+	只有在实际挂断后才会通知用户*/
 	JANUS_LOG(LOG_VERB, "[%"SCNu64"] Hanging up PeerConnection because of a %s\n",
 		handle->handle_id, reason);
 	handle->hangup_reason = reason;
-	/* Let's message the loop, we'll notify the plugin from there */
+	/* Let's message the loop, we'll notify the plugin from there 
+	让我们向循环发送消息，我们将从那里通知插件
+*/
 	if(handle->queued_packets != NULL) {
 #if GLIB_CHECK_VERSION(2, 46, 0)
 		g_async_queue_push_front(handle->queued_packets, &janus_ice_hangup_peerconnection);
@@ -3515,6 +3554,17 @@ void janus_ice_setup_remote_candidates(janus_ice_handle *handle, guint stream_id
 	component->process_started = TRUE;
 }
 
+/**
+ * @brief 设置本地Description（offer）
+ * 
+ * @param handle 
+ * @param offer 
+ * @param audio 
+ * @param video 
+ * @param data 
+ * @param trickle 
+ * @return int 
+ */
 int janus_ice_setup_local(janus_ice_handle *handle, int offer, int audio, int video, int data, int trickle) {
 	if(!handle || g_atomic_int_get(&handle->destroyed))
 		return -1;

@@ -15,9 +15,9 @@ general: {
 											# to stdout or not (default=true)
 	#log_to_file = "/path/to/janus.log"		# Whether to use a log file or not
 	debug_level = 4							# Debug/logging level, valid values are 0-7
-	#debug_timestamps = true				# Whether to show a timestamp for each log line
-	#debug_colors = false					# Whether colors should be disabled in the log
-	#debug_locks = true						# Whether to enable debugging of locks (very verbose!)
+	#debug_timestamps = true				# Whether to show a timestamp for each log line #是否展示每一行的时间戳
+	#debug_colors = false					# Whether colors should be disabled in the log #是否关闭debug颜色区分
+	#debug_locks = true						# Whether to enable debugging of locks (very verbose!) #是否启用锁调试（非常详细！）
 	#log_prefix = "[janus] "				# In case you want log lines to be prefixed by some
 											# custom text, you can use the 'log_prefix' property.
 											# It supports terminal colors, meaning something like
@@ -29,6 +29,7 @@ general: {
 											# or not (default=run in foreground)
 	#pid_file = "/path/to/janus.pid"		# PID file to create when Janus has been
 											# started, and to destroy at shutdown
+											# 启动Janus时创建的PID文件，并在关闭时销毁
 
 		# There are different ways you can authenticate the Janus and Admin APIs
 	#api_secret = "janusrocks"		# String that all Janus requests must contain
@@ -38,11 +39,16 @@ general: {
 									# where you do the things your way) and you
 									# don't want other application to mess with
 									# this Janus instance.
+									# 所有Janus请求必须包含该字符串才能被Janus core接收和通过认证。
+									# 如果您正在服务器中包装所有Janus API请求，
+									# 并且不希望其他应用程序弄乱这个Janus实例，那么这将非常有用。
 	#token_auth = true				# Enable a token based authentication
 									# mechanism to force users to always provide
 									# a valid token in all requests. Useful if
 									# you want to authenticate requests from web
 									# users.
+									# 启用基于令牌的身份验证机制，强制用户在所有请求中始终提供有效令牌。如果您想验证来自web用户的请求，那么这很有用。
+									# 如果您使用了自己的服务器过滤用户网页请求，再间接请求janus服务器，这一步可以省略
 	#token_auth_secret = "janus"	# Use HMAC-SHA1 signed tokens (with token_auth). Note that
 									# without this, the Admin API MUST
 									# be enabled, as tokens are added and removed
@@ -51,6 +57,9 @@ general: {
 									# to be accepted/authorized by the admin/monitor.
 									# only needed if you enabled the admin API
 									# in any of the available transports.
+									# 所有Janus请求必须包含该字符串才能被 admin/monitor接口接收和通过认证。
+									# 只有在可用传输中启用了管理API时才需要。
+
 
 		# Generic settings
 	#interface = "1.2.3.4"			# Interface to use (will be used in SDP)
@@ -88,6 +97,9 @@ general: {
 									# external scripts), then uncomment and set the
 									# recordings_tmp_ext property to the extension
 									# to add to the base (e.g., tmp --> .mjr.tmp).
+									# 在录音中，janus的默认拓展名是.mjr,通常我们会直接保存成.mjr文件，
+									# 如果你希望文件保存的时候能有一个其他的拓展名，
+									# 可以取消该注释，且文件的拓展名会从 a.mjr -> a.mjr.tmp
 	#event_loops = 8				# By default, Janus handles each have their own
 									# event loop and related thread for all the media
 									# routing and management. If for some reason you'd
@@ -105,6 +117,13 @@ general: {
 									# As such, if you want to use this you should
 									# provision the correct value according to the
 									# available resources (e.g., CPUs available).
+									# 默认情况下，Janus handles 每个都有自己的事件循环和用于所有媒体路由和管理的相关线程。
+									# 如果出于某种原因，您希望限制循环/线程的数量，并且希望handles共享这些线程，
+									# 那么可以通过配置event_loops属性来实现：
+									# 这将在启动时生成指定数量的线程，在每个线程上运行单独的事件循环，并在附加时向其中一个线程添加新handles。
+									# 请注意，减少线程数量可能减少上下文切换的同时，这也会对媒体交付产生影响，
+									# 尤其是在可用循环无法及时处理所有句柄及其媒体的情况下。
+									# 因此，如果您想使用它，您应该根据可用资源（例如，可用CPU）提供正确的值。
 	#allow_loop_indication = true	# In case a static number of event loops is
 									# configured as explained above, by default
 									# new handles will be allocated on one loop or
@@ -117,24 +136,39 @@ general: {
 									# only if allow_loop_indication is set to true;
 									# it's set to false by default to avoid abuses.
 									# Don't change if you don't know what you're doing!
+									# 如果如上所述配置了静态数量的事件循环，
+									# 则默认情况下，Janus核心本身将在一个或另一个循环上分配新handles。
+									# 在某些情况下，手动告诉Janus core应该将handles添加到哪个循环中可能会有所帮助
+									# 例如，将同一个流的查看器分组到同一个循环中。
+									# 当执行“attach”请求时，这可以通过Janus API实现，以后该handles的请求，都会由该循环处理
+									# 但前提是allow_loop_indication设置为true；
+									# 默认设置为false以避免滥用。如果你不知道自己在做什么，就不要改变！
 	#opaqueid_in_api = true			# Opaque IDs set by applications are typically
 									# only passed to event handlers for correlation
 									# purposes, but not sent back to the user or
 									# application in the related Janus API responses
 									# or events; in case you need them to be in the
 									# Janus API too, set this property to 'true'.
+									# 应用程序设置的不透明ID通常仅传递给事件处理程序用于关联，
+									# 而不会在相关Janus API响应或事件中发送回用户或应用程序；
+									# 如果需要它们也在Janus API中，请将此属性设置为“true”。
 	#hide_dependencies = true		# By default, a call to the "info" endpoint of
 									# either the Janus or Admin API now also returns
 									# the versions of the main dependencies (e.g.,
 									# libnice, libsrtp, which crypto library is in
 									# use and so on). Should you want that info not
 									# to be disclose, set 'hide_dependencies' to true.
+									# 默认情况下，对Janus或Admin API的 info 的调用现在也会返回主要依赖项的版本（例如，libnice、libsrtp，正在使用哪个加密库等等）。
+									# 如果您不想泄露该信息，请将“hide_dependencies”设置为true。
 	#exit_on_dl_error = false		# If a Janus shared libary cannot be loaded or an expected
 									# symbol is not found, exit immediately.
 
 		# The following is ONLY useful when debugging RTP/RTCP packets,
 		# e.g., to look at unencrypted live traffic with a browser. By
 		# default it is obviously disabled, as WebRTC mandates encryption.
+		# 以下内容仅在调试RTP/RTCP数据包时有用，
+		# 例如，用浏览器查看未加密的实时流量。
+		# 默认情况下，它显然是禁用的，因为WebRTC要求加密
 	#no_webrtc_encryption = true
 
 		# Janus provides ways via its API to specify custom paths to save
@@ -173,18 +207,24 @@ general: {
 	]
 }
 
-# Certificate and key to use for DTLS (and passphrase if needed). If missing,
-# Janus will autogenerate a self-signed certificate to use. Notice that
-# self-signed certificates are fine for the purpose of WebRTC DTLS
+# Certificate and key to use for DTLS (and passphrase if needed). 
+# 用于DTL的证书和密钥（以及密码短语，如果需要）。
+# If missing, Janus will autogenerate a self-signed certificate to use. 
+# 如果缺失，Janus将自动生成一个自签名证书以供使用。
+# Notice that self-signed certificates are fine for the purpose of WebRTC DTLS
 # connectivity, for the time being, at least until Identity Providers
-# are standardized and implemented in browsers. If for some reason you
-# want to enforce the DTLS stack in Janus to enforce valid certificates
+# are standardized and implemented in browsers. 
+# 请注意，至少在身份提供者标准化并在浏览器中实现之前，自签名证书暂时可以用于WebRTC DTLS连接。
+# If for some reason you want to enforce the DTLS stack in Janus to enforce valid certificates
 # from peers, though, you can do that setting 'dtls_accept_selfsigned' to
 # 'false' below: DO NOT TOUCH THAT IF YOU DO NOT KNOW WHAT YOU'RE DOING!
+# 如果由于某些原因你想在Janus强制使用DTLS为端对端提供有效验证，你可以设置dtls_accept_selfsigned为false，如果你不清楚你在做什么，请不要碰这个参数
 # You can also configure the DTLS ciphers to offer: the default if not
 # set is "DEFAULT:!NULL:!aNULL:!SHA256:!SHA384:!aECDH:!AESGCM+AES256:!aPSK"
 # Finally, by default NIST P-256 certificates are generated (see #1997),
 # but RSA generation is still supported if you set 'rsa_private_key' to 'true'.
+# 您还可以配置DTLS密码以提供：如果未设置，则默认为"DEFAULT:!NULL:!aNULL:!SHA256:!SHA384:!aECDH:!AESGCM+AES256:!aPSK"
+# 最后，默认情况下会生成NIST P-256证书，但如果您将“rsa_private_key”设置为“true”，则仍然支持生成RSA。
 certificates: {
 	#cert_pem = "/path/to/certificate.pem"
 	#cert_key = "/path/to/key.pem"
@@ -210,6 +250,15 @@ certificates: {
 # that lower values (e.g., 100ms) will typically get you faster connection
 # times, but may not work in case the RTT of the user is high: as such,
 # you should pick a reasonable trade-off (usually 2*max expected RTT).
+# 媒体相关配置：
+# 您可以配置是否要启用IPv6支持（和链接本地IP）
+# 无论RTT如何，用于重新传输的NACK队列的最小大小（毫秒，默认为200ms）
+# 用于RTP和RTCP的端口范围（默认情况下，无限制）
+# DTL的启动MTU（默认情况下，它会自动适应1200）、
+# 多少时间没有收到任何媒体（音频或视频），Janus会通知你（默认值为1s，0完全禁用这些事件），
+# 有多少丢失的数据包应该触发“slowlink”事件给用户（默认值为0，禁用）
+# 将全传输拥塞控制反馈信息发送回发送方的频率（默认值为200ms）。
+# 最后，如果您使用的是BoringSSL，则可以自定义重新传输的频率：OpenSSL的固定值为1秒（默认值），而BoringSSL可以覆盖该值。请注意，较低的值（例如100ms）通常会加快连接时间，但在用户的RTT较高的情况下可能不起作用：因此，您应该选择一个合理的权衡（通常为最大预期RTT的2倍）。
 media: {
 	#ipv6 = true
 	#ipv6_linklocal = true
@@ -230,6 +279,11 @@ media: {
 	# anyway (which is the main reason why video retransmissions are typically
 	# required). While this optimization is known to work fine in most cases,
 	# it can backfire in some edge cases, and so is disabled by default.
+	# Janus可以对NACK队列进行一些优化，特别是在涉及关键帧时。
+	# 也就是说，您可以配置Janus，以便在任何时候向用户发送关键帧时，该连接的NACK缓冲区都会清空。
+	# 这允许Janus忽略在发送关键帧之前不久发送的数据包的NACK请求，
+	# 因为可以假设关键帧无论如何都会为用户恢复完整的工作图像（这是通常需要视频重新传输的主要原因）。
+	# 虽然这种优化在大多数情况下工作正常，但在某些边缘情况下可能会适得其反，因此在默认情况下被禁用。
 	#nack_optimizations = true
 
 	# If you need DSCP packet marking and prioritization, you can configure
@@ -240,6 +294,11 @@ media: {
 	# we can only use one. You can refer to this document for more info:
 	# https://tools.ietf.org/html/draft-ietf-tsvwg-rtcweb-qos-18#page-6
 	# That said, DON'T TOUCH THIS IF YOU DON'T KNOW WHAT IT MEANS!
+	# 如果需要DSCP数据包标记和优先级，可以将“DSCP”属性配置为特定值，
+	# Janus将尝试使用libnice在所有传出数据包上设置它。
+	# 通常，规范建议根据使用的是音频、视频还是数据使用不同的值，
+	# 但由于Janus中的所有对等连接都是捆绑的，因此我们只能使用一个。
+	# 也就是说，如果你不知道这意味着什么，就不要碰它！
 	#dscp = 46
 }
 
@@ -284,6 +343,10 @@ nat: {
 	# helpful in case you know clients will never be in the same private
 	# network as the one the Janus instance is running from. Notice that
 	# this will cause ICE to fail if mDNS is the only way to connect!
+	# 默认情况下，Janus尝试解析MDN（.local）候选项。即使这是异步完成的也不会让API处于繁忙状态。
+	# 一旦MDN解析需要很长时间才能超时，您也可以选择删除所有本地候选项。
+	# 如果您知道客户端永远不会与Janus实例运行所在的专用网络在同一个专用网络中，这会很有帮助。
+	# 请注意，如果MDN是唯一的连接方式，这将导致ICE失败
 	#ignore_mdns = true
 
 	# In case you're deploying Janus on a server which is configured with
@@ -300,6 +363,12 @@ nat: {
 	# Multiple public IP addresses can be specified as a comma separated list
 	# if the Janus is deployed in a DMZ between two 1-1 NAT for internal and
 	# external users.
+	# 如果您在配置了1:1 NAT的服务器上部署Janus（例如，Amazon EC2），您可能还需要使用以下设置指定机器的公共地址。
+	# 这将导致使用设置中提供的公共地址重写所有候选主机（通常具有私有IP地址）。
+	# 因此，只有在你知道自己在做什么的情况下，才能谨慎使用该选项。
+	# 但是，请确保禁用ICE Lite，因为严格来说，它不是一个可公开访问的服务器，并且仍然涉及NAT。
+	# 如果您希望保留私有IP地址，而不是替换它（因此将两者都作为公布的候选地址），请将“keep_private_host”属性设置为true。
+	# 如果Janus部署在内部和外部用户的两个1-1 NAT之间的DMZ中，则可以将多个公共IP地址指定为逗号分隔的列表。
 	#nat_1_1_mapping = "1.2.3.4"
 	#keep_private_host = true
 
@@ -312,6 +381,12 @@ nat: {
 	# side, and NOT in Janus. The following TURN configuration should ONLY
 	# be enabled when Janus itself is sitting behind a restrictive firewall
 	# (e.g., it's part of a service installed on a box in a private home).
+	# 您可以通过两种不同的方式配置TURN服务器：
+	# 指定静态配置的TURN服务器，从而提供TURN服务器的地址
+	# 要使用的传输（udp/tcp/tls）和一组要验证的有效凭据。
+	# 请注意，除非您真正需要，否则您永远不应该为Janus配置TURN服务器！
+	# 如果您希望用户使用TURN，那么您需要在客户端而不是Janus中进行配置。
+	# 只有当Janus本身位于限制性防火墙之后时（例如，它是安装在私人住宅盒子上的服务的一部分），才应启用以下回合配置。
 	#turn_server = "myturnserver.com"
 	#turn_port = 3478
 	#turn_type = "udp"
@@ -329,6 +404,11 @@ nat: {
 	# via Janus API will be used as the username for a specific PeerConnection
 	# by default; if that one is missing, the 'session_id' will be used as the
 	# username instead.
+	# 您还可以使用TURN REST API动态获取一个或多个TURN服务的信息。
+	# 这利用了这种API的拟议标准，该标准目前在rfc5766 turn服务器和coturn中都可用。
+	# 您可以通过指定TURN-REST API后端的地址、要使用的HTTP方法（GET或POST）以及Janus必须提供的API密钥（如果需要）来实现这一点。
+	# 可以以秒为单位配置超时，默认值为10秒，最小值为1秒。
+	# 请注意，默认情况下，通过Janus API提供的“opaque_id”将用作特定对等连接的用户名；如果缺少该用户名，则将使用“session_id”作为用户名。
 	#turn_rest_api = "http://yourbackend.com/path/to/api"
 	#turn_rest_api_key = "anyapikeyyoumayhaveset"
 	#turn_rest_api_method = "GET"
@@ -337,6 +417,8 @@ nat: {
 	# In case a TURN server is provided, you can allow applications to force
 	# Janus to use TURN (https://github.com/meetecho/janus-gateway/pull/2774).
 	# This is NOT allowed by default: only enable it if you know what you're doing.
+	# 如果提供了TURN服务器，您可以允许应用程序强制Janus使用TURN。
+	# 这在默认情况下是不允许的：只有当你知道自己在做什么时才启用它。
 	#allow_force_relay = true
 
 	# You can also choose which interfaces should be explicitly used by the
@@ -434,6 +516,17 @@ loggers: {
 # statistic events per media (audio, video and simulcast layers as separate
 # events): if you'd rather receive a single containing all media stats in a
 # single array, set 'combine_media_stats' to true.
+# 事件处理程序允许您接收Janus在核心和/或插件中发生的实时事件。
+# 由于这可能需要更多资源，因此默认情况下禁用该功能。
+# 将“broadcast”设置为“true”将启用它们。
+# 然后，您可以选择应加载或不加载哪些可用事件处理程序。
+# 使用“disable”指令防止Janus加载一个或多个事件处理程序：使用逗号分隔的文件名列表来标识要禁用的事件处理程序。
+# 默认情况下，如果“broadcast”设置为“true”，则所有可用的事件处理程序都将在启动时启用和加载。
+# 最后，您可以选择媒体统计信息（发送/接收的数据包、丢失等）的发送频率：默认情况下为每秒一次（音频和视频统计信息分别发送）
+# 但可能会被认为过于冗长，或者您可能希望限制事件的数量，尤其是当您有许多对等连接处于活动状态时。
+# 要改变这一点，只需将“stats_period”设置为每个句柄的统计信息之间应该传递的秒数。将其设置为0将禁用它们（但不禁用其他与媒体相关的事件）。
+# 默认情况下，Janus会按媒体发送单个媒体统计事件（音频、视频和同时广播层作为单独的事件）
+# 如果您希望在单个阵列中接收包含所有媒体统计的单个事件，请将“combine_media_stats”设置为true。
 events: {
 	#broadcast = true
 	#combine_media_stats = true

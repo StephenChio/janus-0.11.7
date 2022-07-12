@@ -72,7 +72,7 @@ static GHashTable *plugins = NULL;
 static GHashTable *plugins_so = NULL;
 
 
-/* Daemonization */
+/* Daemonization 是否为守护进程 */
 static gboolean daemonize = FALSE;
 static int pipefd[2];
 
@@ -84,7 +84,7 @@ janus_mutex counters_mutex;
 #endif
 
 
-/* API secrets */
+/* API secrets API秘钥 */
 static char *api_secret = NULL, *admin_api_secret = NULL;
 
 /* JSON parameters */
@@ -209,12 +209,24 @@ gchar *janus_get_local_ip(void) {
 static GHashTable *public_ips_table = NULL;
 static GList *public_ips = NULL;
 gboolean public_ips_ipv4 = FALSE, public_ips_ipv6 = FALSE;
+/**
+ * @brief 获取公有ip数量
+ * 
+ * @return guint 
+ */
 guint janus_get_public_ip_count(void) {
 	return public_ips_table ? g_hash_table_size(public_ips_table) : 0;
 }
+/**
+ * @brief 根据index获取公有ip
+ * 
+ * @param index 
+ * @return gchar* 
+ */
 gchar *janus_get_public_ip(guint index) {
 	if (!janus_get_public_ip_count()) {
-		/* Fallback to the local IP, if we have no public one */
+		/* Fallback to the local IP, if we have no public one 
+		如果我们没有公有ip，返回私有ip */
 		return local_ip;
 	}
 	if (index >= g_hash_table_size(public_ips_table)) {
@@ -222,6 +234,12 @@ gchar *janus_get_public_ip(guint index) {
 	}
 	return (char *)g_list_nth(public_ips, index)->data;
 }
+
+/**
+ * @brief 添加公有ip到janus
+ * 
+ * @param ip 
+ */
 void janus_add_public_ip(const gchar *ip) {
 	if(ip == NULL) {
 		return;
@@ -234,16 +252,27 @@ void janus_add_public_ip(const gchar *ip) {
 		g_list_free(public_ips);
 		public_ips = g_hash_table_get_keys(public_ips_table);
 	}
-	/* Take note of whether we received at least one IPv4 and/or IPv6 address */
+	/* Take note of whether we received at least one IPv4 and/or IPv6 address 
+	注意我们是否收到了至少一个IPv4和/或IPv6地址*/
 	if(strchr(ip, ':')) {
 		public_ips_ipv6 = TRUE;
 	} else {
 		public_ips_ipv4 = TRUE;
 	}
 }
+/**
+ * @brief 是否收到至少一个IPv4地址
+ * 
+ * @return gboolean 
+ */
 gboolean janus_has_public_ipv4_ip(void) {
 	return public_ips_ipv4;
 }
+/**
+ * @brief 是否收到至少一个IPv6地址
+ * 
+ * @return gboolean 
+ */
 gboolean janus_has_public_ipv6_ip(void) {
 	return public_ips_ipv6;
 }
@@ -256,7 +285,7 @@ gint janus_is_stopping(void) {
 static GMainLoop *mainloop = NULL;
 
 
-/* Public instance name */
+/* Public instance name janus实例名称 */
 static gchar *server_name = NULL;
 
 static json_t *janus_create_message(const char *status, uint64_t session_id, const char *transaction) {
@@ -290,7 +319,11 @@ static uint reclaim_session_timeout = DEFAULT_RECLAIM_SESSION_TIMEOUT;
 /* We can programmatically change whether we want to accept new sessions
  * or not: the default is of course TRUE, but we may want to temporarily
  * change that in some cases, e.g., if we don't want the load on this
- * server to grow too much, or because we're draining the server. */
+ * server to grow too much, or because we're draining the server.
+ * 我们可以通过编程更改是否接受新会话：默认设置当然是正确的，
+ * 但在某些情况下，我们可能需要临时更改，
+ * 例如，如果我们不希望此服务器上的负载增长过多，
+ * 或者因为我们正在耗尽服务器的资源。 */
 static gboolean accept_new_sessions = TRUE;
 
 /* We don't hold (trickle) candidates indefinitely either: by default, we
@@ -298,27 +331,36 @@ static gboolean accept_new_sessions = TRUE;
  * to avoid leaks or orphaned media details. This means that, if for instance
  * you're trying to set up a call with someone, and that someone only answers
  * a minute later, the candidates you sent initially will be discarded and
- * the call will fail. You can modify the default value in janus.jcfg */
+ * the call will fail. You can modify the default value in janus.jcfg 
+ * 我们不会一直存储candidates的信息无限期，默认情况下，我们会存储它们45秒，过了之后，将会被释放。
+ * 以避免泄露或孤立媒体细节。这意味着，例如，如果您试图与某人建立通话，
+ * 而某人仅在一分钟后接听，则您最初发送的candidates将被丢弃，通话将失败。您可以在janus.jcfg 中修改默认值
+ * */
 #define DEFAULT_CANDIDATES_TIMEOUT		45
 static uint candidates_timeout = DEFAULT_CANDIDATES_TIMEOUT;
 
-/* By default we list dependencies details, but some may prefer not to */
+/* By default we list dependencies details, but some may prefer not to 
+默认情况下，我们会隐藏依赖库的信息，在某种情况下，你或许需要展示*/
 static gboolean hide_dependencies = FALSE;
 
-/* By default we do not exit if a shared library cannot be loaded or is missing an expected symbol */
+/* By default we do not exit if a shared library cannot be loaded or is missing an expected symbol
+ 默认情况下，如果无法加载共享库或缺少预期符号，当我们不会退出*/
 static gboolean exit_on_dl_error = FALSE;
 
 /* WebRTC encryption is obviously enabled by default. In the rare cases
  * you want to disable it for debugging purposes, though, you can do
- * that either via command line (-w) or in the main configuration file */
+ * that either via command line (-w) or in the main configuration file
+ * WebRTC 加密默认情况下当然是开启的，如果你想对程序进行debug，你可能会禁用加密，
+ * 你可以通过在命令行输入-w来实现，或者通过配置文件
+ */
 static gboolean webrtc_encryption = TRUE;
 gboolean janus_is_webrtc_encryption_enabled(void) {
 	return webrtc_encryption;
 }
 
-/* Information */
+/* Information 展示信息 */
 static json_t *janus_info(const char *transaction) {
-	/* Prepare a summary on the Janus instance */
+	/* Prepare a summary on the Janus instance 准备Janus实例的信息总览 */
 	json_t *info = janus_create_message("server_info", 0, transaction);
 	json_object_set_new(info, "name", json_string(JANUS_NAME));
 	json_object_set_new(info, "version", json_integer(janus_version));
@@ -510,7 +552,7 @@ int refcount_debug = 0;
 #endif
 
 
-/*! \brief Signal handler (just used to intercept CTRL+C and SIGTERM) */
+/*! \brief Signal handler (just used to intercept CTRL+C and SIGTERM) 中断信号处理 */
 static void janus_handle_signal(int signum) {
 	stop_signal = signum;
 	switch(g_atomic_int_get(&stop)) {
@@ -531,15 +573,15 @@ static void janus_handle_signal(int signum) {
 		g_main_loop_quit(mainloop);
 }
 
-/*! \brief Termination handler (atexit) */
+/*! \brief Termination handler (atexit) 结束处理 */
 static void janus_termination_handler(void) {
-	/* Free the instance name, if provided */
+	/* Free the instance name, if provided 释放server_name空间*/
 	g_free(server_name);
-	/* Remove the PID file if we created it */
+	/* Remove the PID file if we created it 如果我们创建了pid文件,则移除pid文件*/
 	janus_pidfile_remove();
-	/* Close the logger */
+	/* Close the logger 关闭日志打印 */
 	janus_log_destroy();
-	/* Get rid of external loggers too, if any */
+	/* Get rid of external loggers too, if any 如果还有拓展的日志处理，则一并销毁 */
 	if(loggers != NULL && g_hash_table_size(loggers) > 0) {
 		g_hash_table_foreach(loggers, janus_logger_close, NULL);
 		g_hash_table_destroy(loggers);
@@ -548,7 +590,7 @@ static void janus_termination_handler(void) {
 		g_hash_table_foreach(loggers_so, janus_loggerso_close, NULL);
 		g_hash_table_destroy(loggers_so);
 	}
-	/* If we're daemonizing, we send an error code to the parent */
+	/* If we're daemonizing, we send an error code to the parent 如果我们处于守护进程，则发送error code到父进程*/
 	if(daemonize) {
 		int code = 1;
 		ssize_t res = 0;
@@ -629,17 +671,26 @@ static janus_callbacks janus_handler_plugin =
 ///@}
 
 
-/* Core Sessions */
+/* Core Sessions session互斥量 */
 static janus_mutex sessions_mutex;
 static GHashTable *sessions = NULL;
 static GMainContext *sessions_watchdog_context = NULL;
 
-
+/**
+ * @brief ICE handle 释放引用
+ * 
+ * @param handle 
+ */
 static void janus_ice_handle_dereference(janus_ice_handle *handle) {
 	if(handle)
 		janus_refcount_decrease(&handle->ref);
 }
 
+/**
+ * @brief 释放该会话
+ * 
+ * @param session_ref 
+ */
 static void janus_session_free(const janus_refcount *session_ref) {
 	janus_session *session = janus_refcount_containerof(session_ref, janus_session, ref);
 	/* This session can be destroyed, free all the resources */
@@ -654,11 +705,18 @@ static void janus_session_free(const janus_refcount *session_ref) {
 	g_free(session);
 }
 
+/**
+ * @brief 获取该session的请求源，例如来自http，rabbitmq等
+ * 
+ * @param session
+ * @return janus_request* 
+ */
 static janus_request *janus_session_get_request(janus_session *session) {
 	if(session == NULL)
 		return NULL;
 	janus_mutex_lock(&session->mutex);
 	janus_request *source = session->source;
+	/* 如果请求源头不为空，而且请求源标志为未销毁，则该源头引用计数+1*/
 	if(source != NULL && !g_atomic_int_get(&source->destroyed)) {
 		janus_refcount_increase(&source->ref);
 	} else {
@@ -667,52 +725,73 @@ static janus_request *janus_session_get_request(janus_session *session) {
 	janus_mutex_unlock(&session->mutex);
 	return source;
 }
+/**
+ * @brief 释放请求
+ * 
+ * @param request 
+ */
 static void janus_request_unref(janus_request *request) {
 	if(request)
 		janus_refcount_decrease(&request->ref);
 }
 
+/**
+ * @brief 检查会话
+ * 
+ * @param user_data 
+ * @return gboolean 
+ */
 static gboolean janus_check_sessions(gpointer user_data) {
 	janus_mutex_lock(&sessions_mutex);
 	if(sessions && g_hash_table_size(sessions) > 0) {
+		/*如果 sessions hashTable不为空*/
 		GHashTableIter iter;
 		gpointer value;
+		/*初始化迭代器*/
 		g_hash_table_iter_init(&iter, sessions);
+		/*迭代遍历session*/
 		while (g_hash_table_iter_next(&iter, NULL, &value)) {
 			janus_session *session = (janus_session *) value;
 			if (!session || g_atomic_int_get(&session->destroyed)) {
+				/*如果该session为空或者该session已被销毁，继续下一个迭代*/
 				continue;
 			}
+			/**获取当前时间*/
 			gint64 now = janus_get_monotonic_time();
 
-			/* Use either session-specific timeout or global. */
+			/* Use either session-specific timeout or global.
+			使用会话特定超时或全局超时 */
 			gint64 timeout = (gint64)session->timeout;
 			if (timeout == -1) timeout = (gint64)global_session_timeout;
-
+			/*根据session上一次活跃时间和当前时间相比，判断session是否过期*/
 			if ((timeout > 0 && (now - session->last_activity >= timeout * G_USEC_PER_SEC) &&
 					!g_atomic_int_compare_and_exchange(&session->timedout, 0, 1)) ||
 					((g_atomic_int_get(&session->transport_gone) && now - session->last_activity >= (gint64)reclaim_session_timeout * G_USEC_PER_SEC) &&
 							!g_atomic_int_compare_and_exchange(&session->timedout, 0, 1))) {
 				JANUS_LOG(LOG_INFO, "Timeout expired for session %"SCNu64"...\n", session->session_id);
-				/* Mark the session as over, we'll deal with it later */
+				/* Mark the session as over, we'll deal with it later 
+				将会话标记为结束，我们稍后再处理
+				*/
 				janus_session_handles_clear(session);
-				/* Notify the transport */
+				/* Notify the transport 通过session请求源返回session过期事件*/
 				janus_request *source = janus_session_get_request(session);
 				if(source) {
 					json_t *event = janus_create_message("timeout", session->session_id, NULL);
-					/* Send this to the transport client and notify the session's over */
+					/* Send this to the transport client and notify the session's over 
+					将其发送到传输客户端并通知会话结束*/
 					source->transport->send_message(source->instance, NULL, FALSE, event);
 					source->transport->session_over(source->instance, session->session_id, TRUE, FALSE);
 				}
 				janus_request_unref(source);
-				/* Notify event handlers as well */
+				/* Notify event handlers as well 同样通知事件处理程序 */
 				if(janus_events_is_enabled())
 					janus_events_notify_handlers(JANUS_EVENT_TYPE_SESSION, JANUS_EVENT_SUBTYPE_NONE,
 						session->session_id, "timeout", NULL);
 
-				/* FIXME Is this safe? apparently it causes hash table errors on the console */
+				/* FIXME Is this safe? apparently it causes hash table errors on the console 
+				这个安全吗？显然，它会在控制台上导致哈希表错误*/
 				g_hash_table_iter_remove(&iter);
-
+				/*销毁session*/
 				janus_session_destroy(session);
 			}
 		}
@@ -722,6 +801,12 @@ static gboolean janus_check_sessions(gpointer user_data) {
 	return G_SOURCE_CONTINUE;
 }
 
+/**
+ * @brief 获取session 看门狗，定时处理检查session健康状态
+ * 
+ * @param user_data 
+ * @return gpointer 
+ */
 static gpointer janus_sessions_watchdog(gpointer user_data) {
 	GMainLoop *loop = (GMainLoop *) user_data;
 	GMainContext *watchdog_context = g_main_loop_get_context(loop);
@@ -741,26 +826,34 @@ static gpointer janus_sessions_watchdog(gpointer user_data) {
 	return NULL;
 }
 
-
+/**
+ * @brief 创建会话
+ * 
+ * @param session_id 
+ * @return janus_session* 
+ */
 janus_session *janus_session_create(guint64 session_id) {
 	janus_session *session = NULL;
 	if(session_id == 0) {
+		/* 当session_id 为0，随机获取一个session_id并检查它是否已经被使用*/
 		while(session_id == 0) {
 			session_id = janus_random_uint64();
 			session = janus_session_find(session_id);
 			if(session != NULL) {
-				/* Session ID already taken, try another one */
+				/* Session ID already taken, try another one
+				会话ID已被占用，请尝试另一个*/
 				janus_refcount_decrease(&session->ref);
 				session_id = 0;
 			}
 		}
 	}
+	/* 为janus_session 分配空间 */
 	session = (janus_session *)g_malloc(sizeof(janus_session));
 	JANUS_LOG(LOG_INFO, "Creating new session: %"SCNu64"; %p\n", session_id, session);
 	session->session_id = session_id;
 	janus_refcount_init(&session->ref, janus_session_free);
 	session->source = NULL;
-	session->timeout = -1; /* Negative means rely on global timeout */
+	session->timeout = -1; /* Negative means rely on global timeout 负数表示依赖全局超时*/
 	g_atomic_int_set(&session->destroyed, 0);
 	g_atomic_int_set(&session->timedout, 0);
 	g_atomic_int_set(&session->transport_gone, 0);
@@ -768,55 +861,83 @@ janus_session *janus_session_create(guint64 session_id) {
 	session->ice_handles = NULL;
 	janus_mutex_init(&session->mutex);
 	janus_mutex_lock(&sessions_mutex);
+	/*创建完session之后添加到sessions hashTable中，key是session_id*/
 	g_hash_table_insert(sessions, janus_uint64_dup(session->session_id), session);
 	janus_mutex_unlock(&sessions_mutex);
 	return session;
 }
 
+/**
+ * @brief 根据session_id查找是否已经存在session
+ * 
+ * @param session_id 
+ * @return janus_session* 
+ */
 janus_session *janus_session_find(guint64 session_id) {
 	janus_mutex_lock(&sessions_mutex);
 	janus_session *session = g_hash_table_lookup(sessions, &session_id);
 	if(session != NULL) {
 		/* A successful find automatically increases the reference counter:
-		 * it's up to the caller to decrease it again when done */
+		 * it's up to the caller to decrease it again when done 
+		 成功的查找会自动增加引用计数器：完成后，由调用方再次减少它
+		 */
 		janus_refcount_increase(&session->ref);
 	}
 	janus_mutex_unlock(&sessions_mutex);
 	return session;
 }
 
+/**
+ * @brief 
+ * 
+ * @param session 
+ * @param event 
+ */
 void janus_session_notify_event(janus_session *session, json_t *event) {
 	if(session != NULL && !g_atomic_int_get(&session->destroyed)) {
+		/*如果session有效*/
 		janus_request *source = janus_session_get_request(session);
+		/*如果session的source->transport 有效，例如http，rabbitmq*/
 		if(source != NULL && source->transport != NULL) {
-			/* Send this to the transport client */
+			/* Send this to the transport client 发送到传输客户端 */
 			JANUS_LOG(LOG_HUGE, "Sending event to %s (%p)\n", source->transport->get_package(), source->instance);
 			source->transport->send_message(source->instance, NULL, FALSE, event);
 		} else {
-			/* No transport, free the event */
+			/* No transport, free the event 没找到传输路径，释放event */
 			json_decref(event);
 		}
+		/*使用完source 减少引用次数*/
 		janus_request_unref(source);
 	} else {
-		/* No session, free the event */
+		/* No session, free the event 没找到session，释放event */
 		json_decref(event);
 	}
 }
 
 
-/* Destroys a session but does not remove it from the sessions hash table. */
+/* Destroys a session but does not remove it from the sessions hash table. 
+销毁会话，但只会将其从会话哈希表中删除
+*/
 gint janus_session_destroy(janus_session *session) {
 	guint64 session_id = session->session_id;
 	JANUS_LOG(LOG_INFO, "Destroying session %"SCNu64"; %p\n", session_id, session);
 	if(!g_atomic_int_compare_and_exchange(&session->destroyed, 0, 1))
 		return 0;
 	janus_session_handles_clear(session);
-	/* The session will actually be destroyed when the counter gets to 0 */
+	/* The session will actually be destroyed when the counter gets to 0 
+	session只有在couter变成0的时候会被真实销毁
+	*/
 	janus_refcount_decrease(&session->ref);
 
 	return 0;
 }
-
+/**
+ * @brief 根据session和handle_id 寻找插件处理
+ * 
+ * @param session 
+ * @param handle_id 
+ * @return janus_ice_handle* 
+ */
 janus_ice_handle *janus_session_handles_find(janus_session *session, guint64 handle_id) {
 	if(session == NULL)
 		return NULL;
@@ -824,13 +945,19 @@ janus_ice_handle *janus_session_handles_find(janus_session *session, guint64 han
 	janus_ice_handle *handle = session->ice_handles ? g_hash_table_lookup(session->ice_handles, &handle_id) : NULL;
 	if(handle != NULL) {
 		/* A successful find automatically increases the reference counter:
-		 * it's up to the caller to decrease it again when done */
+		 * it's up to the caller to decrease it again when done 
+		 成功的查找会自动增加引用计数器：完成后，由调用方再次减少它*/
 		janus_refcount_increase(&handle->ref);
 	}
 	janus_mutex_unlock(&session->mutex);
 	return handle;
 }
-
+/**
+ * @brief session添加特定插件
+ * 
+ * @param session 
+ * @param handle 
+ */
 void janus_session_handles_insert(janus_session *session, janus_ice_handle *handle) {
 	janus_mutex_lock(&session->mutex);
 	if(session->ice_handles == NULL)
@@ -839,7 +966,12 @@ void janus_session_handles_insert(janus_session *session, janus_ice_handle *hand
 	g_hash_table_insert(session->ice_handles, janus_uint64_dup(handle->handle_id), handle);
 	janus_mutex_unlock(&session->mutex);
 }
-
+/**
+ * @brief session移除特定插件
+ * 
+ * @param session 
+ * @param handle 
+ */
 gint janus_session_handles_remove(janus_session *session, janus_ice_handle *handle) {
 	janus_mutex_lock(&session->mutex);
 	gint error = janus_ice_handle_destroy(session, handle);
@@ -847,7 +979,12 @@ gint janus_session_handles_remove(janus_session *session, janus_ice_handle *hand
 	janus_mutex_unlock(&session->mutex);
 	return error;
 }
-
+/**
+ * @brief session移除所有插件
+ * 
+ * @param session 
+ * @param handle 
+ */
 void janus_session_handles_clear(janus_session *session) {
 	janus_mutex_lock(&session->mutex);
 	if(session->ice_handles != NULL && g_hash_table_size(session->ice_handles) > 0) {
@@ -865,7 +1002,12 @@ void janus_session_handles_clear(janus_session *session) {
 	}
 	janus_mutex_unlock(&session->mutex);
 }
-
+/**
+ * @brief 获取session的插件id列表
+ * 
+ * @param session 
+ * @return json_t* 
+ */
 json_t *janus_session_handles_list_json(janus_session *session) {
 	json_t *list = json_array();
 	janus_mutex_lock(&session->mutex);
@@ -884,10 +1026,11 @@ json_t *janus_session_handles_list_json(janus_session *session) {
 	return list;
 }
 
-/* Requests management */
+/* Requests management 释放请求*/
 static void janus_request_free(const janus_refcount *request_ref) {
 	janus_request *request = janus_refcount_containerof(request_ref, janus_request, ref);
-	/* This request can be destroyed, free all the resources */
+	/* This request can be destroyed, free all the resources
+	可以销毁此请求，释放所有资源 */
 	request->transport = NULL;
 	if(request->instance)
 		janus_refcount_decrease(&request->instance->ref);
@@ -899,6 +1042,16 @@ static void janus_request_free(const janus_refcount *request_ref) {
 	g_free(request);
 }
 
+/**
+ * @brief 创建一个janus请求器，基于http或者rabbitmq，取决于janus_transport
+ * 
+ * @param transport 
+ * @param instance 
+ * @param request_id 
+ * @param admin 
+ * @param message 
+ * @return janus_request* 
+ */
 janus_request *janus_request_new(janus_transport *transport, janus_transport_session *instance, void *request_id, gboolean admin, json_t *message) {
 	janus_request *request = g_malloc(sizeof(janus_request));
 	request->transport = transport;
@@ -912,12 +1065,25 @@ janus_request *janus_request_new(janus_transport *transport, janus_transport_ses
 	return request;
 }
 
+/**
+ * @brief 销毁掉Janus请求器，基于http或者rabbitmq
+ * 
+ * @param request 
+ */
 void janus_request_destroy(janus_request *request) {
 	if(request == NULL || request == &exit_message || !g_atomic_int_compare_and_exchange(&request->destroyed, 0, 1))
 		return;
 	janus_refcount_decrease(&request->ref);
 }
 
+/**
+ * @brief 检查请求的合法性
+ * 
+ * @param request 
+ * @param session_id 
+ * @param transaction_text 
+ * @return int 
+ */
 static int janus_request_check_secret(janus_request *request, guint64 session_id, const gchar *transaction_text) {
 	gboolean secret_authorized = FALSE, token_authorized = FALSE;
 	if(api_secret == NULL && !janus_auth_is_enabled()) {
@@ -927,61 +1093,78 @@ static int janus_request_check_secret(janus_request *request, guint64 session_id
 	} else {
 		json_t *root = request->message;
 		if(api_secret != NULL) {
-			/* There's an API secret, check that the client provided it */
+			/* There's an API secret, check that the client provided it 
+			有一个API 秘钥，请检查客户端是否提供了它*/
 			json_t *secret = json_object_get(root, "apisecret");
 			if(secret && json_is_string(secret) && janus_strcmp_const_time(json_string_value(secret), api_secret)) {
 				secret_authorized = TRUE;
 			}
 		}
 		if(janus_auth_is_enabled()) {
-			/* The token based authentication mechanism is enabled, check that the client provided it */
+			/* The token based authentication mechanism is enabled, check that the client provided it 
+			启用了基于令牌的身份验证机制，请检查客户端是否提供了该机制*/
 			json_t *token = json_object_get(root, "token");
 			if(token && json_is_string(token) && janus_auth_check_token(json_string_value(token))) {
 				token_authorized = TRUE;
 			}
 		}
-		/* We consider a request authorized if either the proper API secret or a valid token has been provided */
+		/* We consider a request authorized if either the proper API secret or a valid token has been provided 
+		如果提供了适当的API机密或有效令牌，则我们认为请求已授权*/
 		if(!(api_secret != NULL && secret_authorized) && !(janus_auth_is_enabled() && token_authorized))
 			return JANUS_ERROR_UNAUTHORIZED;
 	}
 	return 0;
 }
 
+/**
+ * @brief 生成Ice answer
+ * 
+ * @param handle 
+ * @param audio 
+ * @param video 
+ * @param data 
+ * @param jsep_sdp 
+ */
 static void janus_request_ice_handle_answer(janus_ice_handle *handle, int audio, int video, int data, char *jsep_sdp) {
-	/* We got our answer */
+	/* We got our answer 此handle的WebRTC相关标志掩码设置为 ~1 = 0*/
 	janus_flags_clear(&handle->webrtc_flags, JANUS_ICE_HANDLE_WEBRTC_PROCESSING_OFFER);
-	/* Any pending trickles? */
+	/* Any pending trickles? 有任何待定的trickles？ */
 	if(handle->pending_trickles) {
 		JANUS_LOG(LOG_VERB, "[%"SCNu64"]   -- Processing %d pending trickle candidates\n", handle->handle_id, g_list_length(handle->pending_trickles));
 		GList *temp = NULL;
 		while(handle->pending_trickles) {
+			/* 获取第一个trickle 并从原来的handle上移除 */
 			temp = g_list_first(handle->pending_trickles);
 			handle->pending_trickles = g_list_remove_link(handle->pending_trickles, temp);
+			/*获取temp的内容*/
 			janus_ice_trickle *trickle = (janus_ice_trickle *)temp->data;
+			/*释放temp*/
 			g_list_free(temp);
 			if(trickle == NULL)
 				continue;
 			if((janus_get_monotonic_time() - trickle->received) > candidates_timeout*G_USEC_PER_SEC) {
-				/* FIXME Candidate is too old, discard it */
+				/* FIXME Candidate is too old, discard it 如果candidate的时间太久了，把它丢弃*/
 				JANUS_LOG(LOG_WARN, "[%"SCNu64"] Discarding candidate (too old)\n", handle->handle_id);
 				janus_ice_trickle_destroy(trickle);
-				/* FIXME We should report that */
+				/* FIXME We should report that 我们可以报告这一点？*/
 				continue;
 			}
+			/*获取trickle上的candidate*/
 			json_t *candidate = trickle->candidate;
 			if(candidate == NULL) {
 				janus_ice_trickle_destroy(trickle);
 				continue;
 			}
 			if(json_is_object(candidate)) {
-				/* We got a single candidate */
+				/* We got a single candidate 如果是单一candidate object*/
 				int error = 0;
 				const char *error_string = NULL;
+				/*解析candidate*/
 				if((error = janus_ice_trickle_parse(handle, candidate, &error_string)) != 0) {
 					/* FIXME We should report the error parsing the trickle candidate */
 				}
 			} else if(json_is_array(candidate)) {
-				/* We got multiple candidates in an array */
+				/* We got multiple candidates in an array 如果是数组candidate*/
 				JANUS_LOG(LOG_VERB, "[%"SCNu64"] Got multiple candidates (%zu)\n", handle->handle_id, json_array_size(candidate));
 				if(json_array_size(candidate) > 0) {
 					/* Handle remote candidates */
@@ -989,6 +1172,7 @@ static void janus_request_ice_handle_answer(janus_ice_handle *handle, int audio,
 					for(i=0; i<json_array_size(candidate); i++) {
 						json_t *c = json_array_get(candidate, i);
 						/* FIXME We don't care if any trickle fails to parse */
+						/*解析candidate*/
 						janus_ice_trickle_parse(handle, c, NULL);
 					}
 				}
@@ -999,16 +1183,27 @@ static void janus_request_ice_handle_answer(janus_ice_handle *handle, int audio,
 	}
 
 	gboolean candidates_found = (handle->stream && handle->stream->component && g_slist_length(handle->stream->component->candidates) > 0);
-	/* This was an answer, check if it's time to start ICE */
+	/* This was an answer, check if it's time to start ICE 这是一个answer，检查是否可以开始ICE协商*/
 	if(janus_flags_is_set(&handle->webrtc_flags, JANUS_ICE_HANDLE_WEBRTC_TRICKLE) && !candidates_found) {
+		/*如果目前在处于TRICKLE状态和没有找到candidate，我们开始ICE协商*/
 		JANUS_LOG(LOG_VERB, "[%"SCNu64"]   -- ICE Trickling is supported by the browser, waiting for remote candidates...\n", handle->handle_id);
 		janus_flags_set(&handle->webrtc_flags, JANUS_ICE_HANDLE_WEBRTC_START);
 	} else {
+		/*如果目前在不处于TRICKLE状态，处理远程候选对象并启动连接检查*/
 		JANUS_LOG(LOG_VERB, "[%"SCNu64"] Done! Sending connectivity checks...\n", handle->handle_id);
 		janus_ice_setup_remote_candidates(handle, handle->stream_id, 1);
 	}
 }
 
+
+
+
+/**
+ * @brief 处理进入请求
+ * 
+ * @param request 
+ * @return int 
+ */
 int janus_process_incoming_request(janus_request *request) {
 	int ret = -1;
 	if(request == NULL) {
@@ -1018,7 +1213,9 @@ int janus_process_incoming_request(janus_request *request) {
 	int error_code = 0;
 	char error_cause[100];
 	json_t *root = request->message;
-	/* Ok, let's start with the ids */
+	/* Ok, let's start with the ids 
+	获取请求中的session_id和handle_id
+	*/
 	guint64 session_id = 0, handle_id = 0;
 	json_t *s = json_object_get(root, "session_id");
 	if(json_is_null(s))
@@ -1031,24 +1228,28 @@ int janus_process_incoming_request(janus_request *request) {
 	if(h && json_is_integer(h))
 		handle_id = json_integer_value(h);
 
+
 	janus_session *session = NULL;
 	janus_ice_handle *handle = NULL;
 
-	/* Get transaction and message request */
+	/* Get transaction and message request 检查参数格式是否为JSON*/
 	JANUS_VALIDATE_JSON_OBJECT(root, incoming_request_parameters,
 		error_code, error_cause, FALSE,
 		JANUS_ERROR_MISSING_MANDATORY_ELEMENT, JANUS_ERROR_INVALID_ELEMENT_TYPE);
 	if(error_code != 0) {
+		/*参数格式不为JSON*/
 		ret = janus_process_error_string(request, session_id, NULL, error_code, error_cause);
 		goto jsondone;
 	}
+
 	json_t *transaction = json_object_get(root, "transaction");
 	const gchar *transaction_text = json_string_value(transaction);
 	json_t *message = json_object_get(root, "janus");
 	const gchar *message_text = json_string_value(message);
 
 	if(session_id == 0 && handle_id == 0) {
-		/* Can only be a 'Create new session', a 'Get info' or a 'Ping/Pong' request */
+		/* Can only be a 'Create new session', a 'Get info' or a 'Ping/Pong' request 
+		如果session_id为空，只能是create，info，ping，pong请求*/
 		if(!strcasecmp(message_text, "info")) {
 			ret = janus_process_success(request, janus_info(transaction_text));
 			goto jsondone;
@@ -1063,12 +1264,12 @@ int janus_process_incoming_request(janus_request *request) {
 			ret = janus_process_error(request, session_id, transaction_text, JANUS_ERROR_INVALID_REQUEST_PATH, "Unhandled request '%s' at this path", message_text);
 			goto jsondone;
 		}
-		/* Make sure we're accepting new sessions */
+		/* Make sure we're accepting new sessions 确保我们能创建新session */
 		if(!accept_new_sessions) {
 			ret = janus_process_error(request, session_id, transaction_text, JANUS_ERROR_NOT_ACCEPTING_SESSIONS, NULL);
 			goto jsondone;
 		}
-		/* Any secret/token to check? */
+		/* Any secret/token to check? 检查请求合法性*/
 		ret = janus_request_check_secret(request, session_id, transaction_text);
 		if(ret != 0) {
 			ret = janus_process_error(request, session_id, transaction_text, JANUS_ERROR_UNAUTHORIZED, NULL);
@@ -1077,10 +1278,10 @@ int janus_process_incoming_request(janus_request *request) {
 		session_id = 0;
 		json_t *id = json_object_get(root, "id");
 		if(id != NULL) {
-			/* The application provided the session ID to use */
+			/* The application provided the session ID to use 应用程序提供了要使用的会话ID */
 			session_id = json_integer_value(id);
 			if(session_id > 0 && (session = janus_session_find(session_id)) != NULL) {
-				/* Session ID already taken */
+				/* Session ID already taken session_id已经被使用了*/
 				ret = janus_process_error(request, session_id, transaction_text, JANUS_ERROR_SESSION_CONFLICT, "Session ID already in use");
 				goto jsondone;
 			}
@@ -1093,33 +1294,39 @@ int janus_process_incoming_request(janus_request *request) {
 			goto jsondone;
 		}
 		session_id = session->session_id;
-		/* We increase the counter as this request is using the session */
+		/* We increase the counter as this request is using the session 
+		session引用计数+1
+		*/
 		janus_refcount_increase(&session->ref);
-		/* Take note of the request source that originated this session (HTTP, WebSockets, RabbitMQ?) */
+		/* Take note of the request source that originated this session (HTTP, WebSockets, RabbitMQ?) 
+		回复请求源头，从哪里来，到哪里去
+		*/
 		session->source = janus_request_new(request->transport, request->instance, NULL, FALSE, NULL);
-		/* Notify the source that a new session has been created */
+		/* Notify the source that a new session has been created 回复新session被创建 */
 		request->transport->session_created(request->instance, session->session_id);
-		/* Notify event handlers */
+		/* Notify event handlers 通知事件处理*/
 		if(janus_events_is_enabled()) {
-			/* Session created, add info on the transport that originated it */
+			/* Session created, add info on the transport that originated it 创建了新session，把该回复丢到请求源，从哪里来，到哪里去 */
 			json_t *transport = json_object();
 			json_object_set_new(transport, "transport", json_string(session->source->transport->get_package()));
 			char id[32];
 			memset(id, 0, sizeof(id));
 			/* To avoid sending a stringified version of the transport pointer
-			 * around, we convert it to a number and hash it instead */
+			 * around, we convert it to a number and hash it instead 
+			 为了避免发送传输指针的字符串化版本，我们将其转换为数字并对其进行散列
+			 */
 			uint64_t p = janus_uint64_hash(GPOINTER_TO_UINT(session->source->instance));
 			g_snprintf(id, sizeof(id), "%"SCNu64, p);
 			json_object_set_new(transport, "id", json_string(id));
 			janus_events_notify_handlers(JANUS_EVENT_TYPE_SESSION, JANUS_EVENT_SUBTYPE_NONE,
 				session_id, "created", transport);
 		}
-		/* Prepare JSON reply */
+		/* Prepare JSON reply 准备JSON回复 */
 		json_t *reply = janus_create_message("success", 0, transaction_text);
 		json_t *data = json_object();
 		json_object_set_new(data, "id", json_integer(session_id));
 		json_object_set_new(reply, "data", data);
-		/* Send the success reply */
+		/* Send the success reply 发送成功回复*/
 		ret = janus_process_success(request, reply);
 		goto jsondone;
 	}
@@ -1134,26 +1341,29 @@ int janus_process_incoming_request(janus_request *request) {
 		goto jsondone;
 	}
 
-	/* Go on with the processing */
+	/* Go on with the processing 检查请求合法性 */
 	ret = janus_request_check_secret(request, session_id, transaction_text);
 	if(ret != 0) {
 		ret = janus_process_error(request, session_id, transaction_text, JANUS_ERROR_UNAUTHORIZED, NULL);
 		goto jsondone;
 	}
 
-	/* If we got here, make sure we have a session (and/or a handle) */
+	/* If we got here, make sure we have a session (and/or a handle) 确保这个session在我们服务器上 */
 	session = janus_session_find(session_id);
 	if(!session) {
+		/*找不到该session*/
 		JANUS_LOG(LOG_ERR, "Couldn't find any session %"SCNu64"...\n", session_id);
 		ret = janus_process_error(request, session_id, transaction_text, JANUS_ERROR_SESSION_NOT_FOUND, "No such session %"SCNu64"", session_id);
 		goto jsondone;
 	}
-	/* Update the last activity timer */
+	/* Update the last activity timer 更新session最后一次活跃时间 */
 	session->last_activity = janus_get_monotonic_time();
 	handle = NULL;
 	if(handle_id > 0) {
+		/* 通过handle_id找到该session的handle */
 		handle = janus_session_handles_find(session, handle_id);
 		if(!handle) {
+			/*找不到该handle*/
 			JANUS_LOG(LOG_ERR, "Couldn't find any handle %"SCNu64" in session %"SCNu64"...\n", handle_id, session_id);
 			ret = janus_process_error(request, session_id, transaction_text, JANUS_ERROR_HANDLE_NOT_FOUND, "No such handle %"SCNu64" in session %"SCNu64"", handle_id, session_id);
 			goto jsondone;
@@ -1162,13 +1372,14 @@ int janus_process_incoming_request(janus_request *request) {
 
 	/* What is this? */
 	if(!strcasecmp(message_text, "keepalive")) {
-		/* Just a keep-alive message, reply with an ack */
+		/* Just a keep-alive message, reply with an ack 只是一条保持活跃的消息，用ack回复 */
 		JANUS_LOG(LOG_VERB, "Got a keep-alive on session %"SCNu64"\n", session_id);
 		json_t *reply = janus_create_message("ack", session_id, transaction_text);
-		/* Send the success reply */
+		/* Send the success reply 发送成功回复 */
 		ret = janus_process_success(request, reply);
 	} else if(!strcasecmp(message_text, "attach")) {
 		if(handle != NULL) {
+			/* attach 方法不支持在当前插件下使用，它只能在session级别下使用 */
 			/* Attach is a session-level command */
 			ret = janus_process_error(request, session_id, transaction_text, JANUS_ERROR_INVALID_REQUEST_PATH, "Unhandled request '%s' at this path", message_text);
 			goto jsondone;
@@ -1180,6 +1391,7 @@ int janus_process_incoming_request(janus_request *request) {
 			ret = janus_process_error_string(request, session_id, transaction_text, error_code, error_cause);
 			goto jsondone;
 		}
+		/*加载插件*/
 		json_t *plugin = json_object_get(root, "plugin");
 		const gchar *plugin_text = json_string_value(plugin);
 		janus_plugin *plugin_t = janus_plugin_find(plugin_text);
@@ -1187,7 +1399,8 @@ int janus_process_incoming_request(janus_request *request) {
 			ret = janus_process_error(request, session_id, transaction_text, JANUS_ERROR_PLUGIN_NOT_FOUND, "No such plugin '%s'", plugin_text);
 			goto jsondone;
 		}
-		/* If the auth token mechanism is enabled, we should check if this token can access this plugin */
+		/* If the auth token mechanism is enabled, we should check if this token can access this plugin
+		如果启用了身份验证令牌机制，我们应该检查该令牌是否可以访问该插件 */
 		const char *token_value = NULL;
 		if(janus_auth_is_enabled()) {
 			json_t *token = json_object_get(root, "token");
@@ -1204,7 +1417,7 @@ int janus_process_incoming_request(janus_request *request) {
 		const char *opaque_id = opaque ? json_string_value(opaque) : NULL;
 		json_t *loop = json_object_get(root, "loop_index");
 		int loop_index = loop ? json_integer_value(loop) : -1;
-		/* Create handle */
+		/* Create handle 创建插件*/
 		handle = janus_ice_handle_create(session, opaque_id, token_value);
 		if(handle == NULL) {
 			ret = janus_process_error(request, session_id, transaction_text, JANUS_ERROR_UNKNOWN, "Memory error");
@@ -1213,7 +1426,7 @@ int janus_process_incoming_request(janus_request *request) {
 		handle_id = handle->handle_id;
 		/* We increase the counter as this request is using the handle */
 		janus_refcount_increase(&handle->ref);
-		/* Attach to the plugin */
+		/* Attach to the plugin 加载插件*/
 		int error = 0;
 		if((error = janus_ice_handle_attach_plugin(session, handle, plugin_t, loop_index)) != 0) {
 			/* TODO Make error struct to pass verbose information */
@@ -1292,6 +1505,7 @@ int janus_process_incoming_request(janus_request *request) {
 		/* Send the success reply */
 		ret = janus_process_success(request, reply);
 	} else if(!strcasecmp(message_text, "claim")) {
+		/*切换请求源*/
 		janus_mutex_lock(&session->mutex);
 		if(session->source != NULL) {
 			/* If we're claiming from the same transport, ignore */
@@ -1306,15 +1520,16 @@ int janus_process_incoming_request(janus_request *request) {
 				ret = janus_process_success(request, reply);
 				goto jsondone;
 			}
-			/* Notify the old transport that this session is over for them, but has been reclaimed */
+			/* Notify the old transport that this session is over for them, but has been reclaimed
+			通知旧传输，此会话已结束，但已被回收 */
 			session->source->transport->session_over(session->source->instance, session->session_id, FALSE, TRUE);
 			janus_request_destroy(session->source);
 			session->source = NULL;
 		}
 		session->source = janus_request_new(request->transport, request->instance, NULL, FALSE, NULL);
-		/* Notify the new transport that it has claimed a session */
+		/* Notify the new transport that it has claimed a session 通知新传输已声明会话 */
 		session->source->transport->session_claimed(session->source->instance, session->session_id);
-		/* Previous transport may be gone, clear flag */
+		/* Previous transport may be gone, clear flag 以前的运输可能会消失，清除标志*/
 		g_atomic_int_set(&session->transport_gone, 0);
 		janus_mutex_unlock(&session->mutex);
 		/* Prepare JSON reply */
@@ -1325,6 +1540,7 @@ int janus_process_incoming_request(janus_request *request) {
 		/* Send the success reply */
 		ret = janus_process_success(request, reply);
 	} else if(!strcasecmp(message_text, "message")) {
+		/* 处理插件级别请求 */
 		if(handle == NULL) {
 			/* Query is an handle-level command */
 			ret = janus_process_error(request, session_id, transaction_text, JANUS_ERROR_INVALID_REQUEST_PATH, "Unhandled request '%s' at this path", message_text);
@@ -1344,12 +1560,13 @@ int janus_process_incoming_request(janus_request *request) {
 			goto jsondone;
 		}
 		json_t *body = json_object_get(root, "body");
-		/* Is there an SDP attached? */
+		/* Is there an SDP attached? 是否是SDP请求*/
 		json_t *jsep = json_object_get(root, "jsep");
 		char *jsep_type = NULL;
 		char *jsep_sdp = NULL, *jsep_sdp_stripped = NULL;
 		gboolean renegotiation = FALSE;
 		if(jsep != NULL) {
+			/*处理SDP请求*/
 			if(!json_is_object(jsep)) {
 				ret = janus_process_error(request, session_id, transaction_text, JANUS_ERROR_INVALID_JSON_OBJECT, "Invalid jsep object");
 				goto jsondone;
@@ -1382,9 +1599,10 @@ int janus_process_incoming_request(janus_request *request) {
 				}
 				json_object_del(jsep, "rid_order");
 			}
+			/*是否开启端对端加密*/
 			json_t *jsep_e2ee = json_object_get(jsep, "e2ee");
 			gboolean e2ee = jsep_e2ee ? json_is_true(jsep_e2ee) : FALSE;
-			/* Are we still cleaning up from a previous media session? */
+			/* Are we still cleaning up from a previous media session? 我们还在清理之前的媒体会议吗？ */
 			if(janus_flags_is_set(&handle->webrtc_flags, JANUS_ICE_HANDLE_WEBRTC_CLEANING)) {
 				JANUS_LOG(LOG_VERB, "[%"SCNu64"] Still cleaning up from a previous media session, let's wait a bit...\n", handle->handle_id);
 				gint64 waited = 0;
@@ -1398,17 +1616,20 @@ int janus_process_incoming_request(janus_request *request) {
 					}
 				}
 			}
-			/* Check if we're renegotiating (if we have an answer, we did an offer/answer round already) */
+			/* Check if we're renegotiating (if we have an answer, we did an offer/answer round already) 
+			检查我们是否需要重新协商（如果我们有了answer，代表我们已经做过一轮offer/answer了）*/
 			renegotiation = janus_flags_is_set(&handle->webrtc_flags, JANUS_ICE_HANDLE_WEBRTC_NEGOTIATED);
-			/* Check the JSEP type */
+			/* Check the JSEP type 检查jsep类型*/
 			janus_mutex_lock(&handle->mutex);
 			int offer = 0;
 			if(!strcasecmp(jsep_type, "offer")) {
+				/*处理offer，我们会清除之前的answer*/
 				offer = 1;
 				janus_flags_set(&handle->webrtc_flags, JANUS_ICE_HANDLE_WEBRTC_PROCESSING_OFFER);
 				janus_flags_set(&handle->webrtc_flags, JANUS_ICE_HANDLE_WEBRTC_GOT_OFFER);
 				janus_flags_clear(&handle->webrtc_flags, JANUS_ICE_HANDLE_WEBRTC_GOT_ANSWER);
 			} else if(!strcasecmp(jsep_type, "answer")) {
+				/*处理answer 如果我们已经有了offer了，那么会开始媒体协商*/
 				janus_flags_set(&handle->webrtc_flags, JANUS_ICE_HANDLE_WEBRTC_GOT_ANSWER);
 				if(janus_flags_is_set(&handle->webrtc_flags, JANUS_ICE_HANDLE_WEBRTC_GOT_OFFER))
 					janus_flags_set(&handle->webrtc_flags, JANUS_ICE_HANDLE_WEBRTC_NEGOTIATED);
@@ -1422,27 +1643,30 @@ int janus_process_incoming_request(janus_request *request) {
 				goto jsondone;
 			}
 			json_t *sdp = json_object_get(jsep, "sdp");
+			/*获取sdp内容*/
 			jsep_sdp = (char *)json_string_value(sdp);
 			JANUS_LOG(LOG_VERB, "[%"SCNu64"] Remote SDP:\n%s", handle->handle_id, jsep_sdp);
 			/* Is this valid SDP? */
 			char error_str[512];
 			error_str[0] = '\0';
 			int audio = 0, video = 0, data = 0;
+			/* 解析sdp */
 			janus_sdp *parsed_sdp = janus_sdp_preparse(handle, jsep_sdp, error_str, sizeof(error_str), &audio, &video, &data);
 			if(parsed_sdp == NULL) {
-				/* Invalid SDP */
+				/* Invalid SDP 无效sdp*/
 				ret = janus_process_error_string(request, session_id, transaction_text, JANUS_ERROR_JSEP_INVALID_SDP, error_str);
 				g_free(jsep_type);
 				janus_flags_clear(&handle->webrtc_flags, JANUS_ICE_HANDLE_WEBRTC_PROCESSING_OFFER);
 				janus_mutex_unlock(&handle->mutex);
 				goto jsondone;
 			}
-			/* Notify event handlers */
+			/* Notify event handlers 通知事件处理器*/
 			if(janus_events_is_enabled()) {
 				janus_events_notify_handlers(JANUS_EVENT_TYPE_JSEP, JANUS_EVENT_SUBTYPE_NONE,
 					session_id, handle_id, handle->opaque_id, "remote", jsep_type, jsep_sdp);
 			}
-			/* FIXME We're only handling single audio/video lines for now... */
+			/* FIXME We're only handling single audio/video lines for now...
+			我们目前只处理单个音频/视频线路 */
 			JANUS_LOG(LOG_VERB, "[%"SCNu64"] Audio %s been negotiated, Video %s been negotiated, SCTP/DataChannels %s been negotiated\n",
 			                    handle->handle_id,
 			                    audio ? "has" : "has NOT",
@@ -1462,11 +1686,12 @@ int janus_process_incoming_request(janus_request *request) {
 				JANUS_LOG(LOG_WARN, "[%"SCNu64"]   -- DataChannels have been negotiated, but support for them has not been compiled...\n", handle->handle_id);
 			}
 #endif
-			/* We behave differently if it's a new session or an update... */
+			/* We behave differently if it's a new session or an update...
+			如果是新session或更新session，我们的行为会有所不同 */
 			if(!renegotiation) {
-				/* New session */
+				/* New session 处理新session*/
 				if(offer) {
-					/* Setup ICE locally (we received an offer) */
+					/* Setup ICE locally (we received an offer) 我们接收到一个offer，设置本地Description*/
 					if(janus_ice_setup_local(handle, offer, audio, video, data, do_trickle) < 0) {
 						JANUS_LOG(LOG_ERR, "Error setting ICE locally\n");
 						janus_sdp_destroy(parsed_sdp);
@@ -1477,7 +1702,7 @@ int janus_process_incoming_request(janus_request *request) {
 						goto jsondone;
 					}
 				} else {
-					/* Make sure we're waiting for an ANSWER in the first place */
+					/* Make sure we're waiting for an ANSWER in the first place 首先确保我们在等待answer*/
 					if(!handle->agent) {
 						JANUS_LOG(LOG_ERR, "Unexpected ANSWER (did we offer?)\n");
 						janus_sdp_destroy(parsed_sdp);
@@ -1492,6 +1717,9 @@ int janus_process_incoming_request(janus_request *request) {
 				 * that this only works with libnice >= 0.1.14, and will cause the PeerConnection
 				 * to fail if Janus itself is not configured to use a TURN server. Don't use this
 				 * feature if you don't know what you're doing! You will almost always NOT want
+				 * 如果出于某种原因，用户要求我们强制使用relay，如果要这样做。请注意，这仅适用于libnice>=0.1.14
+				 * 如果Janus本身未配置为使用TURN服务器，则会导致对等连接失败。
+				 * 如果你不知道自己在做什么，请不要使用此功能
 				 * Janus itself to use TURN: https://janus.conf.meetecho.com/docs/FAQ.html#turn */
 				if(json_is_true(json_object_get(jsep, "force_relay"))) {
 					if(!janus_ice_is_force_relay_allowed()) {
@@ -1501,7 +1729,7 @@ int janus_process_incoming_request(janus_request *request) {
 						g_object_set(G_OBJECT(handle->agent), "force-relay", TRUE, NULL);
 					}
 				}
-				/* Process the remote SDP */
+				/* Process the remote SDP 处理远端sdp */
 				if(janus_sdp_process(handle, parsed_sdp, rids_hml, FALSE) < 0) {
 					JANUS_LOG(LOG_ERR, "Error processing SDP\n");
 					janus_sdp_destroy(parsed_sdp);
@@ -1512,14 +1740,15 @@ int janus_process_incoming_request(janus_request *request) {
 					goto jsondone;
 				}
 				if(!offer) {
-					/* Set remote candidates now (we received an answer) */
+					/* Set remote candidates now (we received an answer) 
+					   现在设置remote Candidates (我们接收了answer)*/
 					if(do_trickle) {
 						janus_flags_set(&handle->webrtc_flags, JANUS_ICE_HANDLE_WEBRTC_TRICKLE);
 					} else {
 						janus_flags_clear(&handle->webrtc_flags, JANUS_ICE_HANDLE_WEBRTC_TRICKLE);
 					}
 					janus_request_ice_handle_answer(handle, audio, video, data, jsep_sdp);
-					/* Check if the answer does contain the mid/abs-send-time/twcc extmaps */
+					/* Check if the answer does contain the mid/abs-send-time/twcc extmaps 检查answer是否包含mid/abs-send-time/twcc extmaps*/
 					gboolean do_mid = FALSE, do_twcc = FALSE, do_abs_send_time = FALSE;
 					GList *temp = parsed_sdp->m_lines;
 					while(temp) {
@@ -1548,25 +1777,26 @@ int janus_process_incoming_request(janus_request *request) {
 					if(!do_abs_send_time && handle->stream)
 						handle->stream->abs_send_time_ext_id = 0;
 				} else {
-					/* Check if the mid RTP extension is being negotiated */
+					/* Check if the mid RTP extension is being negotiated 检查是否正在协商mid RTP扩展*/
 					handle->stream->mid_ext_id = janus_rtp_header_extension_get_id(jsep_sdp, JANUS_RTP_EXTMAP_MID);
-					/* Check if the RTP Stream ID extension is being negotiated */
+					/* Check if the RTP Stream ID extension is being negotiated 检查是否正在协商RTP流ID扩展*/
 					handle->stream->rid_ext_id = janus_rtp_header_extension_get_id(jsep_sdp, JANUS_RTP_EXTMAP_RID);
 					handle->stream->ridrtx_ext_id = janus_rtp_header_extension_get_id(jsep_sdp, JANUS_RTP_EXTMAP_REPAIRED_RID);
-					/* Check if the audio level ID extension is being negotiated */
+					/* Check if the audio level ID extension is being negotiated 检查是否正在协商音频级别ID扩展*/
 					handle->stream->audiolevel_ext_id = janus_rtp_header_extension_get_id(jsep_sdp, JANUS_RTP_EXTMAP_AUDIO_LEVEL);
-					/* Check if the video orientation ID extension is being negotiated */
+					/* Check if the video orientation ID extension is being negotiated 检查是否正在协商视频方向ID扩展*/
 					handle->stream->videoorientation_ext_id = janus_rtp_header_extension_get_id(jsep_sdp, JANUS_RTP_EXTMAP_VIDEO_ORIENTATION);
-					/* Check if the abs-send-time ID extension is being negotiated */
+					/* Check if the abs-send-time ID extension is being negotiated 检查是否正在协商abs发送时间ID扩展*/
 					handle->stream->abs_send_time_ext_id = janus_rtp_header_extension_get_id(jsep_sdp, JANUS_RTP_EXTMAP_ABS_SEND_TIME);
-					/* Check if transport wide CC is supported */
+					/* Check if transport wide CC is supported 检查是否支持拥塞控制*/
 					int transport_wide_cc_ext_id = janus_rtp_header_extension_get_id(jsep_sdp, JANUS_RTP_EXTMAP_TRANSPORT_WIDE_CC);
 					handle->stream->do_transport_wide_cc = transport_wide_cc_ext_id > 0 ? TRUE : FALSE;
 					handle->stream->transport_wide_cc_ext_id = transport_wide_cc_ext_id;
 				}
 			} else {
 				/* FIXME This is a renegotiation: we can currently only handle simple changes in media
-				 * direction and ICE restarts: anything more complex than that will result in an error */
+				 * direction and ICE restarts: anything more complex than that will result in an error 
+				 这是一次重新媒体协商，我们目前只能处理媒体方面的简单更改和ICE重启，任何比这更复杂的事情都会导致错误*/
 				JANUS_LOG(LOG_INFO, "[%"SCNu64"] Negotiation update, checking what changed...\n", handle->handle_id);
 				if(janus_sdp_process(handle, parsed_sdp, rids_hml, TRUE) < 0) {
 					JANUS_LOG(LOG_ERR, "Error processing SDP\n");
@@ -1585,12 +1815,13 @@ int janus_process_incoming_request(janus_request *request) {
 					} else {
 						janus_flags_clear(&handle->webrtc_flags, JANUS_ICE_HANDLE_WEBRTC_ICE_RESTART);
 					}
-					/* Update remote credentials for ICE */
+					/* Update remote credentials for ICE 更新ICE的远程凭据*/
 					if(handle->stream) {
 						nice_agent_set_remote_credentials(handle->agent, handle->stream->stream_id,
 							handle->stream->ruser, handle->stream->rpass);
 					}
-					/* If we're full-trickling, we'll need to resend the candidates later */
+					/* If we're full-trickling, we'll need to resend the candidates later 
+					如果我们使用full-trickling，我们需要稍后重新发送candidates */
 					if(janus_ice_is_full_trickle_enabled()) {
 						janus_flags_set(&handle->webrtc_flags, JANUS_ICE_HANDLE_WEBRTC_RESEND_TRICKLES);
 					}
@@ -1609,20 +1840,20 @@ int janus_process_incoming_request(janus_request *request) {
 					}
 				}
 #endif
-				/* Check if renegotiating has added new RTP extensions */
+				/* Check if renegotiating has added new RTP extensions 检查重新协商是否添加了新的RTP扩展 */
 				if(offer) {
-					/* Check if the mid RTP extension is being negotiated */
+					/* Check if the mid RTP extension is being negotiated 检查是否正在协商mid RTP扩展*/
 					handle->stream->mid_ext_id = janus_rtp_header_extension_get_id(jsep_sdp, JANUS_RTP_EXTMAP_MID);
-					/* Check if the RTP Stream ID extension is being negotiated */
+					/* Check if the RTP Stream ID extension is being negotiated 检查是否正在协商RTP流ID扩展*/
 					handle->stream->rid_ext_id = janus_rtp_header_extension_get_id(jsep_sdp, JANUS_RTP_EXTMAP_RID);
 					handle->stream->ridrtx_ext_id = janus_rtp_header_extension_get_id(jsep_sdp, JANUS_RTP_EXTMAP_REPAIRED_RID);
-					/* Check if the audio level ID extension is being negotiated */
+					/* Check if the audio level ID extension is being negotiated 检查是否正在协商音频级别ID扩展*/
 					handle->stream->audiolevel_ext_id = janus_rtp_header_extension_get_id(jsep_sdp, JANUS_RTP_EXTMAP_AUDIO_LEVEL);
-					/* Check if the video orientation ID extension is being negotiated */
+					/* Check if the video orientation ID extension is being negotiated 检查是否正在协商视频方向ID扩展*/
 					handle->stream->videoorientation_ext_id = janus_rtp_header_extension_get_id(jsep_sdp, JANUS_RTP_EXTMAP_VIDEO_ORIENTATION);
-					/* Check if the abs-send-time ID extension is being negotiated */
+					/* Check if the abs-send-time ID extension is being negotiated 检查是否正在协商abs发送时间ID扩展*/
 					handle->stream->abs_send_time_ext_id = janus_rtp_header_extension_get_id(jsep_sdp, JANUS_RTP_EXTMAP_ABS_SEND_TIME);
-					/* Check if transport wide CC is supported */
+					/* Check if transport wide CC is supported 检查是否支持拥塞控制*/
 					int transport_wide_cc_ext_id = janus_rtp_header_extension_get_id(jsep_sdp, JANUS_RTP_EXTMAP_TRANSPORT_WIDE_CC);
 					handle->stream->do_transport_wide_cc = transport_wide_cc_ext_id > 0 ? TRUE : FALSE;
 					handle->stream->transport_wide_cc_ext_id = transport_wide_cc_ext_id;
@@ -1632,15 +1863,16 @@ int janus_process_incoming_request(janus_request *request) {
 			handle->remote_sdp = g_strdup(jsep_sdp);
 			g_free(tmp);
 			janus_mutex_unlock(&handle->mutex);
-			/* Anonymize SDP */
+			/* Anonymize SDP 匿名化SDP*/
 			if(janus_sdp_anonymize(parsed_sdp) < 0) {
-				/* Invalid SDP */
+				/* Invalid SDP 无效的SDP */
 				ret = janus_process_error(request, session_id, transaction_text, JANUS_ERROR_JSEP_INVALID_SDP, "JSEP error: invalid SDP");
 				janus_sdp_destroy(parsed_sdp);
 				g_free(jsep_type);
 				janus_flags_clear(&handle->webrtc_flags, JANUS_ICE_HANDLE_WEBRTC_PROCESSING_OFFER);
 				goto jsondone;
 			}
+			/* 生成SDP字符串 */
 			jsep_sdp_stripped = janus_sdp_write(parsed_sdp);
 			janus_sdp_destroy(parsed_sdp);
 			sdp = NULL;
@@ -1649,7 +1881,7 @@ int janus_process_incoming_request(janus_request *request) {
 			janus_flags_clear(&handle->webrtc_flags, JANUS_ICE_HANDLE_WEBRTC_PROCESSING_OFFER);
 		}
 
-		/* Make sure the app handle is still valid */
+		/* Make sure the app handle is still valid 确保应用程序handle仍然有效*/
 		if(handle->app == NULL || !janus_plugin_session_is_alive(handle->app_handle)) {
 			ret = janus_process_error(request, session_id, transaction_text, JANUS_ERROR_PLUGIN_MESSAGE, "No plugin to handle this message");
 			g_free(jsep_type);
@@ -1658,16 +1890,17 @@ int janus_process_incoming_request(janus_request *request) {
 			goto jsondone;
 		}
 
-		/* Send the message to the plugin (which must eventually free transaction_text and unref the two objects, body and jsep) */
+		/* Send the message to the plugin (which must eventually free transaction_text and unref the two objects, body and jsep)
+		将消息发送到插件（插件最终必须释放transaction_text并取消对body和jsep这两个对象的引用） */
 		json_incref(body);
 		json_t *body_jsep = NULL;
 		if(jsep_sdp_stripped) {
 			body_jsep = json_pack("{ssss}", "type", jsep_type, "sdp", jsep_sdp_stripped);
-			/* Check if simulcasting is enabled */
+			/* Check if simulcasting is enabled 检查是否开启simulcasting */
 			if(janus_flags_is_set(&handle->webrtc_flags, JANUS_ICE_HANDLE_WEBRTC_HAS_VIDEO)) {
 				if(handle->stream && (handle->stream->rid[0] || handle->stream->video_ssrc_peer[1])) {
 					json_t *simulcast = json_object();
-					/* If we have rids, pass those, otherwise pass the SSRCs */
+					/* If we have rids, pass those, otherwise pass the SSRCs 如果我们有RID，则传递这些，否则传递SSRC*/
 					if(handle->stream->rid[0]) {
 						json_t *rids = json_array();
 						if(handle->stream->rid[2])
@@ -1689,10 +1922,10 @@ int janus_process_incoming_request(janus_request *request) {
 					json_object_set_new(body_jsep, "simulcast", simulcast);
 				}
 			}
-			/* Check if this is a renegotiation or update */
+			/* Check if this is a renegotiation or update 检查这是一个重新协商还是更新 */
 			if(renegotiation)
 				json_object_set_new(body_jsep, "update", json_true());
-			/* If media is encrypted end-to-end, the plugin may need to know */
+			/* If media is encrypted end-to-end, the plugin may need to know 如果媒体是端对端加密的，插件可能需要知道 */
 			if(janus_flags_is_set(&handle->webrtc_flags, JANUS_ICE_HANDLE_WEBRTC_E2EE))
 				json_object_set_new(body_jsep, "e2ee", json_true());
 		}
@@ -2991,7 +3224,13 @@ jsondone:
 		janus_refcount_decrease(&session->ref);
 	return ret;
 }
-
+/**
+ * @brief 同步返回处理成功内容
+ * 
+ * @param request 
+ * @param payload 
+ * @return int 
+ */
 int janus_process_success(janus_request *request, json_t *payload)
 {
 	if(!request || !payload)
@@ -4129,11 +4368,11 @@ gint main(int argc, char *argv[])
 	g_print("Compiled on:  %s\n\n", janus_build_git_time);
 
 	struct gengetopt_args_info args_info;
-	/* Let's call our cmdline parser */
+	/* Let's call our cmdline parser 获取终端输入参数 */
 	if(cmdline_parser(argc, argv, &args_info) != 0)
 		exit(1);
 
-	/* Any configuration to open? */
+	/* Any configuration to open? 输入参数中是否有配置文件路径 */
 	if(args_info.config_given) {
 		config_file = g_strdup(args_info.config_arg);
 	}
@@ -4143,11 +4382,13 @@ gint main(int argc, char *argv[])
 		configs_folder = g_strdup(CONFDIR);
 	}
 	if(config_file == NULL) {
+		/*如果没有给配置文件，使用默认的配置文件*/
 		char file[255];
 		g_snprintf(file, 255, "%s/janus.jcfg", configs_folder);
 		config_file = g_strdup(file);
 	}
 	if((config = janus_config_parse(config_file)) == NULL) {
+	    /*如果默认jcfg配置文件解析出错，尝试解析cfg文件*/
 		/* We failed to load the libconfig configuration file, let's try the INI */
 		g_print("Failed to load %s, trying the INI instead...\n", config_file);
 		g_free(config_file);
@@ -4169,7 +4410,7 @@ gint main(int argc, char *argv[])
 			}
 		}
 	}
-	/* Pre-fetch some categories (creates them if they don't exist) */
+	/* Pre-fetch some categories (creates them if they don't exist) 预处理一些种类属性 */
 	janus_config_category *config_general = janus_config_get_create(config, NULL, janus_config_type_category, "general");
 	janus_config_category *config_certs = janus_config_get_create(config, NULL, janus_config_type_category, "certificates");
 	janus_config_category *config_nat = janus_config_get_create(config, NULL, janus_config_type_category, "nat");
@@ -4179,12 +4420,12 @@ gint main(int argc, char *argv[])
 	janus_config_category *config_events = janus_config_get_create(config, NULL, janus_config_type_category, "events");
 	janus_config_category *config_loggers = janus_config_get_create(config, NULL, janus_config_type_category, "loggers");
 
-	/* Any log prefix? */
+	/* Any log prefix? 是否有日志输入器 */
 	janus_config_array *lp = janus_config_get(config, config_general, janus_config_type_item, "log_prefix");
 	if(lp && lp->value)
 		janus_log_global_prefix = g_strdup(lp->value);
 
-	/* Check if there are folders to protect */
+	/* Check if there are folders to protect 是否有文件夹需要保护,防止对该文件夹下的文件进行写入 */
 	janus_config_array *pfs = janus_config_get(config, config_general, janus_config_type_array, "protected_folders");
 	if(pfs && pfs->list) {
 		GList *item = pfs->list;
@@ -4196,44 +4437,51 @@ gint main(int argc, char *argv[])
 		}
 	}
 
-	/* Check if we need to log to console and/or file */
+	/* Check if we need to log to console and/or file 查询我们要日志输出的是控制台还是文件 */
 	gboolean use_stdout = TRUE;
 	if(args_info.disable_stdout_given) {
+		/*如果禁用了控制台输出*/
 		use_stdout = FALSE;
 		janus_config_add(config, config_general, janus_config_item_create("log_to_stdout", "no"));
 	} else if(!args_info.log_stdout_given) {
-		/* Check if the configuration file is saying anything about this */
+		/* Check if the configuration file is saying anything about this 如果启动参数中没有给日志输出配置 则读取配置中log_to_stdout */
 		janus_config_item *item = janus_config_get(config, config_general, janus_config_type_item, "log_to_stdout");
 		if(item && item->value && !janus_is_true(item->value))
 			use_stdout = FALSE;
 	}
 	const char *logfile = NULL;
 	if(args_info.log_file_given) {
+		/*如果启动参数中给了文件输出路径，则屏蔽配置文件中的文件输出路径 */
 		logfile = args_info.log_file_arg;
 		janus_config_add(config, config_general, janus_config_item_create("log_to_file", "no"));
 	} else {
+		/*如果启动参数中没有给文件输出路径，则读取配置文件中的文件输出路径 */
 		/* Check if the configuration file is saying anything about this */
 		janus_config_item *item = janus_config_get(config, config_general, janus_config_type_item, "log_to_file");
 		if(item && item->value)
 			logfile = item->value;
 	}
 
-	/* Check if we're going to daemonize Janus */
+	/* Check if we're going to daemonize Janus 参数中是否使用后台守护线程 */
 	if(args_info.daemon_given) {
+		/*如果启动参数中给了使用后台守护线程，则配置daemonize参数为yes */
 		daemonize = TRUE;
 		janus_config_add(config, config_general, janus_config_item_create("daemonize", "yes"));
 	} else {
+		/*如果启动参数中没有给使用后台守护线程，则读取配置文件中的daemonize参数 */
 		/* Check if the configuration file is saying anything about this */
 		janus_config_item *item = janus_config_get(config, config_general, janus_config_type_item, "daemonize");
 		if(item && item->value && janus_is_true(item->value))
 			daemonize = TRUE;
 	}
-	/* If we're going to daemonize, make sure logging to stdout is disabled and a log file has been specified */
+	/* If we're going to daemonize, make sure logging to stdout is disabled and a log file has been specified
+	如果使用守护线程,而又选择了控制台输出，则把控制台输出屏蔽 */
 	if(daemonize && use_stdout && !args_info.log_stdout_given) {
 		use_stdout = FALSE;
 	}
 	/* Daemonize now, if we need to */
 	if(daemonize) {
+		/*开启守护线程*/
 		g_print("Running Janus as a daemon\n");
 
 		/* Create a pipe for parent<->child communication during the startup phase */
@@ -4242,18 +4490,19 @@ gint main(int argc, char *argv[])
 			exit(1);
 		}
 
-		/* Fork off the parent process */
+		/* Fork off the parent process fork子进程*/
 		pid_t pid = fork();
 		if(pid < 0) {
 			g_print("Fork error!\n");
 			exit(1);
 		}
 		if(pid > 0) {
+			/*父进程操作*/
 			/* Ok, we're the parent: let's wait for the child to tell us everything started fine */
 			close(pipefd[1]);
 			int code = -1;
 			struct pollfd pollfds;
-
+			/*父进程循环等待子进程命令*/
 			while(code < 0) {
 				pollfds.fd = pipefd[0];
 				pollfds.events = POLLIN;
@@ -4272,33 +4521,34 @@ gint main(int argc, char *argv[])
 			if(code < 0)
 				code = 1;
 
-			/* Leave the parent and return the exit code we received from the child */
+			/* Leave the parent and return the exit code we received from the child 收到退出命令，父进程退出*/
 			if(code)
 				g_print("Error launching Janus (error code %d), check the logs for more details\n", code);
 			exit(code);
 		}
+		/*子进程操作*/
 		/* Child here */
 		close(pipefd[0]);
 
-		/* Change the file mode mask */
+		/* Change the file mode mask 修改文件掩码，赋予该进程文件操作的最大权限 */
 		umask(0);
 
-		/* Create a new SID for the child process */
+		/* Create a new SID for the child process 子进程创建新的sid */
 		pid_t sid = setsid();
 		if(sid < 0) {
 			g_print("Error setting SID!\n");
 			exit(1);
 		}
-		/* Change the current working directory */
+		/* Change the current working directory 修改正确的工作目录 */
 		const char *cwd = (args_info.cwd_path_given) ? args_info.cwd_path_arg : "/";
 		if((chdir(cwd)) < 0) {
 			g_print("Error changing the current working directory!\n");
 			exit(1);
 		}
-		/* We close stdin/stdout/stderr when initializing the logger */
+		/* We close stdin/stdout/stderr when initializing the logger 初始化记录器时，我们关闭stdin/stdout/stderr */
 	}
 
-	/* Was a custom instance name provided? */
+	/* Was a custom instance name provided? 是否提供了自定义实例名称 */
 	if(args_info.server_name_given) {
 		janus_config_add(config, config_general, janus_config_item_create("server_name", args_info.server_name_arg));
 	}
@@ -4307,18 +4557,19 @@ gint main(int argc, char *argv[])
 		server_name = g_strdup(item->value);
 	}
 
-	/* Check if we should exit immediately on dlopen or dlsym errors */
+	/* Check if we should exit immediately on dlopen or dlsym errors 检查是否应在出现dlopen或dlsym错误时立即退出 */
 	item = janus_config_get(config, config_general, janus_config_type_item, "exit_on_dl_error");
 	if(item && item->value && janus_is_true(item->value))
 		exit_on_dl_error = TRUE;
 
-	/* Initialize logger */
+	/* Initialize logger 初始化日志 */
 	if(janus_log_init(daemonize, use_stdout, logfile) < 0)
 		exit(1);
-	/* Check if there are external loggers we need to load as well */
+	/* Check if there are external loggers we need to load as well 检查是否有需要加载的外部日志记录器 */
 	const char *path = NULL;
 	DIR *dir = NULL;
-	/* External loggers are usually disabled by default: they need to be enabled in the configuration */
+	/* External loggers are usually disabled by default: they need to be enabled in the configuration 
+	默认情况下，外部日志记录器通常处于禁用状态：需要在配置中启用它们*/
 	gchar **disabled_loggers = NULL;
 	path = LOGGERDIR;
 	item = janus_config_get(config, config_general, janus_config_type_item, "loggers_folder");
@@ -4327,14 +4578,15 @@ gint main(int argc, char *argv[])
 	JANUS_LOG(LOG_INFO, "Logger plugins folder: %s\n", path);
 	dir = opendir(path);
 	if(!dir) {
-		/* Not really fatal, we don't care and go on anyway: loggers are not fundamental */
+		/* Not really fatal, we don't care and go on anyway: loggers are not fundamental 
+		如果日志输出路径打开失败，我们也不在乎，毕竟日志功能不是最重要的 */
 		JANUS_LOG(LOG_WARN, "\tCouldn't access logger plugins folder...\n");
 	} else {
-		/* Any loggers to ignore? */
+		/* Any loggers to ignore? 查询需要我们忽略的日志加载器 */
 		item = janus_config_get(config, config_loggers, janus_config_type_item, "disable");
 		if(item && item->value)
 			disabled_loggers = g_strsplit(item->value, ",", -1);
-		/* Open the shared objects */
+		/* Open the shared objects 打开共享对象 */
 		struct dirent *eventent = NULL;
 		char eventpath[1024];
 		while((eventent = readdir(dir))) {
@@ -4345,12 +4597,13 @@ gint main(int argc, char *argv[])
 			if (strcasecmp(eventent->d_name+len-strlen(SHLIB_EXT), SHLIB_EXT)) {
 				continue;
 			}
-			/* Check if this logger has been disabled in the configuration file */
+			/* Check if this logger has been disabled in the configuration file 检查配置文件中是否已禁用记录器 */
 			if(disabled_loggers != NULL) {
 				gchar *index = disabled_loggers[0];
 				if(index != NULL) {
 					int i=0;
 					gboolean skip = FALSE;
+					/*遍历已禁用的日志记录器，输出*/
 					while(index != NULL) {
 						while(isspace(*index))
 							index++;
@@ -4367,14 +4620,19 @@ gint main(int argc, char *argv[])
 				}
 			}
 			JANUS_LOG(LOG_INFO, "Loading logger plugin '%s'...\n", eventent->d_name);
+			/* 把eventpath后的1024字节置为0 */
 			memset(eventpath, 0, 1024);
+			/*输出没被忽略的日志加载器*/
 			g_snprintf(eventpath, 1024, "%s/%s", path, eventent->d_name);
+			/*使用该日志加载器*/
 			void *event = dlopen(eventpath, RTLD_NOW | RTLD_GLOBAL);
 			if (!event) {
+				/*加载失败*/
 				JANUS_LOG(exit_on_dl_error ? LOG_FATAL : LOG_ERR, "\tCouldn't load logger plugin '%s': %s\n", eventent->d_name, dlerror());
 				if (exit_on_dl_error)
 					exit(1);
 			} else {
+				/* 调用动态链接库create函数 */
 				create_l *create = (create_l*) dlsym(event, "create");
 				const char *dlsym_error = dlerror();
 				if (dlsym_error) {
@@ -4383,12 +4641,13 @@ gint main(int argc, char *argv[])
 						exit(1);
 					continue;
 				}
+				/* 使用动态链接库create函数创建janus_logger*  */
 				janus_logger *janus_logger = create();
 				if(!janus_logger) {
 					JANUS_LOG(LOG_ERR, "\tCouldn't use function 'create'...\n");
 					continue;
 				}
-				/* Are all the mandatory methods and callbacks implemented? */
+				/* Are all the mandatory methods and callbacks implemented? 是否实现了所有强制方法和回调 */
 				if(!janus_logger->init || !janus_logger->destroy ||
 						!janus_logger->get_api_compatibility ||
 						!janus_logger->get_version ||
@@ -4400,19 +4659,23 @@ gint main(int argc, char *argv[])
 					JANUS_LOG(LOG_ERR, "\tMissing some mandatory methods/callbacks, skipping this logger plugin...\n");
 					continue;
 				}
+				/*检查api版本*/
 				if(janus_logger->get_api_compatibility() < JANUS_LOGGER_API_VERSION) {
 					JANUS_LOG(LOG_ERR, "The '%s' logger plugin was compiled against an older version of the API (%d < %d), skipping it: update it to enable it again\n",
 						janus_logger->get_package(), janus_logger->get_api_compatibility(), JANUS_LOGGER_API_VERSION);
 					continue;
 				}
+				/*调用janus_logger初始化方法*/
 				janus_logger->init(server_name ? server_name : JANUS_SERVER_NAME, configs_folder);
 				JANUS_LOG(LOG_VERB, "\tVersion: %d (%s)\n", janus_logger->get_version(), janus_logger->get_version_string());
 				JANUS_LOG(LOG_VERB, "\t   [%s] %s\n", janus_logger->get_package(), janus_logger->get_name());
 				JANUS_LOG(LOG_VERB, "\t   %s\n", janus_logger->get_description());
 				JANUS_LOG(LOG_VERB, "\t   Plugin API version: %d\n", janus_logger->get_api_compatibility());
+				/*把生产好的janus_logger放入到loggers hashTable中 */
 				if(loggers == NULL)
 					loggers = g_hash_table_new(g_str_hash, g_str_equal);
 				g_hash_table_insert(loggers, (gpointer)janus_logger->get_package(), janus_logger);
+				/*把 动态链接库地址 放入到loggers_so hashTable中 */
 				if(loggers_so == NULL)
 					loggers_so = g_hash_table_new(g_str_hash, g_str_equal);
 				g_hash_table_insert(loggers_so, (gpointer)janus_logger->get_package(), event);
@@ -4420,6 +4683,7 @@ gint main(int argc, char *argv[])
 		}
 		closedir(dir);
 	}
+	/*释放loggers数组内存*/
 	if(disabled_loggers != NULL)
 		g_strfreev(disabled_loggers);
 	disabled_loggers = NULL;
@@ -4429,20 +4693,21 @@ gint main(int argc, char *argv[])
 	JANUS_PRINT("  Starting Meetecho Janus (WebRTC Server) v%s\n", janus_version_string);
 	JANUS_PRINT("---------------------------------------------------\n\n");
 
-	/* Handle SIGINT (CTRL-C), SIGTERM (from service managers) */
+	/* Handle SIGINT (CTRL-C), SIGTERM (from service managers) Handle SIGINT（CTRL-C）、SIGTERM（来自服务管理器）*/
 	signal(SIGINT, janus_handle_signal);
 	signal(SIGTERM, janus_handle_signal);
 	atexit(janus_termination_handler);
 
-	/* Setup Glib */
+	/* Setup Glib 如果没有初始化Glib，则进行初始化 */
 #if !GLIB_CHECK_VERSION(2, 36, 0)
 	g_type_init();
 #endif
 
-	/* Logging level: default is info and no timestamps */
+	/* Logging level: default is info and no timestamps  日志级别，默认info且没有时间戳*/
 	janus_log_level = LOG_INFO;
 	janus_log_timestamps = FALSE;
 	janus_log_colors = TRUE;
+	/*把输入的日志级别规范到NONE-MAX中*/
 	if(args_info.debug_level_given) {
 		if(args_info.debug_level_arg < LOG_NONE)
 			args_info.debug_level_arg = 0;
@@ -4451,28 +4716,32 @@ gint main(int argc, char *argv[])
 		janus_log_level = args_info.debug_level_arg;
 	}
 
-	/* Any PID we need to create? */
+	/* Any PID we need to create? 是否需要我们创建PID */
 	const char *pidfile = NULL;
 	if(args_info.pid_file_given) {
+		/*如果给了pid文件地址*/
 		pidfile = args_info.pid_file_arg;
 		janus_config_add(config, config_general, janus_config_item_create("pid_file", pidfile));
 	} else {
 		/* Check if the configuration file is saying anything about this */
+		/*如果没有给pid文件地址，查询配置文件*/
 		item = janus_config_get(config, config_general, janus_config_type_item, "pid_file");
 		if(item && item->value)
 			pidfile = item->value;
 	}
 	if(janus_pidfile_create(pidfile) < 0)
+	    /*创建pid失败退出*/
 		exit(1);
 
-	/* Proceed with the rest of the configuration */
+	/* Proceed with the rest of the configuration 处理剩下的配置 */
 	janus_config_print(config);
+	/*参数中是否给了debug级别*/
 	if(args_info.debug_level_given) {
 		char debug[5];
 		g_snprintf(debug, 5, "%d", args_info.debug_level_arg);
 		janus_config_add(config, config_general, janus_config_item_create("debug_level", debug));
 	} else {
-		/* No command line directive on logging, try the configuration file */
+		/* No command line directive on logging, try the configuration file 命令行没有debug级别参数，尝试读取配置文件*/
 		item = janus_config_get(config, config_general, janus_config_type_item, "debug_level");
 		if(item && item->value) {
 			int temp_level = atoi(item->value);
@@ -4487,7 +4756,7 @@ gint main(int argc, char *argv[])
 			}
 		}
 	}
-	/* Any command line argument that should overwrite the configuration? */
+	/* Any command line argument that should overwrite the configuration? 查看是否还有命令行参数需要覆盖配置文件参数*/
 	JANUS_PRINT("Checking command line arguments...\n");
 	if(args_info.debug_timestamps_given) {
 		janus_config_add(config, config_general, janus_config_item_create("debug_timestamps", "yes"));
@@ -4539,7 +4808,7 @@ gint main(int argc, char *argv[])
 		janus_config_add(config, config_certs, janus_config_item_create("cert_pwd", args_info.cert_pwd_arg));
 	}
 	if(args_info.stun_server_given) {
-		/* Split in server and port (if port missing, use 3478 as default) */
+		/* Split in server and port (if port missing, use 3478 as default) 如果stun服务没有给端口，使用默认3478端口 */
 		char *stunport = strrchr(args_info.stun_server_arg, ':');
 		if(stunport != NULL) {
 			*stunport = '\0';
@@ -4626,14 +4895,14 @@ gint main(int argc, char *argv[])
 		JANUS_PRINT("Lock/mutex debugging is enabled\n");
 	}
 
-	/* First of all, let's check if we're disabling WebRTC encryption for debugging purposes */
+	/* First of all, let's check if we're disabling WebRTC encryption for debugging purposes 首先，让我们检查一下是否出于调试目的禁用了WebRTC加密 */
 	item = janus_config_get(config, config_general, janus_config_type_item, "no_webrtc_encryption");
 	if(item && item->value && janus_is_true(item->value)) {
 		JANUS_LOG(LOG_WARN, "Disabling WebRTC encryption: *THIS IS ONLY ACCEPTABLE WHEN DEBUGGING!*\n");
 		webrtc_encryption = FALSE;
 	}
 
-	/* Any IP/interface to enforce/ignore? */
+	/* Any IP/interface to enforce/ignore? 查看是否有需要忽略或者强制使用的IP interface */
 	item = janus_config_get(config, config_nat, janus_config_type_item, "ice_enforce_list");
 	if(item && item->value) {
 		gchar **list = g_strsplit(item->value, ",", -1);
@@ -4668,12 +4937,13 @@ gint main(int argc, char *argv[])
 		}
 		g_clear_pointer(&list, g_strfreev);
 	}
-	/* What is the local IP? */
+
+	/* What is the local IP? 配置本地ip */
 	JANUS_LOG(LOG_VERB, "Selecting local IP address...\n");
 	item = janus_config_get(config, config_general, janus_config_type_item, "interface");
 	if(item && item->value) {
 		JANUS_LOG(LOG_VERB, "  -- Will try to use %s\n", item->value);
-		/* Verify that the address is valid */
+		/* Verify that the address is valid 检测配置的ip是否有效 */
 		struct ifaddrs *ifas = NULL;
 		janus_network_address iface;
 		janus_network_address_string_buffer ibuf;
@@ -4694,6 +4964,7 @@ gint main(int argc, char *argv[])
 		}
 	}
 	if(local_ip == NULL) {
+		/*如果没有配置本地ip，则使用127.0.0.1 */
 		local_ip = janus_network_detect_local_ip_as_string(janus_network_query_options_any_ip);
 		if(local_ip == NULL) {
 			JANUS_LOG(LOG_WARN, "Couldn't find any address! using 127.0.0.1 as the local IP... (which is NOT going to work out of your machine)\n");
@@ -4702,7 +4973,7 @@ gint main(int argc, char *argv[])
 	}
 	JANUS_LOG(LOG_INFO, "Using %s as local IP...\n", local_ip);
 
-	/* Check if a custom session timeout value was specified */
+	/* Check if a custom session timeout value was specified 检查是否指定了自定义会话超时值 */
 	item = janus_config_get(config, config_general, janus_config_type_item, "session_timeout");
 	if(item && item->value) {
 		int st = atoi(item->value);
@@ -4716,7 +4987,7 @@ gint main(int argc, char *argv[])
 		}
 	}
 
-	/* Check if a custom reclaim session timeout value was specified */
+	/* Check if a custom reclaim session timeout value was specified 检查是否指定了自定义回收会话超时值 */
 	item = janus_config_get(config, config_general, janus_config_type_item, "reclaim_session_timeout");
 	if(item && item->value) {
 		int rst = atoi(item->value);
@@ -4730,7 +5001,7 @@ gint main(int argc, char *argv[])
 		}
 	}
 
-	/* Check if a custom candidates timeout value was specified */
+	/* Check if a custom candidates timeout value was specified 检查是否指定了自定义候选者超时值*/
 	item = janus_config_get(config, config_general, janus_config_type_item, "candidates_timeout");
 	if(item && item->value) {
 		int ct = atoi(item->value);
@@ -4741,19 +5012,19 @@ gint main(int argc, char *argv[])
 		}
 	}
 
-	/* Is there any API secret to consider? */
+	/* Is there any API secret to consider? 是否要考虑api秘钥 */
 	api_secret = NULL;
 	item = janus_config_get(config, config_general, janus_config_type_item, "api_secret");
 	if(item && item->value) {
 		api_secret = g_strdup(item->value);
 	}
-	/* Is there any API secret to consider? */
+	/* Is there any API secret to consider? 是否要考虑admin api秘钥 */
 	admin_api_secret = NULL;
 	item = janus_config_get(config, config_general, janus_config_type_item, "admin_secret");
 	if(item && item->value) {
 		admin_api_secret = g_strdup(item->value);
 	}
-	/* Also check if the token based authentication mechanism needs to be enabled */
+	/* Also check if the token based authentication mechanism needs to be enabled 还要检查是否需要启用基于令牌的身份验证机制 */
 	item = janus_config_get(config, config_general, janus_config_type_item, "token_auth");
 	gboolean auth_enabled = item && item->value && janus_is_true(item->value);
 	item = janus_config_get(config, config_general, janus_config_type_item, "token_auth_secret");
@@ -4762,12 +5033,12 @@ gint main(int argc, char *argv[])
 		auth_secret = item->value;
 	janus_auth_init(auth_enabled, auth_secret);
 
-	/* Check if opaque IDs should be sent back in the Janus API too */
+	/* Check if opaque IDs should be sent back in the Janus API too 检查Janus API中是否也应发送不透明ID */
 	item = janus_config_get(config, config_general, janus_config_type_item, "opaqueid_in_api");
 	if(item && item->value && janus_is_true(item->value))
 		janus_enable_opaqueid_in_api();
 
-	/* Initialize the recorder code */
+	/* Initialize the recorder code 初始化记录器代码*/
 	item = janus_config_get(config, config_general, janus_config_type_item, "recordings_tmp_ext");
 	if(item && item->value) {
 		janus_recorder_init(TRUE, item->value);
@@ -4775,12 +5046,12 @@ gint main(int argc, char *argv[])
 		janus_recorder_init(FALSE, NULL);
 	}
 
-	/* Check if we should hide dependencies in "info" requests */
+	/* Check if we should hide dependencies in "info" requests 检查是否应该在“info”请求中隐藏依赖项*/
 	item = janus_config_get(config, config_general, janus_config_type_item, "hide_dependencies");
 	if(item && item->value && janus_is_true(item->value))
 		hide_dependencies = TRUE;
 
-	/* Setup ICE stuff (e.g., checking if the provided STUN server is correct) */
+	/* Setup ICE stuff (e.g., checking if the provided STUN server is correct) 设置ICE（例如，检查提供的STUN服务器是否正确）*/
 	char *stun_server = NULL, *turn_server = NULL;
 	uint16_t stun_port = 0, turn_port = 0;
 	char *turn_type = NULL, *turn_user = NULL, *turn_pwd = NULL;
@@ -4790,6 +5061,8 @@ gint main(int argc, char *argv[])
 	uint turn_rest_api_timeout = 10;
 #endif
 	uint16_t rtp_min_port = 0, rtp_max_port = 0;
+	/*默认 ice_lite = FALSE, ice_tcp = FALSE, full_trickle = FALSE, ipv6 = FALSE,
+		ipv6_linklocal = FALSE, ignore_mdns = FALSE, ignore_unreachable_ice_server = FALSE */
 	gboolean ice_lite = FALSE, ice_tcp = FALSE, full_trickle = FALSE, ipv6 = FALSE,
 		ipv6_linklocal = FALSE, ignore_mdns = FALSE, ignore_unreachable_ice_server = FALSE;
 	item = janus_config_get(config, config_media, janus_config_type_item, "ipv6");
@@ -4798,6 +5071,7 @@ gint main(int argc, char *argv[])
 		item = janus_config_get(config, config_media, janus_config_type_item, "ipv6_linklocal");
 		ipv6_linklocal = (item && item->value) ? janus_is_true(item->value) : FALSE;
 	}
+	/*获取rtp端口传输范围*/
 	item = janus_config_get(config, config_media, janus_config_type_item, "rtp_port_range");
 	if(item && item->value) {
 		/* Split in min and max port */
@@ -4821,19 +5095,30 @@ gint main(int argc, char *argv[])
 			rtp_max_port = 65535;
 		JANUS_LOG(LOG_INFO, "RTP port range: %u -- %u\n", rtp_min_port, rtp_max_port);
 	}
-	/* Check if we need to enable the ICE Lite mode */
+	/*
+     *	STUN的全称是Simple Traversal of UDP Through NAT，即UDP对NAT的简单穿越方式。应用程序（即STUN CLIENT）向NAT外的STUN SERVER通过UDP发送请求STUN 消息询问自身的转换后地址。
+     *
+     * 根据了解到的地址，发送给对端，然后对端请求这个地址，进行通讯。
+     *
+     * 在实际场景中有两种形式：
+     * 
+     * 1.内网机器A访问stun服务器C，通过C获知自己的对外通信的ip和port，然后通过信令服务器告知机器B。B通过ip和port与A进行通信。
+     *
+     * 2.内网机器A访问stun服务器C，直接和C进行通信。（这个就是ice中的lite模式，也是webrtc中的prflx模式）
+	 */
+	/* Check if we need to enable the ICE Lite mode 检查是否需要启用ICE Lite模式 */
 	item = janus_config_get(config, config_nat, janus_config_type_item, "ice_lite");
 	ice_lite = (item && item->value) ? janus_is_true(item->value) : FALSE;
-	/* Check if we need to enable ICE-TCP support (warning: still broken, for debugging only) */
+	/* Check if we need to enable ICE-TCP support (warning: still broken, for debugging only) 检查是否需要启用ICE-TCP支持（仍处于中断状态，仅用于调试）*/
 	item = janus_config_get(config, config_nat, janus_config_type_item, "ice_tcp");
 	ice_tcp = (item && item->value) ? janus_is_true(item->value) : FALSE;
-	/* Check if we need to do full-trickle instead of half-trickle */
+	/* Check if we need to do full-trickle instead of half-trickle 检测是否需要full-trickle */
 	item = janus_config_get(config, config_nat, janus_config_type_item, "full_trickle");
 	full_trickle = (item && item->value) ? janus_is_true(item->value) : FALSE;
-	/* Check if we should exit if a STUN or TURN server is unreachable */
+	/* Check if we should exit if a STUN or TURN server is unreachable 是否需要退出 当stun或者turn服务不可用的时候 */
 	item = janus_config_get(config, config_nat, janus_config_type_item, "ignore_unreachable_ice_server");
 	ignore_unreachable_ice_server = (item && item->value) ? janus_is_true(item->value) : FALSE;
-	/* Any STUN server to use in Janus? */
+	/* Any STUN server to use in Janus? janus是否使用stun_server*/
 	item = janus_config_get(config, config_nat, janus_config_type_item, "stun_server");
 	if(item && item->value)
 		stun_server = (char *)item->value;
@@ -4842,10 +5127,10 @@ gint main(int argc, char *argv[])
 		JANUS_LOG(LOG_WARN, "Invalid STUN port: %s (disabling STUN)\n", item->value);
 		stun_server = NULL;
 	}
-	/* Check if we should drop mDNS candidates */
+	/* Check if we should drop mDNS candidates 检查是否应该放弃MDN候选者 */
 	item = janus_config_get(config, config_nat, janus_config_type_item, "ignore_mdns");
 	ignore_mdns = (item && item->value) ? janus_is_true(item->value) : FALSE;
-	/* Any 1:1 NAT mapping to take into account? */
+	/* Any 1:1 NAT mapping to take into account? 是否要考虑的任何1:1 NAT映射*/
 	item = janus_config_get(config, config_nat, janus_config_type_item, "nat_1_1_mapping");
 	if(item && item->value) {
 		JANUS_LOG(LOG_INFO, "Using nat_1_1_mapping for public IP: %s\n", item->value);
@@ -4867,7 +5152,7 @@ gint main(int argc, char *argv[])
 		}
 		g_strfreev(list);
 		if(janus_get_public_ip_count() > 0) {
-			/* Check if we should replace the private host, or advertise both candidates */
+			/* Check if we should replace the private host, or advertise both candidates 检查我们是否应该更换私有主机，或者同时公布两个候选主机*/
 			gboolean keep_private_host = FALSE;
 			item = janus_config_get(config, config_nat, janus_config_type_item, "keep_private_host");
 			if(item && item->value && janus_is_true(item->value)) {
@@ -4877,7 +5162,7 @@ gint main(int argc, char *argv[])
 			janus_ice_enable_nat_1_1(keep_private_host);
 		}
 	}
-	/* Any TURN server to use in Janus? */
+	/* Any TURN server to use in Janus? janus是否使用turn服务 */
 	item = janus_config_get(config, config_nat, janus_config_type_item, "turn_server");
 	if(item && item->value)
 		turn_server = (char *)item->value;
@@ -4895,7 +5180,7 @@ gint main(int argc, char *argv[])
 	item = janus_config_get(config, config_nat, janus_config_type_item, "turn_pwd");
 	if(item && item->value)
 		turn_pwd = (char *)item->value;
-	/* Check if there's any TURN REST API backend to use */
+	/* Check if there's any TURN REST API backend to use 检查REST API后端是否可以使用 */
 	item = janus_config_get(config, config_nat, janus_config_type_item, "turn_rest_api");
 	if(item && item->value)
 		turn_rest_api = (char *)item->value;
@@ -4921,18 +5206,20 @@ gint main(int argc, char *argv[])
 		JANUS_LOG(LOG_WARN, "Note: applications/users will be allowed to force Janus to use TURN. Make sure you know what you're doing!\n");
 		janus_ice_allow_force_relay();
 	}
-	/* Do we need a limited number of static event loops, or is it ok to have one per handle (the default)? */
+	/* Do we need a limited number of static event loops, or is it ok to have one per handle (the default)?
+	我们是否需要限制静态事件循环数量？即开启线程池？ */
 	item = janus_config_get(config, config_general, janus_config_type_item, "event_loops");
 	if(item && item->value) {
 		int loops = atoi(item->value);
-		/* Check if we should allow API calls to specify which loops to use for new handles */
+		/* Check if we should allow API calls to specify which loops to use for new handles 
+		检查是否应允许API调用指定新handles使用的循环*/
 		gboolean loops_api = FALSE;
 		item = janus_config_get(config, config_general, janus_config_type_item, "allow_loop_indication");
 		if(item && item->value)
 			loops_api = janus_is_true(item->value);
 		janus_ice_set_static_event_loops(loops, loops_api);
 	}
-	/* Initialize the ICE stack now */
+	/* Initialize the ICE stack now 初始化ICE栈 */
 	janus_ice_init(ice_lite, ice_tcp, full_trickle, ignore_mdns, ipv6, ipv6_linklocal, rtp_min_port, rtp_max_port);
 	if(janus_ice_set_stun_server(stun_server, stun_port) < 0) {
 		if(!ignore_unreachable_ice_server) {
@@ -4973,17 +5260,19 @@ gint main(int argc, char *argv[])
 #endif
 	item = janus_config_get(config, config_nat, janus_config_type_item, "nice_debug");
 	if(item && item->value && janus_is_true(item->value)) {
-		/* Enable libnice debugging */
+		/* Enable libnice debugging 启用libnice调试 */
 		janus_ice_debugging_enable();
 	}
 	if(stun_server == NULL && turn_server == NULL) {
-		/* No STUN and TURN server provided for Janus: make sure it isn't on a private address */
+		/* No STUN and TURN server provided for Janus: make sure it isn't on a private address 
+		没有为Janus提供STUN和TURN服务器：确保Janus不在私人地址上 */
 		int num_ips = janus_get_public_ip_count();
 		if(num_ips == 0) {
-			/* If nat_1_1_mapping is off, the first (and only) public IP is the local_ip */
+			/* If nat_1_1_mapping is off, the first (and only) public IP is the local_ip
+			如果nat_1_1_映射处于关闭状态，则第一个（也是唯一一个）公共IP是本地_IP */
 			num_ips++;
 		}
-		/* Check each public IP */
+		/* Check each public IP 检查每一个公共ip */
 		int i = 0;
 		for(i = 0; i < num_ips; i++) {
 			gboolean private_address = FALSE;
@@ -4996,13 +5285,13 @@ gint main(int argc, char *argv[])
 					unsigned short int ip[4];
 					sscanf(test_ip, "%hu.%hu.%hu.%hu", &ip[0], &ip[1], &ip[2], &ip[3]);
 					if(ip[0] == 10) {
-						/* Class A private address */
+						/* Class A private address 一类私有地址 */
 						private_address = TRUE;
 					} else if(ip[0] == 172 && (ip[1] >= 16 && ip[1] <= 31)) {
-						/* Class B private address */
+						/* Class B private address 二类私有地址 */
 						private_address = TRUE;
 					} else if(ip[0] == 192 && ip[1] == 168) {
-						/* Class C private address */
+						/* Class C private address 三类私有地址 */
 						private_address = TRUE;
 					}
 				} else {
@@ -5016,9 +5305,9 @@ gint main(int argc, char *argv[])
 		}
 	}
 
-	/* Is there any DSCP TOS to apply? */
+	/* Is there any DSCP TOS to apply? 是否有适用的DSCP TOS*/
 	item = janus_config_get(config, config_media, janus_config_type_item, "dscp");
-	if(!item || !item->value)	/* Just for backwards compatibility */
+	if(!item || !item->value)	/* Just for backwards compatibility 只是为了向后兼容 */
 		item = janus_config_get(config, config_media, janus_config_type_item, "dscp_tos");
 	if(item && item->value) {
 		int dscp = atoi(item->value);
@@ -5029,7 +5318,7 @@ gint main(int argc, char *argv[])
 		}
 	}
 
-	/* NACK related stuff */
+	/* NACK related stuff NACK相关材料 */
 	item = janus_config_get(config, config_media, janus_config_type_item, "min_nack_queue");
 	if(item && item->value) {
 		int mnq = atoi(item->value);
@@ -5102,12 +5391,12 @@ gint main(int argc, char *argv[])
 	SSL_library_init();
 	SSL_load_error_strings();
 	OpenSSL_add_all_algorithms();
-	/* Check if random pool looks ok (this does not give any guarantees for later, though) */
+	/* Check if random pool looks ok (this does not give any guarantees for later, though) 检查随机池是否正常（但这并不能保证以后可以使用）*/
 	if(RAND_status() != 1) {
 		JANUS_LOG(LOG_FATAL, "Random pool is not properly seeded, cannot generate random numbers\n");
 		exit(1);
 	}
-	/* ... and DTLS-SRTP in particular */
+	/* ... and DTLS-SRTP in particular  */
 	const char *dtls_ciphers = NULL;
 	item = janus_config_get(config, config_certs, janus_config_type_item, "dtls_ciphers");
 	if(item && item->value)
@@ -5129,7 +5418,8 @@ gint main(int argc, char *argv[])
 	if(janus_dtls_srtp_init(server_pem, server_key, password, dtls_ciphers, dtls_timeout, rsa_private_key, dtls_accept_selfsigned) < 0) {
 		exit(1);
 	}
-	/* Check if there's any custom value for the starting MTU to use in the BIO filter */
+	/* Check if there's any custom value for the starting MTU to use in the BIO filter
+	 检查是否有任何自定义值供启动MTU在阻塞IO过滤器中使用*/
 	item = janus_config_get(config, config_media, janus_config_type_item, "dtls_mtu");
 	if(item && item->value)
 		janus_dtls_bio_agent_set_mtu(atoi(item->value));
@@ -5143,10 +5433,10 @@ gint main(int argc, char *argv[])
 	JANUS_LOG(LOG_WARN, "Data Channels support not compiled\n");
 #endif
 
-	/* Sessions */
+	/* Sessions 初始化session hashTable */
 	sessions = g_hash_table_new_full(g_int64_hash, g_int64_equal, (GDestroyNotify)g_free, NULL);
 	janus_mutex_init(&sessions_mutex);
-	/* Start the sessions timeout watchdog */
+	/* Start the sessions timeout watchdog 开启session过期看门狗线程*/
 	sessions_watchdog_context = g_main_context_new();
 	GMainLoop *watchdog_loop = g_main_loop_new(sessions_watchdog_context, FALSE);
 	GError *error = NULL;
@@ -5157,7 +5447,7 @@ gint main(int argc, char *argv[])
 		g_error_free(error);
 		exit(1);
 	}
-	/* Start the thread that will dispatch incoming requests */
+	/* Start the thread that will dispatch incoming requests 开启线程处理进来的请求*/
 	requests = g_async_queue_new_full((GDestroyNotify)janus_request_destroy);
 	GThread *requests_thread = g_thread_try_new("sessions requests", &janus_transport_requests, NULL, &error);
 	if(error != NULL) {
@@ -5166,7 +5456,8 @@ gint main(int argc, char *argv[])
 		g_error_free(error);
 		exit(1);
 	}
-	/* Create a thread pool to handle asynchronous requests, no matter what the transport */
+	/* Create a thread pool to handle asynchronous requests, no matter what the transport 
+	开启线程池去处理异步请求，不区分传输类型*/
 	error = NULL;
 	tasks = g_thread_pool_new(janus_transport_task, NULL, -1, FALSE, &error);
 	if(error != NULL) {
@@ -5176,13 +5467,15 @@ gint main(int argc, char *argv[])
 		g_error_free(error);
 		exit(1);
 	}
-	/* Wait 120 seconds before stopping idle threads to avoid the creation of too many threads for AddressSanitizer. */
+	/* Wait 120 seconds before stopping idle threads to avoid the creation of too many threads for AddressSanitizer. 
+	在停止空闲线程之前等待120秒，以避免为AddressSanitizer创建过多线程。*/
 	g_thread_pool_set_max_idle_time(120 * 1000);
 
-	/* Load event handlers */
+	/* Load event handlers 开启事件处理 */
 	path = NULL;
 	dir = NULL;
-	/* Event handlers are disabled by default, though: they need to be enabled in the configuration */
+	/* Event handlers are disabled by default, though: they need to be enabled in the configuration 
+	事件处理默认是处于关闭状态的，因此，它需要在配置文件中开启enable*/
 	item = janus_config_get(config, config_events, janus_config_type_item, "broadcast");
 	gboolean enable_events = FALSE;
 	if(item && item->value)
@@ -5198,12 +5491,15 @@ gint main(int argc, char *argv[])
 		JANUS_LOG(LOG_INFO, "Event handler plugins folder: %s\n", path);
 		dir = opendir(path);
 		if(!dir) {
-			/* Not really fatal, we don't care and go on anyway: event handlers are not fundamental */
+			/* Not really fatal, we don't care and go on anyway: event handlers are not fundamental 
+			这并不是致命的，我们不在乎，无论如何都要继续：事件处理程序不是基本的
+			*/
 			JANUS_LOG(LOG_WARN, "\tCouldn't access event handler plugins folder...\n");
 		} else {
 			item = janus_config_get(config, config_events, janus_config_type_item, "stats_period");
 			if(item && item->value) {
-				/* Check if we need to use a larger period for pushing statistics to event handlers */
+				/* Check if we need to use a larger period for pushing statistics to event handlers
+				检查是否需要使用更长的时间将统计信息推送到事件处理程序 */
 				int period = atoi(item->value);
 				if(period < 0) {
 					JANUS_LOG(LOG_WARN, "Invalid event handlers statistics period, using default value (1 second)\n");
@@ -5222,7 +5518,7 @@ gint main(int argc, char *argv[])
 				if(combine)
 					JANUS_LOG(LOG_INFO, "Event handler configured to send media stats combined in a single event\n");
 			}
-			/* Any event handlers to ignore? */
+			/* Any event handlers to ignore? 是否有需要忽略的事件处理器*/
 			item = janus_config_get(config, config_events, janus_config_type_item, "disable");
 			if(item && item->value)
 				disabled_eventhandlers = g_strsplit(item->value, ",", -1);
@@ -5335,14 +5631,14 @@ gint main(int argc, char *argv[])
 		if(disabled_eventhandlers != NULL)
 			g_strfreev(disabled_eventhandlers);
 		disabled_eventhandlers = NULL;
-		/* Initialize the event broadcaster */
+		/* Initialize the event broadcaster 初始化事件广播器 */
 		if(janus_events_init(enable_events, (server_name ? server_name : (char *)JANUS_SERVER_NAME), eventhandlers) < 0) {
 			JANUS_LOG(LOG_FATAL, "Error initializing the Event handlers mechanism...\n");
 			exit(1);
 		}
 	}
 
-	/* Load plugins */
+	/* Load plugins 加载插件*/
 	path = PLUGINDIR;
 	item = janus_config_get(config, config_general, janus_config_type_item, "plugins_folder");
 	if(item && item->value)
@@ -5353,7 +5649,7 @@ gint main(int argc, char *argv[])
 		JANUS_LOG(LOG_FATAL, "\tCouldn't access plugins folder...\n");
 		exit(1);
 	}
-	/* Any plugin to ignore? */
+	/* Any plugin to ignore? 是否插件需要忽略 */
 	gchar **disabled_plugins = NULL;
 	item = janus_config_get(config, config_plugins, janus_config_type_item, "disable");
 	if(item && item->value)
@@ -5464,7 +5760,7 @@ gint main(int argc, char *argv[])
 		g_strfreev(disabled_plugins);
 	disabled_plugins = NULL;
 
-	/* Load transports */
+	/* Load transports 加载传输器 */
 	gboolean janus_api_enabled = FALSE, admin_api_enabled = FALSE;
 	path = TRANSPORTDIR;
 	item = janus_config_get(config, config_general, janus_config_type_item, "transports_folder");
@@ -5476,7 +5772,7 @@ gint main(int argc, char *argv[])
 		JANUS_LOG(LOG_FATAL, "\tCouldn't access transport plugins folder...\n");
 		exit(1);
 	}
-	/* Any transport to ignore? */
+	/* Any transport to ignore? 是否有传输器需要忽略 */
 	gchar **disabled_transports = NULL;
 	item = janus_config_get(config, config_transports, janus_config_type_item, "disable");
 	if(item && item->value)
@@ -5582,18 +5878,21 @@ gint main(int argc, char *argv[])
 	if(disabled_transports != NULL)
 		g_strfreev(disabled_transports);
 	disabled_transports = NULL;
-	/* Make sure at least a Janus API transport is available */
+	/* Make sure at least a Janus API transport is available 确保最少有一个Janus Api 传输方式可用*/
 	if(!janus_api_enabled) {
 		JANUS_LOG(LOG_FATAL, "No Janus API transport is available... enable at least one and restart Janus\n");
 		exit(1);	/* FIXME Should we really give up? */
 	}
-	/* Make sure at least an admin API transport is available, if the auth mechanism is enabled */
+	/* Make sure at least an admin API transport is available, if the auth mechanism is enabled 
+	如果启用了身份验证机制，确保最少有一个Admin API 传输方式可用
+	*/
 	if(!admin_api_enabled && janus_auth_is_stored_mode()) {
 		JANUS_LOG(LOG_FATAL, "No Admin/monitor transport is available, but the stored token based authentication mechanism is enabled... this will cause all requests to fail, giving up! If you want to use tokens, enable the Admin/monitor API or set the token auth secret.\n");
 		exit(1);	/* FIXME Should we really give up? */
 	}
 
-	/* Make sure libnice is recent enough, otherwise print a warning */
+	/* Make sure libnice is recent enough, otherwise print a warning 
+	确保libnice足够新，否则打印警告*/
 	int libnice_version = 0;
 	if(libnice_version_string != NULL && sscanf(libnice_version_string, "%*d.%*d.%d", &libnice_version) == 1) {
 		if(libnice_version < 16) {
@@ -5602,7 +5901,8 @@ gint main(int argc, char *argv[])
 		}
 	}
 
-	/* Ok, Janus has started! Let the parent now about this if we're daemonizing */
+	/* Ok, Janus has started! Let the parent now about this if we're daemonizing 
+	好的，Janus已经启动完毕，如果开启后台程序，这时候可以让父进程可以退出了 */
 	if(daemonize) {
 		int code = 0;
 		ssize_t res = 0;
@@ -5611,7 +5911,8 @@ gint main(int argc, char *argv[])
 		} while(res == -1 && errno == EINTR);
 	}
 
-	/* If the Event Handlers mechanism is enabled, notify handlers that Janus just started */
+	/* If the Event Handlers mechanism is enabled, notify handlers that Janus just started 
+	如果启用了事件处理程序机制，则通知处理程序Janus刚刚启动*/
 	if(janus_events_is_enabled()) {
 		json_t *info = json_object();
 		json_object_set_new(info, "status", json_string("started"));
@@ -5619,11 +5920,12 @@ gint main(int argc, char *argv[])
 		janus_events_notify_handlers(JANUS_EVENT_TYPE_CORE, JANUS_EVENT_SUBTYPE_CORE_STARTUP, 0, info);
 	}
 
-	/* Loop until we have to stop */
+	/* Loop until we have to stop 循环直至程序停止 */
 	mainloop = g_main_loop_new (NULL, TRUE);
 	g_main_loop_run(mainloop);
 
-	/* If the Event Handlers mechanism is enabled, notify handlers that Janus is hanging up */
+	/* If the Event Handlers mechanism is enabled, notify handlers that Janus is hanging up
+	如果启用了事件处理程序机制，则通知处理程序Janus正在挂断 */
 	if(janus_events_is_enabled()) {
 		json_t *info = json_object();
 		json_object_set_new(info, "status", json_string("shutdown"));
@@ -5631,7 +5933,7 @@ gint main(int argc, char *argv[])
 		janus_events_notify_handlers(JANUS_EVENT_TYPE_CORE, JANUS_EVENT_SUBTYPE_CORE_SHUTDOWN, 0, info);
 	}
 
-	/* Done */
+	/* Done 结束 */
 	JANUS_LOG(LOG_INFO, "Ending sessions timeout watchdog...\n");
 	g_main_loop_quit(watchdog_loop);
 	g_thread_join(watchdog);
@@ -5652,7 +5954,7 @@ gint main(int argc, char *argv[])
 		g_hash_table_foreach(transports_so, janus_transportso_close, NULL);
 		g_hash_table_destroy(transports_so);
 	}
-	/* Get rid of requests tasks and thread too */
+	/* Get rid of requests tasks and thread too 释放请求主线程和任务线程池*/
 	g_thread_pool_free(tasks, FALSE, FALSE);
 	JANUS_LOG(LOG_INFO, "Ending requests thread...\n");
 	g_async_queue_push(requests, &exit_message);

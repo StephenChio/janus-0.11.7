@@ -677,7 +677,7 @@ typedef struct janus_sdp_mdns_candidate {
 	GCancellable *cancellable;
 } janus_sdp_mdns_candidate;
 static void janus_sdp_mdns_resolved(GObject *source_object, GAsyncResult *res, gpointer user_data) {
-	/* This callback is invoked when the address is resolved */
+	/* This callback is invoked when the address is resolved 解析地址时调用此回调 */
 	janus_sdp_mdns_candidate *mc = (janus_sdp_mdns_candidate *)user_data;
 	GResolver *resolver = g_resolver_get_default();
 	GError *error = NULL;
@@ -716,6 +716,14 @@ static void janus_sdp_mdns_resolved(GObject *source_object, GAsyncResult *res, g
 	g_free(mc);
 }
 
+/**
+ * @brief 解析candidate到handle->stream
+ * 
+ * @param ice_stream 
+ * @param candidate 
+ * @param trickle 
+ * @return int 
+ */
 int janus_sdp_parse_candidate(void *ice_stream, const char *candidate, int trickle) {
 	if(ice_stream == NULL || candidate == NULL)
 		return -1;
@@ -725,19 +733,21 @@ int janus_sdp_parse_candidate(void *ice_stream, const char *candidate, int trick
 		return -2;
 	janus_ice_component *component = NULL;
 	if(strlen(candidate) == 0 || strstr(candidate, "end-of-candidates")) {
+		/*如果candidate长度为0或者candidate包含end-of-candidates*/
 		/* FIXME Should we do something with this? */
 		JANUS_LOG(LOG_VERB, "[%"SCNu64"] end-of-candidates received\n", handle->handle_id);
 		return 0;
 	}
+	/*"candidate": "candidate:3 1 UDP 92217087 52.83.116.127 64339 typ relay raddr 52.83.116.127 rport 64339"*/
 	if(strstr(candidate, "candidate:") == candidate) {
 		/* Skipping the 'candidate:' prefix Firefox puts in trickle candidates */
+		/*忽略candidate:前缀*/
 		candidate += strlen("candidate:");
 	}
 	char rfoundation[33], rtransport[4], rip[50], rtype[6], rrelip[40];
 	guint32 rcomponent, rpriority, rport, rrelport;
 	int res = sscanf(candidate, "%32s %30u %3s %30u %49s %30u typ %5s %*s %39s %*s %30u",
-		rfoundation, &rcomponent, rtransport, &rpriority,
-			rip, &rport, rtype, rrelip, &rrelport);
+		                    rfoundation, &rcomponent, rtransport, &rpriority,rip, &rport, rtype, rrelip, &rrelport);
 	if(res < 7) {
 		/* Failed to parse this address, can it be IPv6? */
 		if(!janus_ice_is_ipv6_enabled()) {
@@ -747,14 +757,16 @@ int janus_sdp_parse_candidate(void *ice_stream, const char *candidate, int trick
 	}
 	if(res >= 7) {
 		if(strstr(rip, ".local")) {
-			/* The IP is actually an mDNS address, try to resolve it
+			/* The IP is actually an mDNS address, try to resolve it IP实际上是一个mDNS地址，请尝试解决它
 			 * https://tools.ietf.org/html/draft-ietf-rtcweb-mdns-ice-candidates-04 */
 			if(!janus_ice_is_mdns_enabled()) {
-				/* ...unless mDNS resolution is disabled, in which case ignore this candidate */
+				/* ...unless mDNS resolution is disabled, in which case ignore this candidate 
+				除非禁用mDNS解析，否则在这种情况下，忽略此candidate */
 				JANUS_LOG(LOG_VERB, "[%"SCNu64"] mDNS candidate ignored\n", handle->handle_id);
 				return 0;
 			}
-			/* We'll resolve this address asynchronously, in order not to keep this thread busy */
+			/* We'll resolve this address asynchronously, in order not to keep this thread busy 
+			我们将异步解析此地址，以避免此线程繁忙*/
 			JANUS_LOG(LOG_VERB, "[%"SCNu64"] Resolving mDNS address (%s) asynchronously\n",
 				handle->handle_id, rip);
 			janus_sdp_mdns_candidate *mc = g_malloc(sizeof(janus_sdp_mdns_candidate));
@@ -769,7 +781,7 @@ int janus_sdp_parse_candidate(void *ice_stream, const char *candidate, int trick
 			g_object_unref(resolver);
 			return 0;
 		}
-		/* Add remote candidate */
+		/* Add remote candidate 添加candidate */
 		component = stream->component;
 		if(component == NULL || rcomponent > 1) {
 			JANUS_LOG(LOG_VERB, "[%"SCNu64"]   -- Skipping component %d in stream %d (rtcp-muxing)\n", handle->handle_id, rcomponent, stream->stream_id);
@@ -784,6 +796,39 @@ int janus_sdp_parse_candidate(void *ice_stream, const char *candidate, int trick
 			component->component_id = rcomponent;
 			component->stream_id = stream->stream_id;
 			NiceCandidate *c = NULL;
+			/**
+			 * Host Candidate:  A candidate obtained by binding to a specific port
+               from an IP address on the host.  This includes IP addresses on
+               physical interfaces and logical ones, such as ones obtained
+               through Virtual Private Networks (VPNs) and Realm Specific IP
+               (RSIP) [RFC3102] (which lives at the operating system level).
+ 
+               这个地址来源于本地的物理网卡或逻辑网卡上的地址，对于具有公网地址或者同一内网的端可以用
+ 
+               Server Reflexive Candidate:  A candidate whose IP address and port
+               are a binding allocated by a NAT for an agent when it sent a
+               packet through the NAT to a server.  Server reflexive candidates
+               can be learned by STUN servers using the Binding request, or TURN
+               servers, which provides both a relayed and server reflexive
+               candidate.
+ 
+               这个地址是端发送 Binding 请求到 STUN/TURN server 经过 NAT 时，NAT 上分配的地址和端口
+ 
+               Peer Reflexive Candidate:  A candidate whose IP address and port are
+               a binding allocated by a NAT for an agent when it sent a STUN
+               Binding request through the NAT to its peer.
+ 
+               这个地址是端发送 Binding 请求到对等端经过 NAT 时，NAT 上分配的地址和端口 
+                PeerA           PeerB
+               ( Full Cone <---> [Restricted Cone, Port Restricted Cone, Symmetric] )
+               如果对方是 Full Cone 类型，对方就可以提供 prflx 类型的 candidate 了，个人理解，仅供参考。
+               Relayed Candidate:  A candidate obtained by sending a TURN Allocate
+               request from a host candidate to a TURN server.  The relayed
+               candidate is resident on the TURN server, and the TURN server
+               relays packets back towards the agent.
+               这个地址是端发送 Allocate 请求到 TURN server ，由 TURN server 用于中继的地址和端口（这个可能是本机或 NAT 地址）
+			 * 
+			 */
 			if(!strcasecmp(rtype, "host")) {
 				JANUS_LOG(LOG_VERB, "[%"SCNu64"]  Adding remote candidate component:%d stream:%d type:host %s:%d\n",
 					handle->handle_id, rcomponent, stream->stream_id, rip, rport);
@@ -896,9 +941,9 @@ int janus_sdp_parse_candidate(void *ice_stream, const char *candidate, int trick
 				component->candidates = g_slist_append(component->candidates, c);
 				JANUS_LOG(LOG_HUGE, "[%"SCNu64"]    Candidate added to the list! (%u elements for %d/%d)\n", handle->handle_id,
 					g_slist_length(component->candidates), stream->stream_id, component->component_id);
-				/* Save for the summary, in case we need it */
+				/* Save for the summary, in case we need it 保存一些资料，以防我们需要*/
 				component->remote_candidates = g_slist_append(component->remote_candidates, g_strdup(candidate));
-				/* Notify event handlers */
+				/* Notify event handlers 通知事件处理器 */
 				if(janus_events_is_enabled()) {
 					janus_session *session = (janus_session *)handle->session;
 					json_t *info = json_object();
@@ -908,20 +953,27 @@ int janus_sdp_parse_candidate(void *ice_stream, const char *candidate, int trick
 					janus_events_notify_handlers(JANUS_EVENT_TYPE_WEBRTC, JANUS_EVENT_SUBTYPE_WEBRTC_RCAND,
 						session->session_id, handle->handle_id, handle->opaque_id, info);
 				}
-				/* See if we need to process this */
+				/* See if we need to process this 看看我们是否需要处理这个*/
 				if(trickle) {
 					if(janus_flags_is_set(&handle->webrtc_flags, JANUS_ICE_HANDLE_WEBRTC_START)) {
-						/* This is a trickle candidate and ICE has started, we should process it right away */
+						/* This is a trickle candidate and ICE has started, we should process it right away 
+						这是一个trickle candidate而且ICE协商已经开始，我们应该马上处理它
+						*/
 						if(!component->process_started) {
-							/* Actually, ICE has JUST started for this component, take care of the candidates we've added so far */
+							/* Actually, ICE has JUST started for this component, take care of the candidates we've added so far 
+							实际上，这个组件的ICE刚刚开始，请注意我们目前添加的候选者
+							*/
 							JANUS_LOG(LOG_VERB, "[%"SCNu64"] ICE already started for this component, setting candidates we have up to now\n", handle->handle_id);
 							janus_ice_setup_remote_candidates(handle, component->stream_id, component->component_id);
 						} else {
-							/* Queue the candidate, we'll process it in the loop */
+							/* Queue the candidate, we'll process it in the loop 
+							将candidate入队，我们将在循环中处理它*/
 							janus_ice_add_remote_candidate(handle, c);
 						}
 					} else {
-						/* ICE hasn't started yet: to make sure we're not stuck, also check if we stopped processing the SDP */
+						/* ICE hasn't started yet: to make sure we're not stuck, also check if we stopped processing the SDP
+						   ICE协商尚未开始，确认我们没有被阻塞和我们没有停止处理SDP
+						 */
 						if(!janus_flags_is_set(&handle->webrtc_flags, JANUS_ICE_HANDLE_WEBRTC_PROCESSING_OFFER)) {
 							janus_flags_set(&handle->webrtc_flags, JANUS_ICE_HANDLE_WEBRTC_START);
 							/* This is a trickle candidate and ICE has started, we should process it right away */
@@ -934,7 +986,9 @@ int janus_sdp_parse_candidate(void *ice_stream, const char *candidate, int trick
 								janus_ice_add_remote_candidate(handle, c);
 							}
 						} else {
-							/* Still processing the offer/answer: queue the trickle candidate for now, we'll process it later */
+							/* Still processing the offer/answer: queue the trickle candidate for now, we'll process it later 
+							目前还在处理offer/answer，入队candidate我们会稍后处理
+							*/
 							JANUS_LOG(LOG_VERB, "[%"SCNu64"] Queueing trickle candidate, status is not START yet\n", handle->handle_id);
 						}
 					}
