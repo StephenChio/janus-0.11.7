@@ -1934,14 +1934,15 @@ int janus_process_incoming_request(janus_request *request) {
 		g_free(jsep_type);
 		g_free(jsep_sdp_stripped);
 		if(result == NULL) {
-			/* Something went horribly wrong! */
+			/* Something went horribly wrong! 如果发生了一些可怕的错误 */
 			ret = janus_process_error(request, session_id, transaction_text, JANUS_ERROR_PLUGIN_MESSAGE, "Plugin didn't give a result");
 			goto jsondone;
 		}
 		if(result->type == JANUS_PLUGIN_OK) {
-			/* The plugin gave a result already (synchronous request/response) */
+			/* The plugin gave a result already (synchronous request/response)
+			如果该插件返回了同步结果 */
 			if(result->content == NULL || !json_is_object(result->content)) {
-				/* Missing content, or not a JSON object */
+				/* Missing content, or not a JSON object 缺少内容，或者不是json格式数据*/
 				ret = janus_process_error(request, session_id, transaction_text, JANUS_ERROR_PLUGIN_MESSAGE,
 					result->content == NULL ?
 						"Plugin didn't provide any content for this synchronous response" :
