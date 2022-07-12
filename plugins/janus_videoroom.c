@@ -3069,7 +3069,8 @@ static int janus_videoroom_access_room(json_t *root, gboolean check_modify, gboo
 	return 0;
 }
 
-/* Helper method to process synchronous requests */
+/* Helper method to process synchronous requests 
+处理同步请求 */
 static json_t *janus_videoroom_process_synchronous_request(janus_videoroom_session *session, json_t *message) {
 	json_t *request = json_object_get(message, "request");
 	const char *request_text = json_string_value(request);
@@ -5088,29 +5089,44 @@ prepare_response:
 
 }
 
+/**
+ * @brief 处理信息
+ * 
+ * @param handle 
+ * @param transaction 
+ * @param message 
+ * @param jsep 
+ * @return struct janus_plugin_result* 
+ */
 struct janus_plugin_result *janus_videoroom_handle_message(janus_plugin_session *handle, char *transaction, json_t *message, json_t *jsep) {
+	/*检查程序是否已经被暂停，检查插件是否被初始化*/
 	if(g_atomic_int_get(&stopping) || !g_atomic_int_get(&initialized))
 		return janus_plugin_result_new(JANUS_PLUGIN_ERROR, g_atomic_int_get(&stopping) ? "Shutting down" : "Plugin not initialized", NULL);
 
-	/* Pre-parse the message */
+	/* Pre-parse the message 预处理信息*/
 	int error_code = 0;
 	char error_cause[512];
 	json_t *root = message;
 	json_t *response = NULL;
 
+    /* 锁住sessions hashTable获取该handle的session */
 	janus_mutex_lock(&sessions_mutex);
 	janus_videoroom_session *session = janus_videoroom_lookup_session(handle);
 	if(!session) {
+		/*如果该handle的session不存在*/
 		janus_mutex_unlock(&sessions_mutex);
 		JANUS_LOG(LOG_ERR, "No session associated with this handle...\n");
 		error_code = JANUS_VIDEOROOM_ERROR_UNKNOWN_ERROR;
 		g_snprintf(error_cause, 512, "%s", "No session associated with this handle...");
 		goto plugin_response;
 	}
-	/* Increase the reference counter for this session: we'll decrease it after we handle the message */
+	/* Increase the reference counter for this session: we'll decrease it after we handle the message 
+	我们增加该session的引用次数，当我们完成处理message之后，会将其减少
+	*/
 	janus_refcount_increase(&session->ref);
 	janus_mutex_unlock(&sessions_mutex);
 	if(g_atomic_int_get(&session->destroyed)) {
+		/*如果该session已被标注销毁*/
 		JANUS_LOG(LOG_ERR, "Session has already been marked as destroyed...\n");
 		error_code = JANUS_VIDEOROOM_ERROR_UNKNOWN_ERROR;
 		g_snprintf(error_cause, 512, "%s", "Session has already been marked as destroyed...");
@@ -5118,12 +5134,14 @@ struct janus_plugin_result *janus_videoroom_handle_message(janus_plugin_session 
 	}
 
 	if(message == NULL) {
+		/*如果处理的信息为空*/
 		JANUS_LOG(LOG_ERR, "No message??\n");
 		error_code = JANUS_VIDEOROOM_ERROR_NO_MESSAGE;
 		g_snprintf(error_cause, 512, "%s", "No message??");
 		goto plugin_response;
 	}
 	if(!json_is_object(root)) {
+		/*如果message不是json结构*/
 		JANUS_LOG(LOG_ERR, "JSON error: not an object\n");
 		error_code = JANUS_VIDEOROOM_ERROR_INVALID_JSON;
 		g_snprintf(error_cause, 512, "JSON error: not an object");
@@ -5136,29 +5154,32 @@ struct janus_plugin_result *janus_videoroom_handle_message(janus_plugin_session 
 	if(error_code != 0)
 		goto plugin_response;
 	json_t *request = json_object_get(root, "request");
-	/* Some requests ('create', 'destroy', 'exists', 'list') can be handled synchronously */
+	/* Some requests ('create', 'destroy', 'exists', 'list') can be handled synchronously 
+	有一些请求，例如('create', 'destroy', 'exists', 'list') 会被同步处理*/
 	const char *request_text = json_string_value(request);
 	/* We have a separate method to process synchronous requests, as those may
-	 * arrive from the Admin API as well, and so we handle them the same way */
+	 * arrive from the Admin API as well, and so we handle them the same way 
+	 我们有一个单独的方法去处理同步请求，也可以接受来自admin api的请求*/
 	response = janus_videoroom_process_synchronous_request(session, root);
 	if(response != NULL) {
-		/* We got a response, send it back */
+		/* We got a response, send it back 我们得到回复，返回该结果*/
 		goto plugin_response;
 	} else if(!strcasecmp(request_text, "join") || !strcasecmp(request_text, "joinandconfigure")
 			|| !strcasecmp(request_text, "configure") || !strcasecmp(request_text, "publish") || !strcasecmp(request_text, "unpublish")
 			|| !strcasecmp(request_text, "start") || !strcasecmp(request_text, "pause") || !strcasecmp(request_text, "switch")
 			|| !strcasecmp(request_text, "leave")) {
-		/* These messages are handled asynchronously */
-
+		/* These messages are handled asynchronously 这些方法将会被异步处理 */
+		/*构建一个janus_videoroom_message结构体存储messgae的信息，把它丢到异步队列，等待处理*/
 		janus_videoroom_message *msg = g_malloc(sizeof(janus_videoroom_message));
 		msg->handle = handle;
 		msg->transaction = transaction;
 		msg->message = root;
 		msg->jsep = jsep;
 		g_async_queue_push(messages, msg);
-
+				
 		return janus_plugin_result_new(JANUS_PLUGIN_OK_WAIT, NULL, NULL);
 	} else {
+		/*其他不明请求*/
 		JANUS_LOG(LOG_VERB, "Unknown request '%s'\n", request_text);
 		error_code = JANUS_VIDEOROOM_ERROR_INVALID_REQUEST;
 		g_snprintf(error_cause, 512, "Unknown request '%s'", request_text);

@@ -888,7 +888,7 @@ janus_session *janus_session_find(guint64 session_id) {
 }
 
 /**
- * @brief 
+ * @brief 通过session获取源头传输通知事件
  * 
  * @param session 
  * @param event 
@@ -1444,37 +1444,43 @@ int janus_process_incoming_request(janus_request *request) {
 		ret = janus_process_success(request, reply);
 	} else if(!strcasecmp(message_text, "destroy")) {
 		if(handle != NULL) {
-			/* Query is a session-level command */
+			/* Query is a session-level command 
+			destroy是一个session级别的请求
+			*/
 			ret = janus_process_error(request, session_id, transaction_text, JANUS_ERROR_INVALID_REQUEST_PATH, "Unhandled request '%s' at this path", message_text);
 			goto jsondone;
 		}
 		janus_mutex_lock(&sessions_mutex);
+		/*从hashTable移除该session*/
 		g_hash_table_remove(sessions, &session->session_id);
 		janus_mutex_unlock(&sessions_mutex);
-		/* Notify the source that the session has been destroyed */
+		/* Notify the source that the session has been destroyed
+		回复源头告诉session已经被销毁
+		 */
 		janus_request *source = janus_session_get_request(session);
 		if(source && source->transport)
 			source->transport->session_over(source->instance, session->session_id, FALSE, FALSE);
 		janus_request_unref(source);
 
-		/* Schedule the session for deletion */
+		/* Schedule the session for deletion 安排删除session*/
 		janus_session_destroy(session);
 
-		/* Prepare JSON reply */
+		/* Prepare JSON reply 准备json回复 */
 		json_t *reply = janus_create_message("success", session_id, transaction_text);
-		/* Send the success reply */
+		/* Send the success reply 发送成功回复*/
 		ret = janus_process_success(request, reply);
-		/* Notify event handlers as well */
+		/* Notify event handlers as well 同时通知事件广播 session 被销毁 */
 		if(janus_events_is_enabled())
 			janus_events_notify_handlers(JANUS_EVENT_TYPE_SESSION, JANUS_EVENT_SUBTYPE_NONE,
 				session_id, "destroyed", NULL);
 	} else if(!strcasecmp(message_text, "detach")) {
 		if(handle == NULL) {
-			/* Query is an handle-level command */
+			/* Query is an handle-level command detach请求必须有插件*/
 			ret = janus_process_error(request, session_id, transaction_text, JANUS_ERROR_INVALID_REQUEST_PATH, "Unhandled request '%s' at this path", message_text);
 			goto jsondone;
 		}
 		if(handle->app == NULL || handle->app_handle == NULL) {
+			/*detach请求必须有插件*/
 			ret = janus_process_error(request, session_id, transaction_text, JANUS_ERROR_PLUGIN_DETACH, "No plugin to detach from");
 			goto jsondone;
 		}
@@ -1961,17 +1967,18 @@ int janus_process_incoming_request(janus_request *request) {
 			json_object_set_new(plugin_data, "plugin", json_string(plugin_t->get_package()));
 			json_object_set_new(plugin_data, "data", result->content);
 			json_object_set_new(reply, "plugindata", plugin_data);
-			/* Send the success reply */
+			/* Send the success reply 发送成功回复*/
 			ret = janus_process_success(request, reply);
 		} else if(result->type == JANUS_PLUGIN_OK_WAIT) {
-			/* The plugin received the request but didn't process it yet, send an ack (asynchronous notifications may follow) */
+			/* The plugin received the request but didn't process it yet, send an ack (asynchronous notifications may follow) 
+			该插件收到请求，但并未完全处理，先返回ack（可能会有异步通知）*/
 			json_t *reply = janus_create_message("ack", session_id, transaction_text);
 			if(result->text)
 				json_object_set_new(reply, "hint", json_string(result->text));
-			/* Send the success reply */
+			/* Send the success reply 发送成功回复*/
 			ret = janus_process_success(request, reply);
 		} else {
-			/* Something went horribly wrong! */
+			/* Something went horribly wrong! 出了一些可怕的错误 */
 			ret = janus_process_error_string(request, session_id, transaction_text, JANUS_ERROR_PLUGIN_MESSAGE,
 				(char *)(result->text ? result->text : "Plugin returned a severe (unknown) error"));
 			janus_plugin_result_destroy(result);
@@ -1980,25 +1987,29 @@ int janus_process_incoming_request(janus_request *request) {
 		janus_plugin_result_destroy(result);
 	} else if(!strcasecmp(message_text, "trickle")) {
 		if(handle == NULL) {
-			/* Trickle is an handle-level command */
+			/* Trickle is an handle-level command trickle请求必须有插件去处理*/
 			ret = janus_process_error(request, session_id, transaction_text, JANUS_ERROR_INVALID_REQUEST_PATH, "Unhandled request '%s' at this path", message_text);
 			goto jsondone;
 		}
 		if(handle->app == NULL || !janus_plugin_session_is_alive(handle->app_handle)) {
+			/*trickle请求必须有插件去处理*/
 			ret = janus_process_error(request, session_id, transaction_text, JANUS_ERROR_PLUGIN_MESSAGE, "No plugin to handle this trickle candidate");
 			goto jsondone;
 		}
 		json_t *candidate = json_object_get(root, "candidate");
 		json_t *candidates = json_object_get(root, "candidates");
 		if(candidate == NULL && candidates == NULL) {
+			/*不能同时缺失candidate和candidates*/
 			ret = janus_process_error(request, session_id, transaction_text, JANUS_ERROR_MISSING_MANDATORY_ELEMENT, "Missing mandatory element (candidate|candidates)");
 			goto jsondone;
 		}
 		if(candidate != NULL && candidates != NULL) {
+			/*不能同时拥有candidate和candidates*/
 			ret = janus_process_error(request, session_id, transaction_text, JANUS_ERROR_INVALID_JSON, "Can't have both candidate and candidates");
 			goto jsondone;
 		}
 		if(janus_flags_is_set(&handle->webrtc_flags, JANUS_ICE_HANDLE_WEBRTC_CLEANING)) {
+			/*如果还处于clean 前一个session阶段*/
 			JANUS_LOG(LOG_ERR, "[%"SCNu64"] Received a trickle, but still cleaning a previous session\n", handle->handle_id);
 			ret = janus_process_error(request, session_id, transaction_text, JANUS_ERROR_WEBRTC_STATE, "Still cleaning a previous session");
 			goto jsondone;
@@ -2009,16 +2020,20 @@ int janus_process_incoming_request(janus_request *request) {
 			JANUS_LOG(LOG_VERB, "Handle %"SCNu64" supports trickle even if it didn't negotiate it...\n", handle->handle_id);
 			janus_flags_set(&handle->webrtc_flags, JANUS_ICE_HANDLE_WEBRTC_TRICKLE);
 		}
-		/* Is there any stream ready? this trickle may get here before the SDP it relates to */
+		/* Is there any stream ready? this trickle may get here before the SDP it relates to
+		 是否有任何stream存在？trickle会在它相关的SDP之前到达
+		 */
 		if(handle->stream == NULL) {
 			JANUS_LOG(LOG_WARN, "[%"SCNu64"] No stream, queueing this trickle as it got here before the SDP...\n", handle->handle_id);
-			/* Enqueue this trickle candidate(s), we'll process this later */
+			/* Enqueue this trickle candidate(s), we'll process this later 
+			入队该trickle candidate 我们会在稍后处理它 */
 			janus_ice_trickle *early_trickle = janus_ice_trickle_new(transaction_text, candidate ? candidate : candidates);
 			handle->pending_trickles = g_list_append(handle->pending_trickles, early_trickle);
-			/* Send the ack right away, an event will tell the application if the candidate(s) failed */
+			/* Send the ack right away, an event will tell the application if the candidate(s) failed 
+			马上发送ack回复，如果candidate协商失败会有事件通知应用程序 */
 			goto trickledone;
 		}
-		/* Is the ICE stack ready already? */
+		/* Is the ICE stack ready already? ICE栈是否已经准备好? */
 		if(janus_flags_is_set(&handle->webrtc_flags, JANUS_ICE_HANDLE_WEBRTC_PROCESSING_OFFER) ||
 				!janus_flags_is_set(&handle->webrtc_flags, JANUS_ICE_HANDLE_WEBRTC_GOT_OFFER) ||
 				!janus_flags_is_set(&handle->webrtc_flags, JANUS_ICE_HANDLE_WEBRTC_GOT_ANSWER)) {
@@ -2031,14 +2046,17 @@ int janus_process_incoming_request(janus_request *request) {
 				cause = "waiting for the offer";
 			JANUS_LOG(LOG_VERB, "[%"SCNu64"] Still %s, queueing this trickle to wait until we're done there...\n",
 				handle->handle_id, cause);
-			/* Enqueue this trickle candidate(s), we'll process this later */
+			/* Enqueue this trickle candidate(s), we'll process this later 
+			入队该trickle candidate 我们会在稍后处理它 */
 			janus_ice_trickle *early_trickle = janus_ice_trickle_new(transaction_text, candidate ? candidate : candidates);
 			handle->pending_trickles = g_list_append(handle->pending_trickles, early_trickle);
-			/* Send the ack right away, an event will tell the application if the candidate(s) failed */
+			/* Send the ack right away, an event will tell the application if the candidate(s) failed
+			马上发送ack回复，如果candidate协商失败会有事件通知应用程序 */
 			goto trickledone;
 		}
 		if(candidate != NULL) {
-			/* We got a single candidate */
+			/* We got a single candidate 
+			我们只有单独的一个candidate */
 			int error = 0;
 			const char *error_string = NULL;
 			if((error = janus_ice_trickle_parse(handle, candidate, &error_string)) != 0) {
@@ -2047,19 +2065,22 @@ int janus_process_incoming_request(janus_request *request) {
 				goto jsondone;
 			}
 		} else {
-			/* We got multiple candidates in an array */
+			/* We got multiple candidates in an array 
+			我们有多个candidate */
 			if(!json_is_array(candidates)) {
+				/*如果candidate不是以json数组的方式存在*/
 				ret = janus_process_error(request, session_id, transaction_text, JANUS_ERROR_INVALID_ELEMENT_TYPE, "candidates is not an array");
 				janus_mutex_unlock(&handle->mutex);
 				goto jsondone;
 			}
 			JANUS_LOG(LOG_VERB, "Got multiple candidates (%zu)\n", json_array_size(candidates));
 			if(json_array_size(candidates) > 0) {
-				/* Handle remote candidates */
+				/* Handle remote candidates 处理远端candidate*/
 				size_t i = 0;
 				for(i=0; i<json_array_size(candidates); i++) {
 					json_t *c = json_array_get(candidates, i);
-					/* FIXME We don't care if any trickle fails to parse */
+					/* FIXME We don't care if any trickle fails to parse 
+					如果trickle连接失败我们也不在乎 */
 					janus_ice_trickle_parse(handle, c, NULL);
 				}
 			}
@@ -2084,6 +2105,12 @@ jsondone:
 	return ret;
 }
 
+/**
+ * @brief admin请求 暂时不梳理 //TODO
+ * 
+ * @param token_value 
+ * @return json_t* 
+ */
 static json_t *janus_json_token_plugin_array(const char *token_value) {
 	json_t *plugins_list = json_array();
 	GList *plugins = janus_auth_list_plugins(token_value);
@@ -2101,6 +2128,13 @@ static json_t *janus_json_token_plugin_array(const char *token_value) {
 	return plugins_list;
 }
 
+/**
+ * @brief admin请求 暂时不梳理 //TODO
+ * 
+ * @param token_value 
+ * @param transaction_text 
+ * @return json_t* 
+ */
 static json_t *janus_json_list_token_plugins(const char *token_value, const gchar *transaction_text) {
 	json_t *plugins_list = janus_json_token_plugin_array(token_value);
 	/* Prepare JSON reply */
@@ -2111,6 +2145,16 @@ static json_t *janus_json_list_token_plugins(const char *token_value, const gcha
 	return reply;
 }
 
+/**
+ * @brief admin请求 暂时不梳理 //TODO
+ * 
+ * @param request 
+ * @param session_id 
+ * @param transaction_text 
+ * @param allow 
+ * @param add 
+ * @return int 
+ */
 static int janus_request_allow_token(janus_request *request, guint64 session_id, const gchar *transaction_text, gboolean allow, gboolean add) {
 	/* Allow/disallow a valid token valid to access a plugin */
 	int ret = -1;
@@ -2219,7 +2263,7 @@ jsondone:
 	return ret;
 }
 
-/* Admin/monitor WebServer requests handler */
+/* Admin/monitor WebServer requests handler 接受输入的admin请求 */
 int janus_process_incoming_admin_request(janus_request *request) {
 	int ret = -1;
 	int error_code = 0;
@@ -3241,6 +3285,16 @@ int janus_process_success(janus_request *request, json_t *payload)
 	return request->transport->send_message(request->instance, request->request_id, request->admin, payload);
 }
 
+/**
+ * @brief 返回异常内容
+ * 
+ * @param request 
+ * @param session_id 
+ * @param transaction 
+ * @param error 
+ * @param error_string 
+ * @return int 
+ */
 static int janus_process_error_string(janus_request *request, uint64_t session_id, const char *transaction, gint error, gchar *error_string)
 {
 	if(!request)
@@ -3257,6 +3311,17 @@ static int janus_process_error_string(janus_request *request, uint64_t session_i
 	return request->transport->send_message(request->instance, request->request_id, request->admin, reply);
 }
 
+/**
+ * @brief 返回异常内容
+ * 
+ * @param request 
+ * @param session_id 
+ * @param transaction 
+ * @param error 
+ * @param format 
+ * @param ... 
+ * @return int 
+ */
 int janus_process_error(janus_request *request, uint64_t session_id, const char *transaction, gint error, const char *format, ...)
 {
 	if(!request)
@@ -3540,7 +3605,7 @@ json_t *janus_admin_component_summary(janus_ice_component *component) {
 }
 
 
-/* Transports */
+/* Transports 传输关闭 */
 void janus_transport_close(gpointer key, gpointer value, gpointer user_data) {
 	janus_transport *transport = (janus_transport *)value;
 	if(!transport)
@@ -3548,11 +3613,19 @@ void janus_transport_close(gpointer key, gpointer value, gpointer user_data) {
 	transport->destroy();
 }
 
+/**
+ * @brief 
+ * 
+ * @param key 
+ * @param value 
+ * @param user_data 
+ */
 void janus_transportso_close(gpointer key, gpointer value, gpointer user_data) {
 	void *transport = value;
 	if(!transport)
 		return;
-	/* FIXME We don't dlclose transports to be sure we can detect leaks */
+	/* FIXME We don't dlclose transports to be sure we can detect leaks 
+	我们不会关闭传输以确保我们可以检测到泄漏 */
 	//~ dlclose(transport);
 }
 
@@ -3565,6 +3638,12 @@ void janus_transport_incoming_request(janus_transport *plugin, janus_transport_s
 	g_async_queue_push(requests, request);
 }
 
+/**
+ * @brief 
+ * 
+ * @param plugin 
+ * @param transport 
+ */
 void janus_transport_gone(janus_transport *plugin, janus_transport_session *transport) {
 	/* Get rid of sessions this transport was handling */
 	JANUS_LOG(LOG_VERB, "A %s transport instance has gone away (%p)\n", plugin->get_package(), transport);
