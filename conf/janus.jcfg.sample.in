@@ -87,6 +87,9 @@ general: {
 									# Setting this to 0 will disable the timeout
 									# mechanism, and sessions will be destroyed immediately
 									# if the transport is gone.
+									# 传输结束后，我们应该等待多长时间来回收 janus 会话。 
+									# 传输结束后，如果在 reclaim_session_timeout 秒（默认值 = 0s）内没有收到请求，会话就会超时。 
+									# 将此设置为 0 将禁用超时机制，如果传输消失，会话将立即被销毁。
 	#recordings_tmp_ext = "tmp"		# The extension for recordings, in Janus, is
 									# .mjr, a custom format we devised ourselves.
 									# By default, we save to .mjr directly. If you'd

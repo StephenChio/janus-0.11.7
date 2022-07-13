@@ -763,7 +763,7 @@ static gboolean janus_check_sessions(gpointer user_data) {
 			使用会话特定超时或全局超时 */
 			gint64 timeout = (gint64)session->timeout;
 			if (timeout == -1) timeout = (gint64)global_session_timeout;
-			/*根据session上一次活跃时间和当前时间相比，判断session是否过期*/
+			/*根据session上一次活跃时间和当前时间相比，判断session是否过期，判断会话所使用的传输是否已经断开*/
 			if ((timeout > 0 && (now - session->last_activity >= timeout * G_USEC_PER_SEC) &&
 					!g_atomic_int_compare_and_exchange(&session->timedout, 0, 1)) ||
 					((g_atomic_int_get(&session->transport_gone) && now - session->last_activity >= (gint64)reclaim_session_timeout * G_USEC_PER_SEC) &&
@@ -1126,7 +1126,7 @@ static int janus_request_check_secret(janus_request *request, guint64 session_id
  * @param jsep_sdp 
  */
 static void janus_request_ice_handle_answer(janus_ice_handle *handle, int audio, int video, int data, char *jsep_sdp) {
-	/* We got our answer 此handle的WebRTC相关标志掩码设置为 ~1 = 0*/
+	/* We got our answer 清除PROCESSING_OFFER标志*/
 	janus_flags_clear(&handle->webrtc_flags, JANUS_ICE_HANDLE_WEBRTC_PROCESSING_OFFER);
 	/* Any pending trickles? 有任何待定的trickles？ */
 	if(handle->pending_trickles) {
@@ -1815,7 +1815,8 @@ int janus_process_incoming_request(janus_request *request) {
 				}
 				if(janus_flags_is_set(&handle->webrtc_flags, JANUS_ICE_HANDLE_WEBRTC_ICE_RESTART)) {
 					JANUS_LOG(LOG_INFO, "[%"SCNu64"] Restarting ICE...\n", handle->handle_id);
-					/* FIXME We only need to do that for offers: if it's an answer, we did that already */
+					/* FIXME We only need to do that for offers: if it's an answer, we did that already
+					我们只需要为offer这样做：如果它是一个answer，代表我们已经这样做了 */
 					if(offer) {
 						janus_ice_restart(handle);
 					} else {
@@ -2088,7 +2089,7 @@ int janus_process_incoming_request(janus_request *request) {
 
 trickledone:
 		janus_mutex_unlock(&handle->mutex);
-		/* We reply right away, not to block the web server... */
+		/* We reply right away, not to block the web server... 我们会马上回复，为了不阻塞网络服务 */
 		json_t *reply = janus_create_message("ack", session_id, transaction_text);
 		/* Send the success reply */
 		ret = janus_process_success(request, reply);
@@ -3269,6 +3270,7 @@ jsondone:
 		janus_refcount_decrease(&session->ref);
 	return ret;
 }
+
 /**
  * @brief 同步返回处理成功内容
  * 
@@ -3639,13 +3641,14 @@ void janus_transport_incoming_request(janus_transport *plugin, janus_transport_s
 }
 
 /**
- * @brief 
+ * @brief 处理传输断开时，关闭使用该传输的session
  * 
  * @param plugin 
  * @param transport 
  */
 void janus_transport_gone(janus_transport *plugin, janus_transport_session *transport) {
-	/* Get rid of sessions this transport was handling */
+	/* Get rid of sessions this transport was handling 
+	清除此传输正在处理的session*/
 	JANUS_LOG(LOG_VERB, "A %s transport instance has gone away (%p)\n", plugin->get_package(), transport);
 	janus_mutex_lock(&sessions_mutex);
 	if(sessions && g_hash_table_size(sessions) > 0) {
@@ -3659,12 +3662,15 @@ void janus_transport_gone(janus_transport *plugin, janus_transport_session *tran
 			if(session->source && session->source->instance == transport) {
 				JANUS_LOG(LOG_VERB, "  -- Session %"SCNu64" will be over if not reclaimed\n", session->session_id);
 				JANUS_LOG(LOG_VERB, "  -- Marking Session %"SCNu64" as over\n", session->session_id);
-				if(reclaim_session_timeout < 1) { /* Reclaim session timeouts are disabled */
-					/* Mark the session as destroyed */
+				if(reclaim_session_timeout < 1) { /* Reclaim session timeouts are disabled 
+				    回收会话超时被禁用，如果传输消失，会话将立即被销毁*/
+					/* Mark the session as destroyed 
+					标志session已经清理*/
 					janus_session_destroy(session);
 					g_hash_table_iter_remove(&iter);
 				} else {
-					/* Set flag for transport_gone. The Janus sessions watchdog will clean this up if not reclaimed */
+					/* Set flag for transport_gone. The Janus sessions watchdog will clean this up if not reclaimed 
+					为 transport_gone 设置标志。 如果不回收，Janus session看门狗将清理它*/
 					g_atomic_int_set(&session->transport_gone, 1);
 				}
 			}
@@ -3673,31 +3679,35 @@ void janus_transport_gone(janus_transport *plugin, janus_transport_session *tran
 	janus_mutex_unlock(&sessions_mutex);
 }
 
+/*判断该传输的请求是否需要api秘钥*/
 gboolean janus_transport_is_api_secret_needed(janus_transport *plugin) {
 	return api_secret != NULL;
 }
-
+/*判断该传输的请求 api秘钥是否有效*/
 gboolean janus_transport_is_api_secret_valid(janus_transport *plugin, const char *apisecret) {
 	if(api_secret == NULL)
 		return TRUE;
 	return apisecret && janus_strcmp_const_time(apisecret, api_secret);
 }
-
+/*判断该传输的请求是否需要token令牌*/
 gboolean janus_transport_is_auth_token_needed(janus_transport *plugin) {
 	return janus_auth_is_enabled();
 }
-
+/*判断该传输的请求 token令牌是否有效*/
 gboolean janus_transport_is_auth_token_valid(janus_transport *plugin, const char *token) {
 	if(!janus_auth_is_enabled())
 		return TRUE;
 	return token && janus_auth_check_token(token);
 }
 
+/*插件被要求去通知handle一些事件的发生*/
 void janus_transport_notify_event(janus_transport *plugin, void *transport, json_t *event) {
-	/* A plugin asked to notify an event to the handlers */
+	/* A plugin asked to notify an event to the handlers 
+	插件被要求去通知handle一些事件的发生*/
 	if(!plugin || !event || !json_is_object(event))
+	    /*不满足通知条件*/
 		return;
-	/* Notify event handlers */
+	/* Notify event handlers 通知handle一些事件的发生*/
 	if(janus_events_is_enabled()) {
 		janus_events_notify_handlers(JANUS_EVENT_TYPE_TRANSPORT, JANUS_EVENT_SUBTYPE_NONE,
 			0, plugin->get_package(), transport, event);
@@ -3706,6 +3716,7 @@ void janus_transport_notify_event(janus_transport *plugin, void *transport, json
 	}
 }
 
+/*janus任务分配，区分admin请求和普通请求*/
 void janus_transport_task(gpointer data, gpointer user_data) {
 	JANUS_LOG(LOG_VERB, "Transport task pool, serving request\n");
 	janus_request *request = (janus_request *)data;
@@ -3722,26 +3733,31 @@ void janus_transport_task(gpointer data, gpointer user_data) {
 }
 
 
-/* Thread to handle incoming requests: may involve an asynchronous task for plugin messaging */
+/* Thread to handle incoming requests: may involve an asynchronous task for plugin messaging 
+处理传入请求的线程：可能涉及插件消息传递的异步任务*/
 static void *janus_transport_requests(void *data) {
 	JANUS_LOG(LOG_INFO, "Joining Janus requests handler thread\n");
 	janus_request *request = NULL;
 	gboolean destroy = FALSE;
+	/*当程序标志停止时候结束*/
 	while(!g_atomic_int_get(&stop)) {
+		/*循环从异步队列拿到请求*/
 		request = g_async_queue_pop(requests);
 		if(request == &exit_message)
 			break;
-		/* Should we process the request synchronously or with a task from the thread pool? */
+		/* Should we process the request synchronously or with a task from the thread pool? 
+		我们应该同步处理请求还是通过任务线程池？*/
 		destroy = TRUE;
-		/* Process the request synchronously only it's not a message for a plugin */
+		/* Process the request synchronously only it's not a message for a plugin
+		只有在消息并不是插件请求的情况下使用同步处理 */
 		json_t *message = json_object_get(request->message, "janus");
 		const gchar *message_text = json_string_value(message);
 		if(message_text && !strcasecmp(message_text, request->admin ? "message_plugin" : "message")) {
-			/* Spawn a task thread */
+			/* Spawn a task thread 该消息是插件请求，派到任务池进行异步处理 */
 			GError *tperror = NULL;
 			g_thread_pool_push(tasks, request, &tperror);
 			if(tperror != NULL) {
-				/* Something went wrong... */
+				/* Something went wrong... 推送到任务池出错 */
 				JANUS_LOG(LOG_ERR, "Got error %d (%s) trying to push task in thread pool...\n",
 					tperror->code, tperror->message ? tperror->message : "??");
 				g_error_free(tperror);
@@ -3749,7 +3765,8 @@ static void *janus_transport_requests(void *data) {
 				const char *transaction_text = json_is_string(transaction) ? json_string_value(transaction) : NULL;
 				janus_process_error(request, 0, transaction_text, JANUS_ERROR_UNKNOWN, "Thread pool error");
 			} else {
-				/* Don't destroy the request now, the task will take care of that */
+				/* Don't destroy the request now, the task will take care of that 
+				我们会销毁这个请求，任务池会替我们处理它*/
 				destroy = FALSE;
 			}
 		} else {
@@ -3767,14 +3784,14 @@ static void *janus_transport_requests(void *data) {
 }
 
 
-/* Event handlers */
+/* Event handlers 事件处理器关闭*/
 void janus_eventhandler_close(gpointer key, gpointer value, gpointer user_data) {
 	janus_eventhandler *eventhandler = (janus_eventhandler *)value;
 	if(!eventhandler)
 		return;
 	eventhandler->destroy();
 }
-
+/* Event handlers 事件处理器关闭*/
 void janus_eventhandlerso_close(gpointer key, gpointer value, gpointer user_data) {
 	void *eventhandler = (janus_eventhandler *)value;
 	if(!eventhandler)
@@ -3783,14 +3800,14 @@ void janus_eventhandlerso_close(gpointer key, gpointer value, gpointer user_data
 }
 
 
-/* Loggers */
+/* Loggers 日志处理器关闭*/
 void janus_logger_close(gpointer key, gpointer value, gpointer user_data) {
 	janus_logger *logger = (janus_logger *)value;
 	if(!logger)
 		return;
 	logger->destroy();
 }
-
+/* Loggers 日志处理器关闭*/
 void janus_loggerso_close(gpointer key, gpointer value, gpointer user_data) {
 	void *logger = (janus_logger *)value;
 	if(!logger)
@@ -3799,14 +3816,14 @@ void janus_loggerso_close(gpointer key, gpointer value, gpointer user_data) {
 }
 
 
-/* Plugins */
+/* Plugins 插件关闭*/
 void janus_plugin_close(gpointer key, gpointer value, gpointer user_data) {
 	janus_plugin *plugin = (janus_plugin *)value;
 	if(!plugin)
 		return;
 	plugin->destroy();
 }
-
+/* Plugins 插件关闭*/
 void janus_pluginso_close(gpointer key, gpointer value, gpointer user_data) {
 	void *plugin = value;
 	if(!plugin)
@@ -3815,6 +3832,7 @@ void janus_pluginso_close(gpointer key, gpointer value, gpointer user_data) {
 	//~ dlclose(plugin);
 }
 
+/*寻找插件*/
 janus_plugin *janus_plugin_find(const gchar *package) {
 	if(package != NULL && plugins != NULL)	/* FIXME Do we need to fix the key pointer? */
 		return g_hash_table_lookup(plugins, package);
@@ -3822,33 +3840,38 @@ janus_plugin *janus_plugin_find(const gchar *package) {
 }
 
 
-/* Plugin callback interface */
+/* Plugin callback interface 插件回调接口，插件会把需要通知的消息丢到这里处理 */
 int janus_plugin_push_event(janus_plugin_session *plugin_session, janus_plugin *plugin, const char *transaction, json_t *message, json_t *jsep) {
 	if(!plugin || !message)
+	    /*插件或者消息内容不存在*/
 		return -1;
 	if(!janus_plugin_session_is_alive(plugin_session))
+	    /*插件session已经失活*/
 		return -2;
 	janus_refcount_increase(&plugin_session->ref);
+	/*把插件会话里面的handle转换成janus_ice_handle*/
 	janus_ice_handle *ice_handle = (janus_ice_handle *)plugin_session->gateway_handle;
 	if(!ice_handle || janus_flags_is_set(&ice_handle->webrtc_flags, JANUS_ICE_HANDLE_WEBRTC_STOP)) {
 		janus_refcount_decrease(&plugin_session->ref);
 		return JANUS_ERROR_SESSION_NOT_FOUND;
 	}
 	janus_refcount_increase(&ice_handle->ref);
+	/*获取具体handle的session*/
 	janus_session *session = ice_handle->session;
 	if(!session || g_atomic_int_get(&session->destroyed)) {
+		/*handle session不存在*/
 		janus_refcount_decrease(&plugin_session->ref);
 		janus_refcount_decrease(&ice_handle->ref);
 		return JANUS_ERROR_SESSION_NOT_FOUND;
 	}
-	/* Make sure this is a JSON object */
+	/* Make sure this is a JSON object 确保它是个JSON对象*/
 	if(!json_is_object(message)) {
 		JANUS_LOG(LOG_ERR, "[%"SCNu64"] Cannot push event (JSON error: not an object)\n", ice_handle->handle_id);
 		janus_refcount_decrease(&plugin_session->ref);
 		janus_refcount_decrease(&ice_handle->ref);
 		return JANUS_ERROR_INVALID_JSON_OBJECT;
 	}
-	/* Attach JSEP if possible? */
+	/* Attach JSEP if possible? 如果可能附加上JSEP*/
 	const char *sdp_type = json_string_value(json_object_get(jsep, "type"));
 	const char *sdp = json_string_value(json_object_get(jsep, "sdp"));
 	gboolean restart = json_object_get(jsep, "sdp") ? json_is_true(json_object_get(jsep, "restart")) : FALSE;
@@ -3871,9 +3894,12 @@ int janus_plugin_push_event(janus_plugin_session *plugin_session, janus_plugin *
 			}
 		}
 	}
-	/* Reference the payload, as the plugin may still need it and will do a decref itself */
+	/* Reference the payload, as the plugin may still need it and will do a decref itself 
+	一些引用计数的操作
+	*/
 	json_incref(message);
-	/* Prepare JSON event */
+
+	/* Prepare JSON event 包装JSON结果*/
 	json_t *event = janus_create_message("event", session->session_id, transaction);
 	json_object_set_new(event, "sender", json_integer(ice_handle->handle_id));
 	if(janus_is_opaqueid_in_api_enabled() && ice_handle->opaque_id != NULL)
@@ -3897,61 +3923,81 @@ int janus_plugin_push_event(janus_plugin_session *plugin_session, janus_plugin *
 				session->session_id, ice_handle->handle_id, ice_handle->opaque_id, "local", merged_sdp_type, merged_sdp);
 		}
 	}
-	/* Send the event */
+
+	/* Send the event
+	发送事件，通过session发送，session记录了传输通道 */
 	JANUS_LOG(LOG_VERB, "[%"SCNu64"] Sending event to transport...\n", ice_handle->handle_id);
 	janus_session_notify_event(session, event);
 
+    /*如果jsep里restart为true代表是一个重新协商ICE的请求 */
 	if((restart || janus_flags_is_set(&ice_handle->webrtc_flags, JANUS_ICE_HANDLE_WEBRTC_RESEND_TRICKLES))
 			&& janus_ice_is_full_trickle_enabled()) {
-		/* We're restarting ICE, send our trickle candidates again */
+		/* We're restarting ICE, send our trickle candidates again 
+		我们重新开始ICE协商，重新发送candidate
+		*/
 		janus_ice_resend_trickles(ice_handle);
 	}
-
+    /*处理一些引用计数*/
 	janus_refcount_decrease(&plugin_session->ref);
 	janus_refcount_decrease(&ice_handle->ref);
 	return JANUS_OK;
 }
 
+/**
+ * @brief 
+ * 
+ * @param plugin_session 
+ * @param plugin 
+ * @param sdp_type 
+ * @param sdp 
+ * @param restart 
+ * @return json_t* 
+ */
 json_t *janus_plugin_handle_sdp(janus_plugin_session *plugin_session, janus_plugin *plugin, const char *sdp_type, const char *sdp, gboolean restart) {
-	if(!janus_plugin_session_is_alive(plugin_session) ||
-			plugin == NULL || sdp_type == NULL || sdp == NULL) {
+	if(!janus_plugin_session_is_alive(plugin_session) || plugin == NULL || sdp_type == NULL || sdp == NULL) {
+		/*如果该插件session已经失效或者重要参数为空*/
 		JANUS_LOG(LOG_ERR, "Invalid arguments\n");
 		return NULL;
 	}
+	/*获取插件session的核心处理器*/
 	janus_ice_handle *ice_handle = (janus_ice_handle *)plugin_session->gateway_handle;
 	//~ if(ice_handle == NULL || janus_flags_is_set(&ice_handle->webrtc_flags, JANUS_ICE_HANDLE_WEBRTC_READY)) {
 	if(ice_handle == NULL) {
+		/*获取插件session的核心处理器为空*/
 		JANUS_LOG(LOG_ERR, "Invalid ICE handle\n");
 		return NULL;
 	}
 	int offer = 0;
 	if(!strcasecmp(sdp_type, "offer")) {
-		/* This is an offer from a plugin */
+		/* This is an offer from a plugin 这是一个offer sdp 标志得到offer和清除得到answer*/
 		offer = 1;
 		janus_flags_set(&ice_handle->webrtc_flags, JANUS_ICE_HANDLE_WEBRTC_GOT_OFFER);
 		janus_flags_clear(&ice_handle->webrtc_flags, JANUS_ICE_HANDLE_WEBRTC_GOT_ANSWER);
 	} else if(!strcasecmp(sdp_type, "answer")) {
-		/* This is an answer from a plugin */
+		/* This is an answer from a plugin 这是一个answer sdp 标志得到answer，如果已经获得过offer了，标志开始进行协商*/
 		janus_flags_set(&ice_handle->webrtc_flags, JANUS_ICE_HANDLE_WEBRTC_GOT_ANSWER);
 		if(janus_flags_is_set(&ice_handle->webrtc_flags, JANUS_ICE_HANDLE_WEBRTC_GOT_OFFER))
 			janus_flags_set(&ice_handle->webrtc_flags, JANUS_ICE_HANDLE_WEBRTC_NEGOTIATED);
 	} else {
-		/* TODO Handle other messages */
+		/* TODO Handle other messages 不明类别的sdp */
 		JANUS_LOG(LOG_ERR, "Unknown type '%s'\n", sdp_type);
 		return NULL;
 	}
-	/* Is this valid SDP? */
+	/* Is this valid SDP? 检查sdp是否有效*/
 	char error_str[512];
 	error_str[0] = '\0';
 	int audio = 0, video = 0, data = 0;
 	janus_sdp *parsed_sdp = janus_sdp_preparse(ice_handle, sdp, error_str, sizeof(error_str), &audio, &video, &data);
 	if(parsed_sdp == NULL) {
+		/*解析sdp出错*/
 		JANUS_LOG(LOG_ERR, "[%"SCNu64"] Couldn't parse SDP... %s\n", ice_handle->handle_id, error_str);
 		return NULL;
 	}
 	gboolean updating = FALSE;
 	if(offer) {
-		/* We may still not have a local ICE setup */
+		/* We may still not have a local ICE setup 
+		我们收到了一个offer，我们可能还没有进行本地ICE设置
+		*/
 		JANUS_LOG(LOG_VERB, "[%"SCNu64"] Audio %s been negotiated\n", ice_handle->handle_id, audio ? "has" : "has NOT");
 		if(audio > 1) {
 			JANUS_LOG(LOG_ERR, "[%"SCNu64"] More than one audio line? only going to negotiate one...\n", ice_handle->handle_id);
@@ -3969,8 +4015,10 @@ json_t *janus_plugin_handle_sdp(janus_plugin_session *plugin_session, janus_plug
 			JANUS_LOG(LOG_WARN, "[%"SCNu64"]   -- DataChannels have been negotiated, but support for them has not been compiled...\n", ice_handle->handle_id);
 		}
 #endif
-		/* Are we still cleaning up from a previous media session? */
+		/* Are we still cleaning up from a previous media session?
+		由于我们收到offer，需要重新设置ICE，检查我们是否还有一些之前残留媒体数据需要清理 */
 		if(janus_flags_is_set(&ice_handle->webrtc_flags, JANUS_ICE_HANDLE_WEBRTC_CLEANING)) {
+			/*如果webRTC flags标志为CLEANING 我们还需要进行等待一段时间进行清理*/
 			JANUS_LOG(LOG_VERB, "[%"SCNu64"] Still cleaning up from a previous media session, let's wait a bit...\n", ice_handle->handle_id);
 			gint64 waited = 0;
 			while(janus_flags_is_set(&ice_handle->webrtc_flags, JANUS_ICE_HANDLE_WEBRTC_CLEANING)) {
@@ -3978,6 +4026,7 @@ json_t *janus_plugin_handle_sdp(janus_plugin_session *plugin_session, janus_plug
 				g_usleep(100000);
 				waited += 100000;
 				if(waited >= 3*G_USEC_PER_SEC) {
+					/*如果等待了3秒 还没有清理完毕，我们会放弃此次offer*/
 					JANUS_LOG(LOG_VERB, "[%"SCNu64"]   -- Waited 3 seconds, that's enough!\n", ice_handle->handle_id);
 					JANUS_LOG(LOG_ERR, "[%"SCNu64"] Still cleaning a previous session\n", ice_handle->handle_id);
 					janus_sdp_destroy(parsed_sdp);
@@ -3986,11 +4035,16 @@ json_t *janus_plugin_handle_sdp(janus_plugin_session *plugin_session, janus_plug
 			}
 		}
 		if(ice_handle->agent == NULL) {
-			/* We still need to configure the WebRTC stuff: negotiate RFC4588 by default */
+			/* We still need to configure the WebRTC stuff: negotiate RFC4588 by default 
+			如果ICE代理为空，说明我们需要进行一些webRTC的配置，默认遵循RFC4588协议
+			*/
 			janus_flags_set(&ice_handle->webrtc_flags, JANUS_ICE_HANDLE_WEBRTC_RFC4588_RTX);
-			/* Process SDP in order to setup ICE locally (this is going to result in an answer from the browser) */
+			/* Process SDP in order to setup ICE locally (this is going to result in an answer from the browser) 
+			为了设置本地ICE，我们会处理SDP，成功之后会返回answer给客户端
+			*/
 			janus_mutex_lock(&ice_handle->mutex);
 			if(janus_ice_setup_local(ice_handle, 0, audio, video, data, 1) < 0) {
+				/*设置本地ICE出错*/
 				JANUS_LOG(LOG_ERR, "[%"SCNu64"] Error setting ICE locally\n", ice_handle->handle_id);
 				janus_sdp_destroy(parsed_sdp);
 				janus_mutex_unlock(&ice_handle->mutex);
@@ -3998,18 +4052,20 @@ json_t *janus_plugin_handle_sdp(janus_plugin_session *plugin_session, janus_plug
 			}
 			janus_mutex_unlock(&ice_handle->mutex);
 		} else {
+			/* 如果ICE代理不为空，我们需要更新一些配置*/
 			updating = TRUE;
 			JANUS_LOG(LOG_INFO, "[%"SCNu64"] Updating existing session\n", ice_handle->handle_id);
 			if(offer && ice_handle->stream) {
-				/* We might need some new properties set as well */
+				/* We might need some new properties set as well
+				我们收到offer，并且已经有了ICE stream 我们可能需要对stream做一些属性修改 */
 				janus_ice_stream *stream = ice_handle->stream;
 				if(audio) {
 					if(!janus_flags_is_set(&ice_handle->webrtc_flags, JANUS_ICE_HANDLE_WEBRTC_HAS_AUDIO)) {
 						janus_flags_set(&ice_handle->webrtc_flags, JANUS_ICE_HANDLE_WEBRTC_HAS_AUDIO);
-						stream->audio_ssrc = janus_random_uint32();	/* FIXME Should we look for conflicts? */
+						stream->audio_ssrc = janus_random_uint32();	/* FIXME Should we look for conflicts? 可能会有冲突 */
 						if(stream->audio_rtcp_ctx == NULL) {
 							stream->audio_rtcp_ctx = g_malloc0(sizeof(rtcp_context));
-							stream->audio_rtcp_ctx->tb = 48000;	/* May change later */
+							stream->audio_rtcp_ctx->tb = 48000;	/* May change later 可能会被后续请求改变 */
 						}
 					}
 					if(ice_handle->audio_mid == NULL)
@@ -4018,10 +4074,10 @@ json_t *janus_plugin_handle_sdp(janus_plugin_session *plugin_session, janus_plug
 				if(video) {
 					if(!janus_flags_is_set(&ice_handle->webrtc_flags, JANUS_ICE_HANDLE_WEBRTC_HAS_VIDEO)) {
 						janus_flags_set(&ice_handle->webrtc_flags, JANUS_ICE_HANDLE_WEBRTC_HAS_VIDEO);
-						stream->video_ssrc = janus_random_uint32();	/* FIXME Should we look for conflicts? */
+						stream->video_ssrc = janus_random_uint32();	/* FIXME Should we look for conflicts? 可能会有冲突 */
 						if(stream->video_rtcp_ctx[0] == NULL) {
 							stream->video_rtcp_ctx[0] = g_malloc0(sizeof(rtcp_context));
-							stream->video_rtcp_ctx[0]->tb = 90000;	/* May change later */
+							stream->video_rtcp_ctx[0]->tb = 90000;	/* May change later 可能会被后续请求改变 */
 						}
 					}
 					if(ice_handle->video_mid == NULL)
@@ -4033,10 +4089,23 @@ json_t *janus_plugin_handle_sdp(janus_plugin_session *plugin_session, janus_plug
 				}
 			}
 		}
-		/* Make sure we don't send the rid/repaired-rid attributes when offering ourselves */
+		/* Make sure we don't send the rid/repaired-rid attributes when offering ourselves 
+		确保不发送rid/repaired-rid属性
+		*/
 		int mid_ext_id = 0, transport_wide_cc_ext_id = 0, abs_send_time_ext_id = 0,
 			audiolevel_ext_id = 0, videoorientation_ext_id = 0;
 		GList *temp = parsed_sdp->m_lines;
+		/*在offer sdp中找到:
+		urn:ietf:params:rtp-hdrext:sdes:mid 参数赋值到 mid_ext_id
+		http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01 参数赋值到 transport_wide_cc_ext_id
+		http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time 参数赋值到 abs_send_time_ext_id
+		urn:ietf:params:rtp-hdrext:ssrc-audio-level 参数赋值到 audiolevel_ext_id
+		urn:3gpp:video-orientation 参数赋值到 videoorientation_ext_id
+
+		移除sdp属性
+		urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id
+		urn:ietf:params:rtp-hdrext:sdes:repaired-rtp-stream-id
+		*/
 		while(temp) {
 			janus_sdp_mline *m = (janus_sdp_mline *)temp->data;
 			GList *tempA = m->attributes;
@@ -4078,9 +4147,17 @@ json_t *janus_plugin_handle_sdp(janus_plugin_session *plugin_session, janus_plug
 		if(ice_handle->stream && ice_handle->stream->videoorientation_ext_id != videoorientation_ext_id)
 			ice_handle->stream->videoorientation_ext_id = videoorientation_ext_id;
 	} else {
-		/* Check if the answer does contain the mid/rid/repaired-rid/abs-send-time/twcc extmaps */
+		/* Check if the answer does contain the mid/rid/repaired-rid/abs-send-time/twcc extmaps 
+		检查收到的answer是否包含mid/rid/repaired-rid/abs-send-time/twcc extmaps*/
 		gboolean do_mid = FALSE, do_rid = FALSE, do_repaired_rid = FALSE,
 			do_twcc = FALSE, do_abs_send_time = FALSE;
+        /*在answer sdp中找到:
+		urn:ietf:params:rtp-hdrext:sdes:mid 则 do_mid = TRUE
+		urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id 则 do_rid = TRUE
+        urn:ietf:params:rtp-hdrext:sdes:repaired-rtp-stream-id 则 do_repaired_rid = TRUE
+		http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01 则 do_twcc = TRUE
+		http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time 则 do_abs_send_time = TRUE
+		*/
 		GList *temp = parsed_sdp->m_lines;
 		while(temp) {
 			janus_sdp_mline *m = (janus_sdp_mline *)temp->data;
@@ -4104,15 +4181,21 @@ json_t *janus_plugin_handle_sdp(janus_plugin_session *plugin_session, janus_plug
 			temp = temp->next;
 		}
 		if(!do_mid && ice_handle->stream)
+		    /*如果在answer sdp中没有找到urn:ietf:params:rtp-hdrext:sdes:mid 则 min_ext_id = 0*/
 			ice_handle->stream->mid_ext_id = 0;
 		if(!do_rid && ice_handle->stream) {
+			/*如果在answer sdp中没有找到urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id 则 rid_ext_id = 0*/
+			/*如果在answer sdp中没有找到urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id 则 ridrtx_ext_id = 0*/
 			ice_handle->stream->rid_ext_id = 0;
 			ice_handle->stream->ridrtx_ext_id = 0;
 			g_free(ice_handle->stream->rid[0]);
+			/*如果在answer sdp中没有找到urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id 则 rid[0] = NULL*/
 			ice_handle->stream->rid[0] = NULL;
 			g_free(ice_handle->stream->rid[1]);
+			/*如果在answer sdp中没有找到urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id 则 rid[1] = NULL*/
 			ice_handle->stream->rid[1] = NULL;
 			g_free(ice_handle->stream->rid[2]);
+			/*如果在answer sdp中没有找到urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id 则 rid[2] = NULL*/
 			ice_handle->stream->rid[2] = NULL;
 			if(ice_handle->stream->video_ssrc_peer_temp > 0) {
 				ice_handle->stream->video_ssrc_peer[0] = ice_handle->stream->video_ssrc_peer_temp;
@@ -4120,16 +4203,20 @@ json_t *janus_plugin_handle_sdp(janus_plugin_session *plugin_session, janus_plug
 			}
 		}
 		if(!do_repaired_rid && ice_handle->stream)
+            /*如果在answer sdp中没有找到urn:ietf:params:rtp-hdrext:sdes:repaired-rtp-stream-id 则 ridrtx_ext_id = 0*/
 			ice_handle->stream->ridrtx_ext_id = 0;
 		if(!do_twcc && ice_handle->stream) {
+			/*如果在answer sdp中没有找到http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01 则 do_transport_wide_cc = FALSE*/
+			/*如果在answer sdp中没有找到http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01 则 transport_wide_cc_ext_id = 0*/
 			ice_handle->stream->do_transport_wide_cc = FALSE;
 			ice_handle->stream->transport_wide_cc_ext_id = 0;
 		}
 		if(!do_abs_send_time && ice_handle->stream)
+		    /*如果在answer sdp中没有找到http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time 则 abs_send_time_ext_id = 0*/
 			ice_handle->stream->abs_send_time_ext_id = 0;
 	}
 	if(!updating && !janus_ice_is_full_trickle_enabled()) {
-		/* Wait for candidates-done callback */
+		/* Wait for candidates-done callback 如果我们收到offer，且ICE代理为空 且我们的ICE连接方式不是full-trickle，我们需要等待candidates-done，这个方法会一直阻塞线程，没有过期时间，直到收集到至少一个candidate*/
 		int waiting = 0;
 		while(ice_handle->cdone < 1) {
 			if(ice_handle == NULL || janus_flags_is_set(&ice_handle->webrtc_flags, JANUS_ICE_HANDLE_WEBRTC_STOP)
@@ -4155,18 +4242,19 @@ json_t *janus_plugin_handle_sdp(janus_plugin_session *plugin_session, janus_plug
 			g_usleep(1000);
 		}
 	}
-	/* Anonymize SDP */
+	/* Anonymize SDP 匿名化SDP */
 	if(janus_sdp_anonymize(parsed_sdp) < 0) {
-		/* Invalid SDP */
+		/* Invalid SDP 无效的SDP */
 		JANUS_LOG(LOG_ERR, "[%"SCNu64"] Invalid SDP\n", ice_handle->handle_id);
 		janus_sdp_destroy(parsed_sdp);
 		return NULL;
 	}
 
-	/* Check if this is a renegotiation and we need an ICE restart */
+	/* Check if this is a renegotiation and we need an ICE restart 检查这是否是一个重新协商请求，我们是否需要重新启动ICE*/
 	if(offer && restart)
+	    /*我们需要带上offer和restart来启动重新协商*/
 		janus_ice_restart(ice_handle);
-	/* Add our details */
+	/* Add our details 添加一些细节 */
 	janus_mutex_lock(&ice_handle->mutex);
 	janus_ice_stream *stream = ice_handle->stream;
 	if (stream == NULL) {
@@ -4177,7 +4265,8 @@ json_t *janus_plugin_handle_sdp(janus_plugin_session *plugin_session, janus_plug
 	}
 	if(janus_flags_is_set(&ice_handle->webrtc_flags, JANUS_ICE_HANDLE_WEBRTC_RFC4588_RTX) &&
 			stream->rtx_payload_types == NULL) {
-		/* Make sure we have a list of rtx payload types to generate, if needed */
+		/* Make sure we have a list of rtx payload types to generate, if needed
+		 如果需要，请确保我们有要生成的 rtx 有效负载类型列表 */
 		janus_sdp_mline *m = janus_sdp_mline_find(parsed_sdp, JANUS_SDP_VIDEO);
 		if(m && m->ptypes) {
 			stream->rtx_payload_types = g_hash_table_new(NULL, NULL);
@@ -4209,7 +4298,8 @@ json_t *janus_plugin_handle_sdp(janus_plugin_session *plugin_session, janus_plug
 			g_list_free(rtx_ptypes);
 		}
 	}
-	/* Enrich the SDP the plugin gave us with all the WebRTC related stuff */
+	/* Enrich the SDP the plugin gave us with all the WebRTC related stuff 
+	用与 WebRTC 相关的东西来丰富我们的 SDP*/
 	char *sdp_merged = janus_sdp_merge(ice_handle, parsed_sdp, offer ? TRUE : FALSE);
 	if(sdp_merged == NULL) {
 		/* Couldn't merge SDP */
@@ -4222,10 +4312,13 @@ json_t *janus_plugin_handle_sdp(janus_plugin_session *plugin_session, janus_plug
 
 	if(!updating) {
 		if(offer) {
-			/* We set the flag to wait for an answer before handling trickle candidates */
+			/* We set the flag to wait for an answer before handling trickle candidates 
+			如果这是我们第一次收到offer请求，我们标志PROCESSING_OFFER来等到answer来临再去处理trickle candidates
+			*/
 			janus_flags_set(&ice_handle->webrtc_flags, JANUS_ICE_HANDLE_WEBRTC_PROCESSING_OFFER);
 		} else {
 			JANUS_LOG(LOG_VERB, "[%"SCNu64"] Sending answer, ready to setup remote candidates and send connectivity checks...\n", ice_handle->handle_id);
+			/*如果这是我们第一次收到answer请求，我们去处理trickle candidates*/
 			janus_request_ice_handle_answer(ice_handle, audio, video, data, NULL);
 		}
 	}
@@ -4255,6 +4348,13 @@ json_t *janus_plugin_handle_sdp(janus_plugin_session *plugin_session, janus_plug
 	return jsep;
 }
 
+
+/**
+ * @brief 插件转发rtp数据
+ * 
+ * @param plugin_session 
+ * @param packet 
+ */
 void janus_plugin_relay_rtp(janus_plugin_session *plugin_session, janus_plugin_rtp *packet) {
 	if((plugin_session < (janus_plugin_session *)0x1000) || g_atomic_int_get(&plugin_session->stopped) ||
 			packet == NULL || packet->buffer == NULL || packet->length < 1)
@@ -4266,6 +4366,12 @@ void janus_plugin_relay_rtp(janus_plugin_session *plugin_session, janus_plugin_r
 	janus_ice_relay_rtp(handle, packet);
 }
 
+/**
+ * @brief 插件转发rtcp数据
+ * 
+ * @param plugin_session 
+ * @param packet 
+ */
 void janus_plugin_relay_rtcp(janus_plugin_session *plugin_session, janus_plugin_rtcp *packet) {
 	if((plugin_session < (janus_plugin_session *)0x1000) || g_atomic_int_get(&plugin_session->stopped) ||
 			packet == NULL || packet->buffer == NULL || packet->length < 1)
@@ -4277,6 +4383,12 @@ void janus_plugin_relay_rtcp(janus_plugin_session *plugin_session, janus_plugin_
 	janus_ice_relay_rtcp(handle, packet);
 }
 
+/**
+ * @brief 插件转发data数据
+ * 
+ * @param plugin_session 
+ * @param packet 
+ */
 void janus_plugin_relay_data(janus_plugin_session *plugin_session, janus_plugin_data *packet) {
 	if((plugin_session < (janus_plugin_session *)0x1000) || g_atomic_int_get(&plugin_session->stopped) ||
 			packet == NULL || packet->buffer == NULL || packet->length < 1)

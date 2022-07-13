@@ -1556,7 +1556,8 @@ static MHD_Result janus_http_handler(void *cls, struct MHD_Connection *connectio
 				/* Token is valid or disabled */
 				token_authorized = TRUE;
 			}
-			/* We consider a request authorized if either the proper API secret or a valid token has been provided */
+			/* We consider a request authorized if either the proper API secret or a valid token has been provided 
+			如果提供了正确的 API 机密或有效令牌，我们认为请求已获得授权*/
 			if(!(is_api_secret_needed && secret_authorized) && !(is_auth_token_needed && token_authorized)) {
 				response = MHD_create_response_from_buffer(0, NULL, MHD_RESPMEM_PERSISTENT);
 				janus_http_add_cors_headers(msg, response);

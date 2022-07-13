@@ -434,6 +434,13 @@ int janus_get_codec_pt(const char *sdp, const char *codec) {
 	return -3;
 }
 
+/**
+ * @brief 从sdp中获取音频或者视频的编解码器
+ * 
+ * @param sdp 
+ * @param pt 
+ * @return const char* 
+ */
 const char *janus_get_codec_from_pt(const char *sdp, int pt) {
 	if(!sdp || pt < 0)
 		return NULL;

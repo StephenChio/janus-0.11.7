@@ -287,9 +287,9 @@ typedef rtcp_context janus_rtcp_context;
 /*! \brief Stores transport wide packet reception statistics */
 typedef struct rtcp_transport_wide_cc_stats
 {
-	/*! \brief Transwport wide sequence number */
+	/*! \brief Transwport wide sequence number 传输序列号*/
 	guint32 transport_seq_num;
-	/*! \brief Reception time */
+	/*! \brief Reception time 接收时间 */
 	guint64 timestamp;
 } rtcp_transport_wide_cc_stats;
 typedef rtcp_transport_wide_cc_stats janus_rtcp_transport_wide_cc_stats;

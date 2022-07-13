@@ -719,7 +719,7 @@ static void janus_ice_clear_queued_packets(janus_ice_handle *handle) {
 	}
 }
 
-
+/*向客户端发送trickle请求重新协商ICE*/
 static void janus_ice_notify_trickle(janus_ice_handle *handle, char *buffer) {
 	if(handle == NULL)
 		return;
@@ -751,6 +751,7 @@ static void janus_ice_notify_trickle(janus_ice_handle *handle, char *buffer) {
 	janus_session_notify_event(session, event);
 }
 
+/*向客户端发送media相关信息*/
 static void janus_ice_notify_media(janus_ice_handle *handle, gboolean video, int substream, gboolean up) {
 	if(handle == NULL)
 		return;
@@ -775,7 +776,7 @@ static void janus_ice_notify_media(janus_ice_handle *handle, gboolean video, int
 	/* Send the event */
 	JANUS_LOG(LOG_VERB, "[%"SCNu64"] Sending event to transport...\n", handle->handle_id);
 	janus_session_notify_event(session, event);
-	/* Notify event handlers as well */
+	/* Notify event handlers as well 如果开启事件通知，则一并同步消息*/
 	if(janus_events_is_enabled()) {
 		json_t *info = json_object();
 		json_object_set_new(info, "media", json_string(video ? "video" : "audio"));
@@ -788,7 +789,7 @@ static void janus_ice_notify_media(janus_ice_handle *handle, gboolean video, int
 			session->session_id, handle->handle_id, handle->opaque_id, info);
 	}
 }
-
+/*向客户端发送hangup相关信息*/
 void janus_ice_notify_hangup(janus_ice_handle *handle, const char *reason) {
 	if(handle == NULL)
 		return;
@@ -808,7 +809,7 @@ void janus_ice_notify_hangup(janus_ice_handle *handle, const char *reason) {
 	/* Send the event */
 	JANUS_LOG(LOG_VERB, "[%"SCNu64"] Sending event to transport...; %p\n", handle->handle_id, handle);
 	janus_session_notify_event(session, event);
-	/* Notify event handlers as well */
+	/* Notify event handlers as well 如果开启事件通知，则一并同步消息*/
 	if(janus_events_is_enabled()) {
 		json_t *info = json_object();
 		json_object_set_new(info, "connection", json_string("hangup"));
@@ -820,7 +821,7 @@ void janus_ice_notify_hangup(janus_ice_handle *handle, const char *reason) {
 }
 
 
-/* Trickle helpers */
+/* Trickle helpers 创建一个新的trickle */
 janus_ice_trickle *janus_ice_trickle_new(const char *transaction, json_t *candidate) {
 	if(transaction == NULL || candidate == NULL)
 		return NULL;
@@ -2419,6 +2420,16 @@ candidatedone:
 	return;
 }
 
+/**
+ * @brief 从ICE收到数据包
+ * 
+ * @param agent 
+ * @param stream_id 
+ * @param component_id 
+ * @param len 
+ * @param buf 
+ * @param ice 
+ */
 static void janus_ice_cb_nice_recv(NiceAgent *agent, guint stream_id, guint component_id, guint len, gchar *buf, gpointer ice) {
 	janus_ice_component *component = (janus_ice_component *)ice;
 	if(!component) {
@@ -2444,25 +2455,31 @@ static void janus_ice_cb_nice_recv(NiceAgent *agent, guint stream_id, guint comp
 		JANUS_LOG(LOG_VERB, "[%"SCNu64"] Forced to stop it here...\n", handle->handle_id);
 		return;
 	}
-	/* What is this? */
+	/* What is this? 判断是dtls数据 */
 	if(janus_is_dtls(buf) || (!janus_is_rtp(buf, len) && !janus_is_rtcp(buf, len))) {
-		/* This is DTLS: either handshake stuff, or data coming from SCTP DataChannels */
+		/* This is DTLS: either handshake stuff, or data coming from SCTP DataChannels 
+		这是 DTLS：要么是握手的东西，要么是来自 SCTP 数据通道的数据 */
 		JANUS_LOG(LOG_HUGE, "[%"SCNu64"] Looks like DTLS!\n", handle->handle_id);
 		janus_dtls_srtp_incoming_msg(component->dtls, buf, len);
-		/* Update stats (TODO Do the same for the last second window as well) */
+		/* Update stats (TODO Do the same for the last second window as well) 
+		更新统计信息（也对最后一秒窗口执行相同操作）
+		*/
 		component->in_stats.data.packets++;
 		component->in_stats.data.bytes += len;
 		return;
 	}
-	/* Not DTLS... RTP or RTCP? (http://tools.ietf.org/html/rfc5761#section-4) */
+	/* Not DTLS... RTP or RTCP? (http://tools.ietf.org/html/rfc5761#section-4) 
+	不是DTLS数据，判断是RTP还是RTCP */
 	if(janus_is_rtp(buf, len)) {
-		/* This is RTP */
+		/* This is RTP 收到RTP数据包*/
 		if(janus_is_webrtc_encryption_enabled() && (!component->dtls || !component->dtls->srtp_valid || !component->dtls->srtp_in)) {
+			//如果数据是加密的，且缺失srtp_valid
 			JANUS_LOG(LOG_WARN, "[%"SCNu64"]     Missing valid SRTP session (packet arrived too early?), skipping...\n", handle->handle_id);
 		} else {
+			/*数据不加密，或者持有秘钥 */
 			janus_rtp_header *header = (janus_rtp_header *)buf;
 			guint32 packet_ssrc = ntohl(header->ssrc);
-			/* Is this audio or video? */
+			/* Is this audio or video? 判断是视频还是音频*/
 			int video = 0, vindex = 0, rtx = 0;
 			/* Bundled streams, check SSRC */
 			video = ((stream->video_ssrc_peer[0] == packet_ssrc
@@ -2472,28 +2489,31 @@ static void janus_ice_cb_nice_recv(NiceAgent *agent, guint stream_id, guint comp
 				|| stream->video_ssrc_peer[2] == packet_ssrc
 				|| stream->video_ssrc_peer_rtx[2] == packet_ssrc) ? 1 : 0);
 			if(!video && stream->audio_ssrc_peer != packet_ssrc) {
-				/* Apparently we were not told the peer SSRCs, try the RTP mid extension (or payload types) */
+				/* Apparently we were not told the peer SSRCs, try the RTP mid extension (or payload types)
+				显然我们没有被告知 peer SSRCs，尝试 RTP mid 扩展（或有效负载类型） */
 				gboolean found = FALSE;
 				if(handle->stream->mid_ext_id > 0) {
 					char sdes_item[16];
+					/*解析mid拓展*/
 					if(janus_rtp_header_extension_parse_mid(buf, len, handle->stream->mid_ext_id, sdes_item, sizeof(sdes_item)) == 0) {
 						if(handle->audio_mid && !strcmp(handle->audio_mid, sdes_item)) {
-							/* It's audio */
+							/* It's audio 如果该插件的音频mid等于该rtp的mid */
 							JANUS_LOG(LOG_VERB, "[%"SCNu64"] Unadvertized SSRC (%"SCNu32") is audio! (mid %s)\n", handle->handle_id, packet_ssrc, sdes_item);
 							video = 0;
 							stream->audio_ssrc_peer = packet_ssrc;
 							found = TRUE;
 						} else if(handle->video_mid && !strcmp(handle->video_mid, sdes_item)) {
-							/* It's video */
+							/* It's video 如果该插件的视频mid等于该rtp的mid */
 							JANUS_LOG(LOG_VERB, "[%"SCNu64"] Unadvertized SSRC (%"SCNu32") is video! (mid %s)\n", handle->handle_id, packet_ssrc, sdes_item);
 							video = 1;
-							/* Check if simulcasting is involved */
+							/* Check if simulcasting is involved 检查是否涉及simulcasting*/
 							if(stream->rid[0] == NULL || stream->rid_ext_id < 1) {
+								// rid为空，说明不涉及simulcasting
 								stream->video_ssrc_peer[0] = packet_ssrc;
 								found = TRUE;
 							} else {
 								if(janus_rtp_header_extension_parse_rid(buf, len, stream->rid_ext_id, sdes_item, sizeof(sdes_item)) == 0) {
-									/* Try the RTP stream ID */
+									/* Try the RTP stream ID 查看RTP数据中的RTP拓展头中以rid_ext_id为id的的rid数据是否和stream中的rid[0]，rid[1]，rid[2]某一个相同，说明是来自其中一个RTP数据*/
 									if(stream->rid[0] != NULL && !strcmp(stream->rid[0], sdes_item)) {
 										JANUS_LOG(LOG_VERB, "[%"SCNu64"]  -- Simulcasting: rid=%s\n", handle->handle_id, sdes_item);
 										stream->video_ssrc_peer[0] = packet_ssrc;
@@ -2514,7 +2534,7 @@ static void janus_ice_cb_nice_recv(NiceAgent *agent, guint stream_id, guint comp
 									}
 								} else if(stream->ridrtx_ext_id > 0 &&
 										janus_rtp_header_extension_parse_rid(buf, len, stream->ridrtx_ext_id, sdes_item, sizeof(sdes_item)) == 0) {
-									/* Try the repaired RTP stream ID */
+									/* Try the repaired RTP stream ID 查看RTP数据中的RTP拓展头中以ridrtx_ext_id为id的的rid数据是否和stream中的rid[0]，rid[1]，rid[2]某一个相同，说明是来自其中一个RTP数据*/
 									if(stream->rid[0] != NULL && !strcmp(stream->rid[0], sdes_item)) {
 										JANUS_LOG(LOG_VERB, "[%"SCNu64"]  -- Simulcasting: rid=%s (rtx)\n", handle->handle_id, sdes_item);
 										stream->video_ssrc_peer_rtx[0] = packet_ssrc;
@@ -2542,14 +2562,18 @@ static void janus_ice_cb_nice_recv(NiceAgent *agent, guint stream_id, guint comp
 					}
 				}
 				if(!found) {
+					/*没有找到任何音视频数据*/
 					JANUS_LOG(LOG_WARN, "[%"SCNu64"] Not video and not audio? dropping (SSRC %"SCNu32")...\n", handle->handle_id, packet_ssrc);
 					return;
 				}
 			}
-			/* Make sure we're prepared to receive this media packet */
+			/* Make sure we're prepared to receive this media packet
+			确保我们需要接收音视频数据
+			 */
 			if((!video && !stream->audio_recv) || (video && !stream->video_recv))
 				return;
-			/* If this is video, check if this is simulcast and/or a retransmission using RFC4588 */
+			/* If this is video, check if this is simulcast and/or a retransmission using RFC4588 
+			如果这是视频，请检查这是否是simulcast 或使用 RFC4588 重新传输*/
 			if(video) {
 				if(stream->video_ssrc_peer[1] == packet_ssrc) {
 					/* FIXME Simulcast (1) */
@@ -2560,7 +2584,8 @@ static void janus_ice_cb_nice_recv(NiceAgent *agent, guint stream_id, guint comp
 					JANUS_LOG(LOG_HUGE, "[%"SCNu64"] Simulcast #2 (SSRC %"SCNu32")...\n", handle->handle_id, packet_ssrc);
 					vindex = 2;
 				} else {
-					/* Maybe a video retransmission using RFC4588? */
+					/* Maybe a video retransmission using RFC4588? 
+					也许使用 RFC4588 重新传输视频 */
 					if(stream->video_ssrc_peer_rtx[0] == packet_ssrc) {
 						rtx = 1;
 						vindex = 0;
@@ -2581,8 +2606,8 @@ static void janus_ice_cb_nice_recv(NiceAgent *agent, guint stream_id, guint comp
 			}
 
 			int buflen = len;
-			srtp_err_status_t res = janus_is_webrtc_encryption_enabled() ?
-				srtp_unprotect(component->dtls->srtp_in, buf, &buflen) : srtp_err_status_ok;
+			/*是否开启webRTC加密，如果开启了，判断秘钥是否有效*/
+			srtp_err_status_t res = janus_is_webrtc_encryption_enabled() ? srtp_unprotect(component->dtls->srtp_in, buf, &buflen) : srtp_err_status_ok;
 			if(res != srtp_err_status_ok) {
 				if(res != srtp_err_status_replay_fail && res != srtp_err_status_replay_old) {
 					/* Only print the error if it's not a 'replay fail' or 'replay old' (which is probably just the result of us NACKing a packet) */
@@ -2602,11 +2627,12 @@ static void janus_ice_cb_nice_recv(NiceAgent *agent, guint stream_id, guint comp
 						JANUS_LOG(LOG_VERB, "[%"SCNu64"]     Peer audio SSRC: %u\n", handle->handle_id, stream->audio_ssrc_peer);
 					}
 				}
-				/* Do we need to dump this packet for debugging? */
+				/* Do we need to dump this packet for debugging? 我们是否需要转储此数据包以进行调试？*/
 				if(g_atomic_int_get(&handle->dump_packets))
 					janus_text2pcap_dump(handle->text2pcap, JANUS_TEXT2PCAP_RTP, TRUE, buf, buflen,
 						"[session=%"SCNu64"][handle=%"SCNu64"]", session->session_id, handle->handle_id);
-				/* If this is a retransmission using RFC4588, we have to do something first to get the original packet */
+				/* If this is a retransmission using RFC4588, we have to do something first to get the original packet
+				如果这是使用 RFC4588 的重传，我们必须先做一些事情来获取原始数据包 */
 				janus_rtp_header *header = (janus_rtp_header *)buf;
 				int plen = 0;
 				char *payload = janus_rtp_payload(buf, buflen, &plen);
@@ -2614,45 +2640,50 @@ static void janus_ice_cb_nice_recv(NiceAgent *agent, guint stream_id, guint comp
 					  JANUS_LOG(LOG_ERR, "[%"SCNu64"]     Error accessing the RTP payload len=%d\n", handle->handle_id, buflen);
 				}
 				if(rtx) {
-					/* The original sequence number is in the first two bytes of the payload */
-					/* Rewrite the header with the info from the original packet (payload type, SSRC, sequence number) */
+					/* RFC4588 的重传操作*/
+					/* The original sequence number is in the first two bytes of the payload
+					原始序列号在payload的前两个字节中 */
+					/* Rewrite the header with the info from the original packet (payload type, SSRC, sequence number) 
+					使用原始数据包中的信息（payload类型、SSRC、序列号）重写header */
 					header->type = stream->video_payload_type;
 					packet_ssrc = stream->video_ssrc_peer[vindex];
 					header->ssrc = htonl(packet_ssrc);
 					if(plen > 0) {
 						memcpy(&header->seq_number, payload, 2);
 						/* Finally, remove the original sequence number from the payload: move the whole
-						 * payload back two bytes rather than shifting the header forward (avoid misaligned access) */
+						 * payload back two bytes rather than shifting the header forward (avoid misaligned access) 
+						   最后，从payload中删除原始序列号：将整个payload向后移动两个字节，而不是将header向前移动（避免未对齐的访问）*/
 						buflen -= 2;
 						plen -= 2;
 						memmove(payload, payload+2, plen);
 						header = (janus_rtp_header *)buf;
 						if(stream->rid_ext_id > 1 && stream->ridrtx_ext_id > 1) {
-							/* Replace the 'repaired' extension ID as well with the 'regular' one */
+							/* Replace the 'repaired' extension ID as well with the 'regular' one 
+							   将“repaired”扩展 ID 替换为“regular”扩展 ID*/
 							janus_rtp_header_extension_replace_id(buf, buflen, stream->ridrtx_ext_id, stream->rid_ext_id);
 						}
 					}
 				}
-				/* Check if we need to handle transport wide cc */
+				/* Check if we need to handle transport wide cc 检查我们是否需要处理拥塞控制 */
 				if(stream->do_transport_wide_cc) {
 					guint16 transport_seq_num;
-					/* Get transport wide seq num */
+					/* Get transport wide seq num 获取拥塞传输序列号 */
 					if(janus_rtp_header_extension_parse_transport_wide_cc(buf, buflen, stream->transport_wide_cc_ext_id, &transport_seq_num)==0) {
 						/* Get current timestamp */
 						struct timeval now;
 						gettimeofday(&now,0);
 						/* Create <seq num, time> pair */
 						janus_rtcp_transport_wide_cc_stats *stats = g_malloc0(sizeof(janus_rtcp_transport_wide_cc_stats));
-						/* Check if we have a sequence wrap */
+						/* Check if we have a sequence wrap 检查我们是否有序列换行 */
 						if(transport_seq_num<0x0FFF && (stream->transport_wide_cc_last_seq_num&0xFFFF)>0xF000) {
-							/* Increase cycles */
+							/* Increase cycles 增加周期 */
 							stream->transport_wide_cc_cycles++;
 						}
-						/* Get extended value */
+						/* Get extended value 获取拓展值 */
 						guint32 transport_ext_seq_num = stream->transport_wide_cc_cycles<<16 | transport_seq_num;
-						/* Store last received transport seq num */
+						/* Store last received transport seq num 存储最后接收的拥塞传输序列号 */
 						stream->transport_wide_cc_last_seq_num = transport_seq_num;
-						/* Set stats values */
+						/* Set stats values 设置状态值 */
 						stats->transport_seq_num = transport_ext_seq_num;
 						stats->timestamp = (((guint64)now.tv_sec)*1E6+now.tv_usec);
 						/* Lock and append to received list */
@@ -2662,17 +2693,18 @@ static void janus_ice_cb_nice_recv(NiceAgent *agent, guint stream_id, guint comp
 					}
 				}
 				if(video) {
-					/* Check if this packet is a duplicate: can happen with RFC4588 */
+					/* Check if this packet is a duplicate: can happen with RFC4588 检查此数据包是否重复：可能发生在 RFC4588 中 */
 					guint16 seqno = ntohs(header->seq_number);
 					int nstate = stream->rtx_nacked[vindex] ?
 						GPOINTER_TO_INT(g_hash_table_lookup(stream->rtx_nacked[vindex], GUINT_TO_POINTER(seqno))) : 0;
 					if(nstate == 1) {
-						/* Packet was NACKed and this is the first time we receive it: change state to received */
+						/* Packet was NACKed and this is the first time we receive it: change state to received 
+						数据包被确认，这是我们第一次收到它：将状态更改为收到*/
 						JANUS_LOG(LOG_HUGE, "[%"SCNu64"] Received NACKed packet %"SCNu16" (SSRC %"SCNu32", vindex %d)...\n",
 							handle->handle_id, seqno, packet_ssrc, vindex);
 						g_hash_table_insert(stream->rtx_nacked[vindex], GUINT_TO_POINTER(seqno), GUINT_TO_POINTER(2));
 					} else if(nstate == 2) {
-						/* We already received this packet: drop it */
+						/* We already received this packet: drop it 我们已经接收到这个包了，把它丢弃*/
 						JANUS_LOG(LOG_HUGE, "[%"SCNu64"] Detected duplicate packet %"SCNu16" (SSRC %"SCNu32", vindex %d)...\n",
 							handle->handle_id, seqno, packet_ssrc, vindex);
 						return;
@@ -2682,13 +2714,20 @@ static void janus_ice_cb_nice_recv(NiceAgent *agent, guint stream_id, guint comp
 						 * Chrome sends the first packet ~8 times as a retransmission, probably to ensure
 						 * we receive it, since the first packet cannot be NACKed (NACKs are triggered
 						 * when there's a gap in between two packets, and the first doesn't have a reference)
-						 * Rather than dropping, we should add a better check in the future */
+						 * Rather than dropping, we should add a better check in the future
+						 * 我们收到了一个我们没有 "需要丢包重传" 的数据包的重传：丢弃它
+						 * 启用 RFC4588 时，Chrome 似乎会发生这种情况
+						 * 在这种情况下，Chrome 发送第一个数据包约 8 次作为重传，可能是为了确保我们接收到它。
+						 * 因为第一个数据包不能被触发丢包重传而是会被丢弃（当两个数据包之间存在间隙时会触发丢包重传，而第一个数据包没有参考）
+						 * 我们应该在未来添加一个更好的检查
+						 *  */
 						JANUS_LOG(LOG_HUGE, "[%"SCNu64"] Got a retransmission for non-NACKed packet %"SCNu16" (SSRC %"SCNu32", vindex %d)...\n",
 							handle->handle_id, seqno, packet_ssrc, vindex);
 						return;
 					}
 				}
-				/* Backup the RTP header before passing it to the proper RTP switching context */
+				/* Backup the RTP header before passing it to the proper RTP switching context 
+				在将 RTP 标头传递给正确的 RTP context 之前备份它*/
 				janus_rtp_header backup = *header;
 				if(!video) {
 					if(stream->audio_ssrc_peer_orig == 0)
@@ -2701,8 +2740,9 @@ static void janus_ice_cb_nice_recv(NiceAgent *agent, guint stream_id, guint comp
 					janus_rtp_header_update(header, &stream->rtp_ctx[vindex], TRUE, 0);
 					header->ssrc = htonl(stream->video_ssrc_peer_orig[vindex]);
 				}
-				/* Keep track of payload types too */
+				/* Keep track of payload types too 保持对payload类型的追踪 */
 				if(!video && stream->audio_payload_type < 0) {
+					/*如果我们收到音频而且audio_payload_type未设置，我们把它进行更新，同时更新音频编解码类型*/
 					stream->audio_payload_type = header->type;
 					if(stream->audio_codec == NULL) {
 						const char *codec = janus_get_codec_from_pt(handle->local_sdp, stream->audio_payload_type);
@@ -2710,6 +2750,7 @@ static void janus_ice_cb_nice_recv(NiceAgent *agent, guint stream_id, guint comp
 							stream->audio_codec = g_strdup(codec);
 					}
 				} else if(video && stream->video_payload_type < 0) {
+					/*如果我们收到视频而且video_payload_type未设置，我们把它进行更新，同时更新视频编解码类型*/
 					stream->video_payload_type = header->type;
 					if(janus_flags_is_set(&handle->webrtc_flags, JANUS_ICE_HANDLE_WEBRTC_RFC4588_RTX) &&
 							stream->rtx_payload_types && g_hash_table_size(stream->rtx_payload_types) > 0) {
@@ -2723,6 +2764,7 @@ static void janus_ice_cb_nice_recv(NiceAgent *agent, guint stream_id, guint comp
 							stream->video_codec = g_strdup(codec);
 					}
 					if(stream->video_is_keyframe == NULL && stream->video_codec != NULL) {
+						/*更新关键帧*/
 						if(!strcasecmp(stream->video_codec, "vp8"))
 							stream->video_is_keyframe = &janus_vp8_is_keyframe;
 						else if(!strcasecmp(stream->video_codec, "vp9"))
@@ -2735,10 +2777,13 @@ static void janus_ice_cb_nice_recv(NiceAgent *agent, guint stream_id, guint comp
 							stream->video_is_keyframe = &janus_h265_is_keyframe;
 					}
 				}
-				/* Prepare the data to pass to the responsible plugin */
+				/* Prepare the data to pass to the responsible plugin 
+				准备要传递给负责插件的RTP数据 */
 				janus_plugin_rtp rtp = { .video = video, .buffer = buf, .length = buflen };
 				janus_plugin_rtp_extensions_reset(&rtp.extensions);
-				/* Parse RTP extensions before involving the plugin */
+				/* Parse RTP extensions before involving the plugin
+				在处理插件之前解析RTP拓展
+				 */
 				if(stream->audiolevel_ext_id != -1) {
 					gboolean vad = FALSE;
 					int level = -1;
@@ -2763,7 +2808,7 @@ static void janus_ice_cb_nice_recv(NiceAgent *agent, guint stream_id, guint comp
 						rtp.extensions.video_flipped = f;
 					}
 				}
-				/* Pass the packet to the plugin */
+				/* Pass the packet to the plugin 把数据传输给插件 */
 				janus_plugin *plugin = (janus_plugin *)handle->app;
 				if(plugin && plugin->incoming_rtp && handle->app_handle &&
 						!g_atomic_int_get(&handle->app_handle->stopped) &&
@@ -3558,7 +3603,7 @@ void janus_ice_setup_remote_candidates(janus_ice_handle *handle, guint stream_id
  * @brief 设置本地Description（offer）
  * 
  * @param handle 
- * @param offer 
+ * @param offer 0 代表 offer 1代表 answer
  * @param audio 
  * @param video 
  * @param data 
@@ -3566,14 +3611,17 @@ void janus_ice_setup_remote_candidates(janus_ice_handle *handle, guint stream_id
  * @return int 
  */
 int janus_ice_setup_local(janus_ice_handle *handle, int offer, int audio, int video, int data, int trickle) {
+	/*判断ICE核心handle是否可用*/
 	if(!handle || g_atomic_int_get(&handle->destroyed))
 		return -1;
+	/*判断ICE核心handle是否已经存在ICE代理*/
 	if(janus_flags_is_set(&handle->webrtc_flags, JANUS_ICE_HANDLE_WEBRTC_HAS_AGENT)) {
 		JANUS_LOG(LOG_WARN, "[%"SCNu64"] Agent already exists?\n", handle->handle_id);
 		return -2;
 	}
 	JANUS_LOG(LOG_VERB, "[%"SCNu64"] Setting ICE locally: got %s (%d audios, %d videos)\n", handle->handle_id, offer ? "OFFER" : "ANSWER", audio, video);
 	g_atomic_int_set(&handle->closepc, 0);
+	/*设置标志为已经获取代理，清空其余标志（开始，协商，准备，停止，修改，清除，有音频，有视频，ICE重新协商，发送trickles）*/
 	janus_flags_set(&handle->webrtc_flags, JANUS_ICE_HANDLE_WEBRTC_HAS_AGENT);
 	janus_flags_clear(&handle->webrtc_flags, JANUS_ICE_HANDLE_WEBRTC_START);
 	janus_flags_clear(&handle->webrtc_flags, JANUS_ICE_HANDLE_WEBRTC_NEGOTIATED);
@@ -3586,7 +3634,9 @@ int janus_ice_setup_local(janus_ice_handle *handle, int offer, int audio, int vi
 	janus_flags_clear(&handle->webrtc_flags, JANUS_ICE_HANDLE_WEBRTC_ICE_RESTART);
 	janus_flags_clear(&handle->webrtc_flags, JANUS_ICE_HANDLE_WEBRTC_RESEND_TRICKLES);
 
-	/* Note: in case this is not an OFFER, we don't know whether any medium are supported on the other side or not yet */
+	/* Note: in case this is not an OFFER, we don't know whether any medium are supported on the other side or not yet 
+	如果这不是OFFER，我们不知道对方是否支持任何媒体
+	*/
 	if(audio) {
 		janus_flags_set(&handle->webrtc_flags, JANUS_ICE_HANDLE_WEBRTC_HAS_AUDIO);
 	} else {
@@ -3602,19 +3652,27 @@ int janus_ice_setup_local(janus_ice_handle *handle, int offer, int audio, int vi
 	} else {
 		janus_flags_clear(&handle->webrtc_flags, JANUS_ICE_HANDLE_WEBRTC_DATA_CHANNELS);
 	}
-	/* Note: in case this is not an OFFER, we don't know whether ICE trickling is supported on the other side or not yet */
+	/* Note: in case this is not an OFFER, we don't know whether ICE trickling is supported on the other side or not yet 
+	如果这不是一个OFFER，我们不知道另一边是否支持 ICE trickling */
 	if(offer && trickle) {
 		janus_flags_set(&handle->webrtc_flags, JANUS_ICE_HANDLE_WEBRTC_TRICKLE);
 	} else {
 		janus_flags_clear(&handle->webrtc_flags, JANUS_ICE_HANDLE_WEBRTC_TRICKLE);
 	}
+	/*清除标志（ALL_TRICKLES，TRICKLE_SYNCED）*/
 	janus_flags_clear(&handle->webrtc_flags, JANUS_ICE_HANDLE_WEBRTC_ALL_TRICKLES);
 	janus_flags_clear(&handle->webrtc_flags, JANUS_ICE_HANDLE_WEBRTC_TRICKLE_SYNCED);
 
-	/* Note: NICE_COMPATIBILITY_RFC5245 is only available in more recent versions of libnice */
+	/* Note: NICE_COMPATIBILITY_RFC5245 is only available in more recent versions of libnice
+	NICE_COMPATIBILITY_RFC5245 仅在较新版本的 libnice 中可用  */
+	/* 如果开启了ICE LITE, handle的角色标志成controlled(受控制), 
+	 * 如果没有开启ICE LITE ，在收到offer 的时候，！offer = 1 handle的角色标志成controlling (控制) 
+	 如果没有开启ICE LITE ，  在收到answer的时候，！offer = 0 handle的角色标志成controlled (受控制)
+	 */
 	handle->controlling = janus_ice_lite_enabled ? FALSE : !offer;
 	JANUS_LOG(LOG_INFO, "[%"SCNu64"] Creating ICE agent (ICE %s mode, %s)\n", handle->handle_id,
 		janus_ice_lite_enabled ? "Lite" : "Full", handle->controlling ? "controlling" : "controlled");
+	/*libnice创建一个ICE代理*/
 	handle->agent = g_object_new(NICE_TYPE_AGENT,
 		"compatibility", NICE_COMPATIBILITY_DRAFT19,
 		"main-context", handle->mainctx,
@@ -3632,19 +3690,22 @@ int janus_ice_setup_local(janus_ice_handle *handle, int offer, int audio, int vi
 	handle->agent_created = janus_get_monotonic_time();
 	handle->srtp_errors_count = 0;
 	handle->last_srtp_error = 0;
-	/* Any STUN server to use? */
+	/* Any STUN server to use? 我们是否需要使用STUN服务器？ */
 	if(janus_stun_server != NULL && janus_stun_port > 0) {
 		g_object_set(G_OBJECT(handle->agent),
 			"stun-server", janus_stun_server,
 			"stun-server-port", janus_stun_port,
 			NULL);
 	}
-	/* Any dynamic TURN credentials to retrieve via REST API? */
+	/* Any dynamic TURN credentials to retrieve via REST API? 
+	任何动态 TURN 凭据可通过 REST API 检索？*/
 	gboolean have_turnrest_credentials = FALSE;
 #ifdef HAVE_TURNRESTAPI
 	/* When using the TURN REST API, we use the handle's opaque_id as a username
 	 * by default, and fall back to the session_id when it's missing. Refer to this
-	 * issue for more context: https://github.com/meetecho/janus-gateway/issues/2199 */
+	 * issue for more context: https://github.com/meetecho/janus-gateway/issues/2199 
+	 * 在使用 TURN REST API 时，我们默认使用handle 的 opaque_id 作为用户名，当它丢失时回退到 session_id
+	 * */
 	char turnrest_username[20];
 	if(handle->opaque_id == NULL) {
 		janus_session *session = (janus_session *)handle->session;
@@ -3667,12 +3728,14 @@ int janus_ice_setup_local(janus_ice_handle *handle, int offer, int audio, int vi
 		}
 	}
 #endif
+    /*设置代理的配置，例如角色控制状态，candidate收集完成的回调函数，组件状态改变的回调函数*/
 	g_object_set(G_OBJECT(handle->agent), "upnp", FALSE, NULL);
 	g_object_set(G_OBJECT(handle->agent), "controlling-mode", handle->controlling, NULL);
 	g_signal_connect (G_OBJECT (handle->agent), "candidate-gathering-done",
 		G_CALLBACK (janus_ice_cb_candidate_gathering_done), handle);
 	g_signal_connect (G_OBJECT (handle->agent), "component-state-changed",
 		G_CALLBACK (janus_ice_cb_component_state_changed), handle);
+	/*是否定义了使用TCP进行ICE连接*/
 #ifndef HAVE_LIBNICE_TCP
 	g_signal_connect (G_OBJECT (handle->agent), "new-selected-pair",
 #else
@@ -3694,7 +3757,9 @@ int janus_ice_setup_local(janus_ice_handle *handle, int offer, int audio, int vi
 #endif
 		G_CALLBACK (janus_ice_cb_new_remote_candidate), handle);
 
-	/* Add all local addresses, except those in the ignore list */
+	/* Add all local addresses, except those in the ignore list 
+	添加所有本地地址，除了我们需要忽略的那些
+	*/
 	struct ifaddrs *ifaddr, *ifa;
 	int family, s, n;
 	char host[NI_MAXHOST];
@@ -3705,21 +3770,24 @@ int janus_ice_setup_local(janus_ice_handle *handle, int offer, int audio, int vi
 		for(ifa = ifaddr, n = 0; ifa != NULL; ifa = ifa->ifa_next, n++) {
 			if(ifa->ifa_addr == NULL)
 				continue;
-			/* Skip interfaces which are not up and running */
+			/* Skip interfaces which are not up and running 跳过那些没有在运行的地址*/
 			if(!((ifa->ifa_flags & IFF_UP) && (ifa->ifa_flags & IFF_RUNNING)))
 				continue;
-			/* Skip loopback interfaces */
+			/* Skip loopback interfaces 跳过环回地址*/
 			if(ifa->ifa_flags & IFF_LOOPBACK)
 				continue;
 			family = ifa->ifa_addr->sa_family;
 			if(family != AF_INET && family != AF_INET6)
 				continue;
-			/* We only add IPv6 addresses if support for them has been explicitly enabled */
+			/* We only add IPv6 addresses if support for them has been explicitly enabled 
+			如果已明确启用对 IPv6 地址的支持，我们只会添加 IPv6 地址*/
 			if(family == AF_INET6 && !janus_ipv6_enabled)
 				continue;
-			/* Check the interface name first, we can ignore that as well: enforce list would be checked later */
+			/* Check the interface name first, we can ignore that as well: enforce list would be checked later 
+			跳过忽略地址*/
 			if(janus_ice_enforce_list == NULL && ifa->ifa_name != NULL && janus_ice_is_ignored(ifa->ifa_name))
 				continue;
+			/*获取地址名称信息*/
 			s = getnameinfo(ifa->ifa_addr,
 					(family == AF_INET) ? sizeof(struct sockaddr_in) : sizeof(struct sockaddr_in6),
 					host, NI_MAXHOST, NULL, 0, NI_NUMERICHOST);
@@ -3727,32 +3795,37 @@ int janus_ice_setup_local(janus_ice_handle *handle, int offer, int audio, int vi
 				JANUS_LOG(LOG_ERR, "[%"SCNu64"] getnameinfo() failed: %s\n", handle->handle_id, gai_strerror(s));
 				continue;
 			}
-			/* Skip 0.0.0.0, :: and, unless otherwise configured, local scoped addresses  */
+			/* Skip 0.0.0.0, :: and, unless otherwise configured, local scoped addresses 
+			跳过 0.0.0.0、:: 以及除非另有配置，否则跳过本地范围地址 */
 			if(!strcmp(host, "0.0.0.0") || !strcmp(host, "::") || (!janus_ipv6_linklocal_enabled && !strncmp(host, "fe80:", 5)))
 				continue;
-			/* Check if this IP address is in the ignore/enforce list: the enforce list has the precedence but the ignore list can then discard candidates */
+			/* Check if this IP address is in the ignore/enforce list: the enforce list has the precedence but the ignore list can then discard candidates 
+			检查IP地址是否在强制使用列表中，如果强制使用，会有更高优先级，如果忽略，则丢弃*/
 			if(janus_ice_enforce_list != NULL) {
 				if(ifa->ifa_name != NULL && !janus_ice_is_enforced(ifa->ifa_name) && !janus_ice_is_enforced(host))
 					continue;
 			}
 			if(janus_ice_is_ignored(host))
 				continue;
-			/* Ok, add interface to the ICE agent */
+			/* Ok, add interface to the ICE agent 添加地址到ICE代理 */
 			JANUS_LOG(LOG_VERB, "[%"SCNu64"] Adding %s to the addresses to gather candidates for\n", handle->handle_id, host);
 			NiceAddress addr_local;
 			nice_address_init (&addr_local);
 			if(!nice_address_set_from_string (&addr_local, host)) {
+				/*添加地址失败，可能是无效地址*/
 				JANUS_LOG(LOG_WARN, "[%"SCNu64"] Skipping invalid address %s\n", handle->handle_id, host);
 				continue;
 			}
+			/*添加地址到ICE代理*/
 			nice_agent_add_local_address (handle->agent, &addr_local);
 		}
+		/*释放已使用的资源*/
 		freeifaddrs(ifaddr);
 	}
 
 	handle->cdone = 0;
 	handle->stream_id = 0;
-	/* If this is our first offer, let's generate some mids */
+	/* If this is our first offer, let's generate some mids 如果这是我们的第一个offer，生成一些mids */
 	if(!offer) {
 		if(audio) {
 			if(handle->audio_mid == NULL)
@@ -3775,42 +3848,50 @@ int janus_ice_setup_local(janus_ice_handle *handle, int offer, int audio, int vi
 		}
 #endif
 	}
-	/* Now create an ICE stream for all the media we'll handle */
+	/* Now create an ICE stream for all the media we'll handle
+	现在为了所有我们处理的媒体生成一个ICE stream
+	 */
 	handle->stream_id = nice_agent_add_stream(handle->agent, 1);
 	if(dscp_ef > 0) {
-		/* A DSCP value was configured, shift it and pass it to libnice as a TOS */
+		/* A DSCP value was configured, shift it and pass it to libnice as a TOS
+		如果配置了 DSCP 值，将其转换并作为 TOS 传递给 libnice */
 		nice_agent_set_stream_tos(handle->agent, handle->stream_id, dscp_ef << 2);
 	}
+	/*初始化一个ICE stream*/
 	janus_ice_stream *stream = g_malloc0(sizeof(janus_ice_stream));
+	/*增加一些引用计数*/
 	janus_refcount_init(&stream->ref, janus_ice_stream_free);
 	janus_refcount_increase(&handle->ref);
+	/*ICE stream 赋值*/
 	stream->stream_id = handle->stream_id;
 	stream->handle = handle;
 	stream->audio_payload_type = -1;
 	stream->video_payload_type = -1;
 	stream->video_rtx_payload_type = -1;
 	stream->nack_queue_ms = min_nack_queue;
-	/* FIXME By default, if we're being called we're DTLS clients, but this may be changed by ICE... */
+	/* FIXME By default, if we're being called we're DTLS clients, but this may be changed by ICE...
+	如果我们接受offer，那么我们是接收端，反之我们是客户端 */
 	stream->dtls_role = offer ? JANUS_DTLS_ROLE_CLIENT : JANUS_DTLS_ROLE_ACTPASS;
 	if(audio) {
-		stream->audio_ssrc = janus_random_uint32();	/* FIXME Should we look for conflicts? */
+		stream->audio_ssrc = janus_random_uint32();	/* FIXME Should we look for conflicts? 我们是否应该寻找冲突？ 这里可能会有ssrc冲突 概率很低*/
 		stream->audio_rtcp_ctx = g_malloc0(sizeof(janus_rtcp_context));
-		stream->audio_rtcp_ctx->tb = 48000;	/* May change later */
+		stream->audio_rtcp_ctx->tb = 48000;	/* May change later 可能会被后续请求修改 */
 	}
 	if(video) {
-		stream->video_ssrc = janus_random_uint32();	/* FIXME Should we look for conflicts? */
+		stream->video_ssrc = janus_random_uint32();	/* FIXME Should we look for conflicts? 我们是否应该寻找冲突？ 这里可能会有ssrc冲突 概率很低*/
 		if(janus_flags_is_set(&handle->webrtc_flags, JANUS_ICE_HANDLE_WEBRTC_RFC4588_RTX)) {
 			/* Create an SSRC for RFC4588 as well */
-			stream->video_ssrc_rtx = janus_random_uint32();	/* FIXME Should we look for conflicts? */
+			stream->video_ssrc_rtx = janus_random_uint32();	/* FIXME Should we look for conflicts? 我们是否应该寻找冲突？ 这里可能会有ssrc_rtx冲突 概率很低*/
 		}
 		stream->video_rtcp_ctx[0] = g_malloc0(sizeof(janus_rtcp_context));
 		stream->video_rtcp_ctx[0]->tb = 90000;
 	}
 	janus_mutex_init(&stream->mutex);
 	if(!have_turnrest_credentials) {
-		/* No TURN REST API server and credentials, any static ones? */
+		/* No TURN REST API server and credentials, any static ones? 
+		没有配置动态turn服务API来获取turn服务，我们是否有一个静态的turn服务？*/
 		if(janus_turn_server != NULL) {
-			/* We need relay candidates as well */
+			/* We need relay candidates as well 我们有一个静态的turn服务，需要转发candidate */
 			gboolean ok = nice_agent_set_relay_info(handle->agent, handle->stream_id, 1,
 				janus_turn_server, janus_turn_port, janus_turn_user, janus_turn_pwd, janus_turn_type);
 			if(!ok) {
@@ -3820,9 +3901,11 @@ int janus_ice_setup_local(janus_ice_handle *handle, int offer, int audio, int vi
 		}
 #ifdef HAVE_TURNRESTAPI
 	} else {
-		/* We need relay candidates as well: add all those we got */
+		/* We need relay candidates as well: add all those we got 
+		我们配置了动态turn服务API来获取turn服务*/
 		GList *server = turnrest_credentials->servers;
 		while(server != NULL) {
+			/*转发candidate*/
 			janus_turnrest_instance *instance = (janus_turnrest_instance *)server->data;
 			gboolean ok = nice_agent_set_relay_info(handle->agent, handle->stream_id, 1,
 				instance->server, instance->port,
@@ -3836,20 +3919,28 @@ int janus_ice_setup_local(janus_ice_handle *handle, int offer, int audio, int vi
 		}
 #endif
 	}
+	/*初始化ICE streamn结束*/
 	handle->stream = stream;
+	/*初始化ICE 组件*/
 	janus_ice_component *component = g_malloc0(sizeof(janus_ice_component));
 	janus_refcount_init(&component->ref, janus_ice_component_free);
+	/*把ICE stream加载到ICE组件中*/
 	component->stream = stream;
 	janus_refcount_increase(&stream->ref);
+	/*把ICE组件stream id为ICE stream Id*/
 	component->stream_id = stream->stream_id;
 	component->component_id = 1;
 	janus_mutex_init(&component->mutex);
+	/*把ICE 组件加载到ICE stream中*/
 	stream->component = component;
 #ifdef HAVE_PORTRANGE
-	/* FIXME: libnice supports this since 0.1.0, but the 0.1.3 on Fedora fails with an undefined reference! */
+    /*是否有端口范围*/
+	/* FIXME: libnice supports this since 0.1.0, but the 0.1.3 on Fedora fails with an undefined reference! 
+	libnice 从 0.1.0 开始就支持这一点，但是 Fedora 上的 0.1.3 会失败并带有未定义的引用*/
 	nice_agent_set_port_range(handle->agent, handle->stream_id, 1, rtp_range_min, rtp_range_max);
 #endif
-	/* Gather now only if we're doing hanf-trickle */
+	/* Gather now only if we're doing hanf-trickle
+	仅当我们正在做 hanf-trickle 时才收集 */
 	if(!janus_full_trickle_enabled && !nice_agent_gather_candidates(handle->agent, handle->stream_id)) {
 #ifdef HAVE_TURNRESTAPI
 		if(turnrest_credentials != NULL) {
@@ -3870,17 +3961,19 @@ int janus_ice_setup_local(janus_ice_handle *handle, int offer, int audio, int vi
 		turnrest_credentials = NULL;
 	}
 #endif
-	/* Create DTLS-SRTP context, at last */
+	/* Create DTLS-SRTP context, at last 最后创建DTLS-SRTP内容 */
 	component->dtls = janus_dtls_srtp_create(component, stream->dtls_role);
 	if(!component->dtls) {
-		/* FIXME We should clear some resources... */
+		/* FIXME We should clear some resources...如果创建失败，我们需要清理一些资源 */
 		JANUS_LOG(LOG_ERR, "[%"SCNu64"] Error creating DTLS-SRTP stack...\n", handle->handle_id);
 		janus_flags_clear(&handle->webrtc_flags, JANUS_ICE_HANDLE_WEBRTC_HAS_AGENT);
 		janus_ice_webrtc_hangup(handle, "DTLS-SRTP stack error");
 		return -1;
 	}
 	janus_refcount_increase(&component->dtls->ref);
-	/* If we're doing full-tricke, start gathering asynchronously */
+	/* If we're doing full-tricke, start gathering asynchronously 
+	如果我们在做full-trickle，开始异步收集
+	*/
 	if(janus_full_trickle_enabled) {
 #if GLIB_CHECK_VERSION(2, 46, 0)
 		g_async_queue_push_front(handle->queued_packets, &janus_ice_start_gathering);
@@ -3892,6 +3985,11 @@ int janus_ice_setup_local(janus_ice_handle *handle, int offer, int audio, int vi
 	return 0;
 }
 
+/**
+ * @brief ICE重新协商
+ * 
+ * @param handle 
+ */
 void janus_ice_restart(janus_ice_handle *handle) {
 	if(!handle || !handle->agent || !handle->stream)
 		return;
@@ -3902,6 +4000,7 @@ void janus_ice_restart(janus_ice_handle *handle) {
 	janus_flags_clear(&handle->webrtc_flags, JANUS_ICE_HANDLE_WEBRTC_ICE_RESTART);
 }
 
+/*重新发送trickle给客户端*/
 void janus_ice_resend_trickles(janus_ice_handle *handle) {
 	if(!handle || !handle->agent)
 		return;
@@ -3913,7 +4012,7 @@ void janus_ice_resend_trickles(janus_ice_handle *handle) {
 	if(!component)
 		return;
 	NiceAgent *agent = handle->agent;
-	/* Iterate on all existing local candidates */
+	/* Iterate on all existing local candidates 迭代所有已经存在的本地candidate */
 	gchar buffer[200];
 	GSList *candidates, *i;
 	candidates = nice_agent_get_local_candidates (agent, stream->stream_id, component->component_id);
@@ -3929,12 +4028,17 @@ void janus_ice_resend_trickles(janus_ice_handle *handle) {
 		guint public_ip_index = 0;
 		do {
 			if(janus_ice_candidate_to_string(handle, c, buffer, sizeof(buffer), FALSE, FALSE, public_ip_index) == 0) {
-				/* Candidate encoded, send a "trickle" event to the browser */
+				/* Candidate encoded, send a "trickle" event to the browser
+				candidate编码，向客户端发送trickle回复（带有candidate），客户端通过webRTC进行重新协商ICE
+				 */
 				janus_ice_notify_trickle(handle, buffer);
-				/* If nat-1-1 is enabled but we want to keep the private host, add another candidate */
+				/* If nat-1-1 is enabled but we want to keep the private host, add another candidate
+				如果开启了1对1 nat地址映射但是我们想要保持私有地址，添加其他的candidate
+				 */
 				if(nat_1_1_enabled && keep_private_host && public_ip_index == 0 &&
 						janus_ice_candidate_to_string(handle, c, buffer, sizeof(buffer), FALSE, TRUE, public_ip_index) == 0) {
-					/* Candidate encoded, send a "trickle" event to the browser */
+					/* Candidate encoded, send a "trickle" event to the browser 
+					candidate编码，向客户端发送trickle回复（带有candidate），客户端通过webRTC进行重新协商ICE */
 					janus_ice_notify_trickle(handle, buffer);
 				}
 			}
@@ -3942,7 +4046,7 @@ void janus_ice_resend_trickles(janus_ice_handle *handle) {
 		} while (public_ip_index < janus_get_public_ip_count());
 		nice_candidate_free(c);
 	}
-	/* Send a "completed" trickle at the end */
+	/* Send a "completed" trickle at the end 最后发送completed */
 	janus_ice_notify_trickle(handle, NULL);
 }
 
@@ -4898,54 +5002,70 @@ static void janus_ice_queue_packet(janus_ice_handle *handle, janus_ice_queued_pa
 	}
 }
 
+/**
+ * @brief ICE转发RTP数据
+ * 
+ * @param handle 
+ * @param packet 
+ */
 void janus_ice_relay_rtp(janus_ice_handle *handle, janus_plugin_rtp *packet) {
+	/* 判断参数是否有效 */
 	if(!handle || !handle->stream || handle->queued_packets == NULL || packet == NULL || packet->buffer == NULL ||
 			!janus_is_rtp(packet->buffer, packet->length))
 		return;
+	/* 判断该插件是否不传输音频和视频 */	
 	if((!packet->video && !janus_flags_is_set(&handle->webrtc_flags, JANUS_ICE_HANDLE_WEBRTC_HAS_AUDIO))
 			|| (packet->video && !janus_flags_is_set(&handle->webrtc_flags, JANUS_ICE_HANDLE_WEBRTC_HAS_VIDEO)))
 		return;
+	/*RTP头部大小*/
 	uint16_t totlen = RTP_HEADER_SIZE;
-	/* Check how large the payload is */
+	/* Check how large the payload is 检查payload的大小 */
 	int plen = 0;
 	char *payload = janus_rtp_payload(packet->buffer, packet->length, &plen);
 	if(payload != NULL)
+	    /*总长度等于RTP头部长度+payload长度*/
 		totlen += plen;
-	/* We need to strip extensions, here, and add those that need to be there manually */
+	/* We need to strip extensions, here, and add those that need to be there manually
+	我们需要在这里去除扩展名，然后手动添加那些需要的扩展名 */
 	uint16_t extlen = 0;
 	char extensions[50];
 	janus_rtp_header *header = (janus_rtp_header *)packet->buffer;
 	int origext = header->extension;
 	header->extension = 0;
-	/* Add core and plugin extensions, if any */
-	if(handle->stream->mid_ext_id > 0 || (packet->video && handle->stream->abs_send_time_ext_id > 0) ||
+	/* Add core and plugin extensions, if any 如果需要添加插件拓展 */
+	if(handle->stream->mid_ext_id > 0 || 
+	        (packet->video && handle->stream->abs_send_time_ext_id > 0) ||
 			(packet->video && handle->stream->transport_wide_cc_ext_id > 0) ||
 			(!packet->video && packet->extensions.audio_level != -1 && handle->stream->audiolevel_ext_id > 0) ||
 			(packet->video && packet->extensions.video_rotation != -1 && handle->stream->videoorientation_ext_id > 0)) {
 		header->extension = 1;
+		/*初始化extensions内存空间为0*/
 		memset(extensions, 0, sizeof(extensions));
+		/*在extensions内存空间上创建janus_rtp_header_extension，初始化type = 0xBEDE , length = 0 RTP头后的第一个16为固定为0XBEDE标志，意味着这是一个one-byte扩展*/
 		janus_rtp_header_extension *extheader = (janus_rtp_header_extension *)extensions;
 		extheader->type = htons(0xBEDE);
 		extheader->length = 0;
-		/* Iterate on all extensions we need */
+		/* Iterate on all extensions we need 迭代我们需要的拓展 index指向拓展内容*/
 		char *index = extensions + 4;
-		/* Check if we need to add the abs-send-time extension */
+		/* Check if we need to add the abs-send-time extension 检查我们是否需要添加abs-send-time拓展*/
 		if(packet->video && handle->stream->abs_send_time_ext_id > 0) {
 			*index = (handle->stream->abs_send_time_ext_id << 4) + 2;
-			/* We'll actually set the value later, when sending the packet */
+			/* We'll actually set the value later, when sending the packet
+			我们稍后会在发送数据包时设置该值  */
 			memset(index+1, 0, 3);
 			index += 4;
 			extlen += 4;
 		}
-		/* Check if we need to add the transport-wide CC extension */
+		/* Check if we need to add the transport-wide CC extension 检查我们是否需要添加transport-wide CC拓展 */
 		if(packet->video && handle->stream->transport_wide_cc_ext_id > 0) {
 			*index = (handle->stream->transport_wide_cc_ext_id << 4) + 1;
-			/* We'll actually set the sequence number later, when sending the packet */
+			/* We'll actually set the sequence number later, when sending the packet
+			我们稍后会在发送数据包时设置序列号 */
 			memset(index+1, 0, 2);
 			index += 3;
 			extlen += 3;
 		}
-		/* Check if we need to add the mid extension */
+		/* Check if we need to add the mid extension 检查我们是否需要添加mid拓展 */
 		if(handle->stream->mid_ext_id > 0) {
 			char *mid = packet->video ? handle->video_mid : handle->audio_mid;
 			if(mid != NULL) {
@@ -4956,16 +5076,16 @@ void janus_ice_relay_rtp(janus_ice_handle *handle, janus_plugin_rtp *packet) {
 				extlen += (midlen + 1);
 			}
 		}
-		/* Check if the plugin (or source) included other extensions */
+		/* Check if the plugin (or source) included other extensions 检查是否插件包含其他拓展 */
 		if(!packet->video && packet->extensions.audio_level != -1 && handle->stream->audiolevel_ext_id > 0) {
-			/* Add audio-level extension */
-			*index = (handle->stream->audiolevel_ext_id << 4);
+			/* Add audio-level extension 添加音频级别拓展 */
+			*index = (handle->stream->audiolevel_ext_id << 4) + 0;
 			*(index+1) = (packet->extensions.audio_level_vad << 7) + (packet->extensions.audio_level & 0x7F);
 			index += 2;
 			extlen += 2;
 		}
 		if(packet->video && packet->extensions.video_rotation != -1 && handle->stream->videoorientation_ext_id > 0) {
-			/* Add video-orientation extension */
+			/* Add video-orientation extension 添加视频角度拓展 */
 			*index = (handle->stream->videoorientation_ext_id << 4);
 			gboolean c = packet->extensions.video_back_camera,
 				f = packet->extensions.video_flipped, r1 = FALSE, r0 = FALSE;
@@ -4992,24 +5112,24 @@ void janus_ice_relay_rtp(janus_ice_handle *handle, janus_plugin_rtp *packet) {
 			index += 2;
 			extlen += 2;
 		}
-		/* Calculate the whole length */
+		/* Calculate the whole length 计算总长度 */
 		uint16_t words = extlen/4;
 		if(extlen%4 != 0)
 			words++;
 		extheader->length = htons(words);
-		/* Update lengths (taking into account the RFC5285 header) */
+		/* Update lengths (taking into account the RFC5285 header) 更新总长度 */
 		extlen = 4 + (words*4);
 		totlen += extlen;
 	}
-	/* Queue this packet */
+	/* Queue this packet 入队RTP包 */
 	janus_ice_queued_packet *pkt = g_malloc(sizeof(janus_ice_queued_packet));
 	pkt->data = g_malloc(totlen + SRTP_MAX_TAG_LEN);
-	/* RTP header first */
+	/* RTP header first 复制包头 */
 	memcpy(pkt->data, packet->buffer, RTP_HEADER_SIZE);
-	/* Then RTP extensions, if any */
+	/* Then RTP extensions, if any 复制包拓展头 如果有*/
 	if(extlen > 0)
 		memcpy(pkt->data + RTP_HEADER_SIZE, extensions, extlen);
-	/* Finally the RTP payload, if available */
+	/* Finally the RTP payload, if available 最后复制RTP payload*/
 	if(payload != NULL && plen > 0)
 		memcpy(pkt->data + RTP_HEADER_SIZE + extlen, payload, plen);
 	pkt->length = totlen;
@@ -5021,7 +5141,7 @@ void janus_ice_relay_rtp(janus_ice_handle *handle, janus_plugin_rtp *packet) {
 	pkt->protocol = NULL;
 	pkt->added = janus_get_monotonic_time();
 	janus_ice_queue_packet(handle, pkt);
-	/* Restore the extension flag to what the plugin set it to */
+	/* Restore the extension flag to what the plugin set it to 将扩展标志恢复为插件设置的值 */
 	header->extension = origext;
 }
 

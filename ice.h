@@ -324,37 +324,41 @@ enum {
 
 /*! \brief Janus ICE handle */
 struct janus_ice_handle {
-	/*! \brief Opaque pointer to the core/peer session */
+	/*! \brief Opaque pointer to the core/peer session 指向核心session的指针 对于一个用户这是他主session*/
 	void *session;
-	/*! \brief Handle identifier, guaranteed to be non-zero */
+	/*! \brief Handle identifier, guaranteed to be non-zero 对于一个用户这是他插件的handle_id */
 	guint64 handle_id;
-	/*! \brief Opaque identifier, e.g., to provide inter-handle relationships to external tools */
+	/*! \brief Opaque identifier, e.g., to provide inter-handle relationships to external tools 主要是内部使用*/
 	char *opaque_id;
-	/*! \brief Token that was used to attach the handle, if required */
+	/*! \brief Token that was used to attach the handle, if required 加载插件所需要的token令牌，如果需要*/
 	char *token;
-	/*! \brief Monotonic time of when the handle has been created */
+	/*! \brief Monotonic time of when the handle has been created 创建插件handle的时间*/
 	gint64 created;
-	/*! \brief Opaque application (plugin) pointer */
+	/*! \brief Opaque application (plugin) pointer 指向具体插件的指针 */
 	void *app;
-	/*! \brief Opaque core/plugin session pointer */
+	/*! \brief Opaque core/plugin session pointer 指向插件session的指针 每一个handle添加到一个插件上都会创建一个session */
 	janus_plugin_session *app_handle;
 	/*! \brief Mask of WebRTC-related flags for this handle */
 	janus_flags webrtc_flags;
-	/*! \brief Number of gathered candidates */
+	/*! \brief Number of gathered candidates 收集的candidate数量*/
 	gint cdone;
-	/*! \brief GLib context for the handle and libnice */
+	/*! \brief GLib context for the handle and libnice # handle和libnice的 GLib 上下文 */
 	GMainContext *mainctx;
-	/*! \brief GLib loop for the handle and libnice */
+	/*! \brief GLib loop for the handle and libnice # handle和libnice 的 GLib 循环*/
 	GMainLoop *mainloop;
-	/*! \brief GLib thread for the handle and libnice */
+	/*! \brief GLib thread for the handle and libnice # handle和libnice 的 GLib 线程 */
 	GThread *thread;
-	/*! \brief GLib sources for outgoing traffic, recurring RTCP, and stats (and optionally TWCC) */
+	/*! \brief GLib sources for outgoing traffic, recurring RTCP, and stats (and optionally TWCC) 
+	用于传出流量、循环 RTCP 和统计信息（以及可选的 TWCC）的 GLib 源*/
 	GSource *rtp_source, *rtcp_source, *stats_source, *twcc_source;
-	/*! \brief libnice ICE agent */
+	/*! \brief libnice ICE agent
+	libnice的ICE代理 */
 	NiceAgent *agent;
-	/*! \brief Monotonic time of when the ICE agent has been created */
+	/*! \brief Monotonic time of when the ICE agent has been created
+	代理创建的时间  */
 	gint64 agent_created;
-	/*! \brief ICE role (controlling or controlled) */
+	/*! \brief ICE role (controlling or controlled) 
+	ICE 角色（控制或受控） */
 	gboolean controlling;
 	/*! \brief Audio mid (media ID) */
 	gchar *audio_mid;
@@ -416,7 +420,7 @@ struct janus_ice_stream {
 	guint32 video_ssrc;
 	/*! \brief Video retransmission SSRC of the peer for this stream */
 	guint32 video_ssrc_rtx;
-	/*! \brief Audio SSRC of the peer for this stream */
+	/*! \brief Audio SSRC of the peer for this stream 音频的SSRC值*/
 	guint32 audio_ssrc_peer, audio_ssrc_peer_new, audio_ssrc_peer_orig;
 	/*! \brief Video SSRC(s) of the peer for this stream (may be simulcasting) */
 	guint32 video_ssrc_peer[3], video_ssrc_peer_new[3], video_ssrc_peer_orig[3], video_ssrc_peer_temp;

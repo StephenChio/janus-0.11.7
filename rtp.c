@@ -23,29 +23,66 @@ gboolean janus_is_rtp(char *buf, guint len) {
 	return ((header->type < 64) || (header->type >= 96));
 }
 
+/**
+ * @brief 获取rtp playload
+ * 
+ * @param buf 
+ * @param len 
+ * @param plen 
+ * @return char* 
+ */
 char *janus_rtp_payload(char *buf, int len, int *plen) {
 	if(!buf || len < 12)
+	    /*如果buf不存在或者小于rtp头部的长度*/
 		return NULL;
 	janus_rtp_header *rtp = (janus_rtp_header *)buf;
 	if (rtp->version != 2) {
+		/*如果协议版本号不为2*/
 		return NULL;
 	}
 	int hlen = 12;
-	if(rtp->csrccount)	/* Skip CSRC if needed */
+	if(rtp->csrccount)	/* Skip CSRC if needed 跳过所有CSRC标识符 */
 		hlen += rtp->csrccount*4;
 
+    /* buf+hlen为 extension 开始的地方 */
 	if(rtp->extension) {
+		/*含有头部拓展 头部扩展可以用于存储信息，比如视频旋转角度*/
 		janus_rtp_header_extension *ext = (janus_rtp_header_extension*)(buf+hlen);
-		int extlen = ntohs(ext->length)*4;
-		hlen += 4;
+		/**
+		 * 在C/C++写网络程序的时候，往往会遇到字节的网络顺序和主机顺序的问题。这是就可能用到htons(), ntohl(), ntohs()，htons()这4个函数。
+           网络字节顺序与本地字节顺序之间的转换函数：
+ 
+           htonl()--"Host to Network Long"
+           ntohl()--"Network to Host Long"
+           htons()--"Host to Network Short"
+           ntohs()--"Network to Host Short"
+ 
+           之所以需要这些函数是因为计算机数据表示存在两种字节顺序：NBO与HBO
+ 
+           网络字节顺序NBO（Network Byte Order）：
+           按从高到低的顺序存储，在网络上使用统一的网络字节顺序，可以避免兼容性问题。
+ 
+           主机字节顺序（HBO，Host Byte Order）：
+           不同的机器HBO不相同，与CPU设计有关，数据的顺序是由cpu决定的,而与操作系统无关。
+           如 Intel   x86结构下,short型数0x1234表示为34   12, int型数0x12345678表示为78   56   34   12   
+           如IBM   power PC结构下,short型数0x1234表示为12   34, int型数0x12345678表示为12   34   56   78
+ 
+           由于这个原因不同体系结构的机器之间无法通信,所以要转换成一种约定的数序,也就是网络字节顺序,其实就是如同power   pc那样的顺序 。在PC开发中有ntohl和htonl函数可以用来进行网络字节和主机字节的转换。
+		 */
+		int extlen = ntohs(ext->length)*4; /*获取拓展字节长度*/
+		hlen += 4; /* 头部拓展4个字节 */
+		/*如果总长度大于头部+头部拓展长度*/
 		if(len > (hlen + extlen))
 			hlen += extlen;
 	}
+	/*如果长度缺失*/
 	if (len-hlen <= 0) {
 		return NULL;
 	}
 	if(plen)
+	     /*plen=总长度减去头部及头部拓展长度，即payload长度*/
 		*plen = len-hlen;
+	 /* buf+hlen为 payload 开始的地方 */
 	return buf+hlen;
 }
 
@@ -145,6 +182,7 @@ static int janus_rtp_header_extension_find(char *buf, int len, int id,
 				uint8_t extid = 0, idlen;
 				int i = 0;
 				while(i < extlen) {
+					/*获取第一个字节的高4位id*/
 					extid = (uint8_t)buf[hlen+i] >> 4;
 					if(extid == reserved) {
 						break;
@@ -152,16 +190,20 @@ static int janus_rtp_header_extension_find(char *buf, int len, int id,
 						i++;
 						continue;
 					}
+					/*获取第一个字节的低4位长度（真实字节-1）*/
 					idlen = ((uint8_t)buf[hlen+i] & 0xF)+1;
 					if(extid == id) {
-						/* Found! */
+						/* Found! 如果该RTP拓展的id和我们需要的id是一样的*/
 						if(byte)
+						    /*如果传来了byte,返回内容开始位置第一个byte的内容 */
 							*byte = (uint8_t)buf[hlen+i+1];
 						if(word && idlen >= 3 && (i+3) < extlen) {
+							 /*如果传来了word,返回内容开始之后4个字节的内容 */
 							memcpy(word, buf+hlen+i, sizeof(uint32_t));
 							*word = ntohl(*word);
 						}
 						if(ref)
+						    /*如果传来了ref,返回内容开始位置第一个byte的地址 */
 							*ref = &buf[hlen+i];
 						return 0;
 					}
@@ -248,10 +290,21 @@ int janus_rtp_header_extension_parse_mid(char *buf, int len, int id,
 	return 0;
 }
 
+/**
+ * @brief 从rtp头拓展 解析rid
+ * 
+ * @param buf 
+ * @param len 
+ * @param id 
+ * @param sdes_item 
+ * @param sdes_len 
+ * @return int 
+ */
 int janus_rtp_header_extension_parse_rid(char *buf, int len, int id,
 		char *sdes_item, int sdes_len) {
 	char *ext = NULL;
 	if(janus_rtp_header_extension_find(buf, len, id, NULL, NULL, &ext) < 0)
+	    /*没有找到该拓展id所对应的数据*/
 		return -1;
 	/* a=extmap:4 urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id */
 	/* a=extmap:5 urn:ietf:params:rtp-hdrext:sdes:repaired-rtp-stream-id */
