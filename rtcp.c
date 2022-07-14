@@ -735,6 +735,14 @@ int janus_rtcp_fix_ssrc(janus_rtcp_context *ctx, char *packet, int len, int fixs
 	return 0;
 }
 
+/**
+ * @brief 过滤离开的RTCP信息 
+ * 
+ * @param packet 
+ * @param len 
+ * @param newlen 
+ * @return char* 
+ */
 char *janus_rtcp_filter(char *packet, int len, int *newlen) {
 	if(packet == NULL || len <= 0 || newlen == NULL)
 		return NULL;
@@ -763,7 +771,8 @@ char *janus_rtcp_filter(char *packet, int len, int *newlen) {
 			case RTCP_SR:
 			case RTCP_RR:
 			case RTCP_SDES:
-				/* These are packets we generate ourselves, so remove them */
+				/* These are packets we generate ourselves, so remove them 
+				这是我们需要自己生成的数据包，所以移除它*/
 				keep = FALSE;
 				break;
 			case RTCP_BYE:
@@ -773,27 +782,32 @@ char *janus_rtcp_filter(char *packet, int len, int *newlen) {
 				break;
 			case RTCP_RTPFB:
 				if(rtcp->rc == 1) {
-					/* We handle NACKs ourselves as well, remove this too */
+					/* We handle NACKs ourselves as well, remove this too 
+					我们自己处理丢包重传，所以也移除它*/
 					keep = FALSE;
 					break;
 				} else if(rtcp->rc == 15) {
-					/* We handle Transport Wide CC ourselves as well, remove this too */
+					/* We handle Transport Wide CC ourselves as well, remove this too 
+					我们自己处理拥塞控制，所以也移除它*/
 					keep = FALSE;
 					break;
 				}
 				break;
 			case RTCP_XR:
-				/* FIXME We generate RR/SR ourselves, so remove XR */
+				/* FIXME We generate RR/SR ourselves, so remove XR 
+				我们自己生成RR/SR，所以移除XR
+				*/
 				keep = FALSE;
 				break;
 			default:
 				JANUS_LOG(LOG_ERR, "Unknown RTCP PT %d\n", rtcp->type);
-				/* FIXME Should we allow this to go through instead? */
+				/* FIXME Should we allow this to go through instead? 
+				我们是否应该允许它通过 ？*/
 				keep = FALSE;
 				break;
 		}
 		if(keep) {
-			/* Keep this packet */
+			/* Keep this packet 保存需要保留的包 */
 			if(filtered == NULL)
 				filtered = g_malloc0(total);
 			memcpy(filtered+*newlen, (char *)rtcp, bytes);
@@ -1165,7 +1179,13 @@ gboolean janus_rtcp_has_pli(char *packet, int len) {
 	}
 	return FALSE;
 }
-
+/**
+ * @brief 解析 RTCP NACK 消息
+ * 
+ * @param packet 
+ * @param len 
+ * @return GSList* 
+ */
 GSList *janus_rtcp_get_nacks(char *packet, int len) {
 	if(packet == NULL || len == 0)
 		return NULL;
@@ -1510,20 +1530,21 @@ int janus_rtcp_pli(char *packet, int len) {
 	return 12;
 }
 
-/* Generate a new NACK message */
+/* Generate a new NACK message 生成新的 RTCP NACK 消息以报告丢失数据包 */
 int janus_rtcp_nacks(char *packet, int len, GSList *nacks) {
 	if(packet == NULL || len < 16 || nacks == NULL)
 		return -1;
 	memset(packet, 0, len);
 	janus_rtcp_header *rtcp = (janus_rtcp_header *)packet;
-	/* Set header */
+	/* Set header 设置头部 */
 	rtcp->version = 2;
 	rtcp->type = RTCP_RTPFB;
 	rtcp->rc = 1;	/* FMT=1 */
-	/* Now set NACK stuff */
+	/* Now set NACK stuff 设置丢包重传的一些设置 */
 	janus_rtcp_fb *rtcpfb = (janus_rtcp_fb *)rtcp;
 	janus_rtcp_nack *nack = (janus_rtcp_nack *)rtcpfb->fci;
-	/* FIXME We assume the GSList list is already ordered... */
+	/* FIXME We assume the GSList list is already ordered...
+	我们假设 GSList 列表已经排序 */
 	guint16 pid = GPOINTER_TO_UINT(nacks->data);
 	nack->pid = htons(pid);
 	nacks = nacks->next;

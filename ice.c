@@ -624,13 +624,21 @@ static void janus_cleanup_nack_buffer(gint64 now, janus_ice_stream *stream, gboo
 
 #define SEQ_MISSING_WAIT 12000 /*  12ms */
 #define SEQ_NACKED_WAIT 155000 /* 155ms */
-/* janus_seq_info list functions */
+/* janus_seq_info list functions 创建序列号列表*/
 static void janus_seq_append(janus_seq_info **head, janus_seq_info *new_seq) {
 	if(*head == NULL) {
+		/*头节点为空，新节点作为头结点*/
 		new_seq->prev = new_seq;
 		new_seq->next = new_seq;
 		*head = new_seq;
 	} else {
+		/*头节点不为空，存储头节点的上节点，
+		  新节点成为头节点的上一个节点，
+		  头节点的上节点成为新节点的上一个节点
+		
+		head.prev <- head
+		         ||      
+		head.prev <- new_seq <- head */
 		janus_seq_info *last_seq = (*head)->prev;
 		new_seq->prev = last_seq;
 		new_seq->next = *head;
@@ -663,6 +671,14 @@ void janus_seq_list_free(janus_seq_info **head) {
 	} while(cur != *head);
 	*head = NULL;
 }
+/**
+ * @brief 当序列号大于开始序列号是，序列号需要在开始序列号+长度之间 或者  
+ * 
+ * @param seqn 
+ * @param start 
+ * @param len 
+ * @return int 
+ */
 static int janus_seq_in_range(guint16 seqn, guint16 start, guint16 len) {
 	/* Supports wrapping sequence (easier with int range) */
 	int n = seqn;
@@ -673,7 +689,8 @@ static int janus_seq_in_range(guint16 seqn, guint16 start, guint16 len) {
 }
 
 
-/* Internal method for relaying RTCP messages, optionally filtering them in case they come from plugins */
+/* Internal method for relaying RTCP messages, optionally filtering them in case they come from plugins
+转发 RTCP 消息的内部方法，可选择过滤它们 如果它们来自插件 */
 void janus_ice_relay_rtcp_internal(janus_ice_handle *handle, janus_plugin_rtcp *packet, gboolean filter_rtcp);
 
 
@@ -751,7 +768,14 @@ static void janus_ice_notify_trickle(janus_ice_handle *handle, char *buffer) {
 	janus_session_notify_event(session, event);
 }
 
-/*向客户端发送media相关信息*/
+/**
+ * @brief 向客户端发送media相关信息
+ * 
+ * @param handle 
+ * @param video 音频或者视频
+ * @param substream 
+ * @param up 上行还是下行
+ */
 static void janus_ice_notify_media(janus_ice_handle *handle, gboolean video, int substream, gboolean up) {
 	if(handle == NULL)
 		return;
@@ -1843,8 +1867,7 @@ static void janus_ice_component_free(const janus_refcount *component_ref) {
 }
 
 /* Call plugin slow_link callback if a minimum of lost packets are detected within a second */
-static void
-janus_slow_link_update(janus_ice_component *component, janus_ice_handle *handle,
+static void janus_slow_link_update(janus_ice_component *component, janus_ice_handle *handle,
 		gboolean video, gboolean uplink, guint lost) {
 	/* We keep the counters in different janus_ice_stats objects, depending on the direction */
 	guint sl_lost_last_count = uplink ?
@@ -2431,6 +2454,7 @@ candidatedone:
  * @param ice 
  */
 static void janus_ice_cb_nice_recv(NiceAgent *agent, guint stream_id, guint component_id, guint len, gchar *buf, gpointer ice) {
+	/*ICE组件*/
 	janus_ice_component *component = (janus_ice_component *)ice;
 	if(!component) {
 		JANUS_LOG(LOG_ERR, "No component %d in stream %d??\n", component_id, stream_id);
@@ -2699,7 +2723,7 @@ static void janus_ice_cb_nice_recv(NiceAgent *agent, guint stream_id, guint comp
 						GPOINTER_TO_INT(g_hash_table_lookup(stream->rtx_nacked[vindex], GUINT_TO_POINTER(seqno))) : 0;
 					if(nstate == 1) {
 						/* Packet was NACKed and this is the first time we receive it: change state to received 
-						数据包被确认，这是我们第一次收到它：将状态更改为收到*/
+						数据包被确认，这是我们第一次收到它：将状态更改为收到 */
 						JANUS_LOG(LOG_HUGE, "[%"SCNu64"] Received NACKed packet %"SCNu16" (SSRC %"SCNu32", vindex %d)...\n",
 							handle->handle_id, seqno, packet_ssrc, vindex);
 						g_hash_table_insert(stream->rtx_nacked[vindex], GUINT_TO_POINTER(seqno), GUINT_TO_POINTER(2));
@@ -2727,7 +2751,7 @@ static void janus_ice_cb_nice_recv(NiceAgent *agent, guint stream_id, guint comp
 					}
 				}
 				/* Backup the RTP header before passing it to the proper RTP switching context 
-				在将 RTP 标头传递给正确的 RTP context 之前备份它*/
+				在将 RTP 标头传递给正确的 RTP context 之前备份它 */
 				janus_rtp_header backup = *header;
 				if(!video) {
 					if(stream->audio_ssrc_peer_orig == 0)
@@ -2814,21 +2838,27 @@ static void janus_ice_cb_nice_recv(NiceAgent *agent, guint stream_id, guint comp
 						!g_atomic_int_get(&handle->app_handle->stopped) &&
 						!g_atomic_int_get(&handle->destroyed))
 					plugin->incoming_rtp(handle->app_handle, &rtp);
-				/* Restore the header for the stats (plugins may have messed with it) */
+				/* Restore the header for the stats (plugins may have messed with it)
+				恢复header的统计信息（插件可能对header做了一些操作） */
 				*header = backup;
-				/* Update stats (overall data received, and data received in the last second) */
+				/* Update stats (overall data received, and data received in the last second) 
+				更新统计信息（收到的整体数据，以及最后一秒收到的数据）*/
 				if(buflen > 0) {
 					gint64 now = janus_get_monotonic_time();
 					if(!video) {
+						/*处理音频*/
 						if(component->in_stats.audio.bytes == 0 || component->in_stats.audio.notified_lastsec) {
-							/* We either received our first audio packet, or we started receiving it again after missing more than a second */
+							/* We either received our first audio packet, or we started receiving it again after missing more than a second 
+							这是我们收到的第一个音频包 或者是 在它丢失超过一秒后再次开始接收它
+							我们会通知客户端它上传了音频 通知时机：第一次收到音频包 或者 丢失了数据超过一秒之后重新收到数据
+							*/
 							component->in_stats.audio.notified_lastsec = FALSE;
 							janus_ice_notify_media(handle, FALSE, 0, TRUE);
 						}
-						/* Overall audio data */
+						/* Overall audio data 更新音频数据*/
 						component->in_stats.audio.packets++;
 						component->in_stats.audio.bytes += buflen;
-						/* Last second audio data */
+						/* Last second audio data 最后一秒的音频数据 */
 						if(component->in_stats.audio.updated == 0)
 							component->in_stats.audio.updated = now;
 						if(now > component->in_stats.audio.updated &&
@@ -2840,11 +2870,13 @@ static void janus_ice_cb_nice_recv(NiceAgent *agent, guint stream_id, guint comp
 						component->in_stats.audio.bytes_lastsec_temp += buflen;
 					} else {
 						if(component->in_stats.video[vindex].bytes == 0 || component->in_stats.video[vindex].notified_lastsec) {
-							/* We either received our first video packet, or we started receiving it again after missing more than a second */
+							/* We either received our first video packet, or we started receiving it again after missing more than a second 
+							这是我们收到的第一个视频包 或者是 在它丢失超过一秒后再次开始接收它
+							我们会通知客户端它上传了视频 通知时机：第一次收到视频包 或者 丢失了数据超过一秒之后重新收到数据 */
 							component->in_stats.video[vindex].notified_lastsec = FALSE;
 							janus_ice_notify_media(handle, TRUE, vindex, TRUE);
 						}
-						/* Overall video data for this SSRC */
+						/* Overall video data for this SSRC 更新相对于SSRC的视频数据 */
 						component->in_stats.video[vindex].packets++;
 						component->in_stats.video[vindex].bytes += buflen;
 						/* Last second video data for this SSRC */
@@ -2860,9 +2892,12 @@ static void janus_ice_cb_nice_recv(NiceAgent *agent, guint stream_id, guint comp
 					}
 				}
 
-				/* Update the RTCP context as well */
+				/* Update the RTCP context as well 同时更新RTCP内容 */
+				/* 获取某一路视频或者是音频的RTCP信息 */
 				rtcp_context *rtcp_ctx = video ? stream->video_rtcp_ctx[vindex] : stream->audio_rtcp_ctx;
+				/* 我们是否需要对音频或者视频包做丢包重传 不需要则禁止丢包重传*/
 				gboolean retransmissions_disabled = (!video && !component->do_audio_nacks) || (video && !component->do_video_nacks);
+				/*通过RTCP控制进入的RTP数据*/
 				janus_rtcp_process_incoming_rtp(rtcp_ctx, buf, buflen,
 						(video && rtx) ? TRUE : FALSE,
 						(video && janus_flags_is_set(&handle->webrtc_flags, JANUS_ICE_HANDLE_WEBRTC_RFC4588_RTX)),
@@ -2870,13 +2905,18 @@ static void janus_ice_cb_nice_recv(NiceAgent *agent, guint stream_id, guint comp
 				);
 
 				/* Keep track of RTP sequence numbers, in case we need to NACK them */
-				/* 	Note: unsigned int overflow/underflow wraps (defined behavior) */
+				/* 	Note: unsigned int overflow/underflow wraps (defined behavior) 
+				保持对RTP序列号的追踪，以防我们需要丢包重传
+				做好无符号整形的上下溢出防控
+				*/
 				if(retransmissions_disabled) {
-					/* ... unless NACKs are disabled for this medium */
+					/* ... unless NACKs are disabled for this medium 如果不需要丢包重传*/
 					return;
 				}
+				/*获取该包序列号*/
 				guint16 new_seqn = ntohs(header->seq_number);
-				/* If this is video, check if this is a keyframe: if so, we empty our NACK queue */
+				/* If this is video, check if this is a keyframe: if so, we empty our NACK queue 
+				如果这是一个视频包，检查它是否是一个关键帧，如果是，我们清空丢包重传队列，因为关键帧可以帮助客户端恢复视频，之前保存的包可以不需要了 */
 				if(video && stream->video_is_keyframe) {
 					if(stream->video_is_keyframe(payload, plen)) {
 						if(rtcp_ctx && (int16_t)(new_seqn - rtcp_ctx->max_seq_nr) > 0) {
@@ -2885,64 +2925,76 @@ static void janus_ice_cb_nice_recv(NiceAgent *agent, guint stream_id, guint comp
 						}
 					}
 				}
+				/*新序列号*/
 				guint16 cur_seqn;
+				/*需要重新传输的序列号数量*/
 				int last_seqs_len = 0;
 				janus_mutex_lock(&component->mutex);
+				/* 获取最后收到的序列号列表 如果获取不到，代表之前被清理了，目前处理的是一个关键帧*/
 				janus_seq_info **last_seqs = video ? &component->last_seqs_video[vindex] : &component->last_seqs_audio;
+				/*用一个临时变量存储序列号列表，cur_seq用来下面寻找上一个序列号使用 那么就不需要改变last_seqs的指向，方便后续对last_seqs进行释放*/
 				janus_seq_info *cur_seq = *last_seqs;
+				/*cur_seq 等于上一个序列号 */
 				if(cur_seq) {
+					/* cur_seqn 等于上一个序列号*/
 					cur_seq = cur_seq->prev;
 					cur_seqn = cur_seq->seq;
 				} else {
-					/* First seq, set up to add one seq */
+					/* First seq, set up to add one seq 如果没有之前的序列号，那么cur_seqn等于目前处理的包序列号-1*/
 					cur_seqn = new_seqn - (guint16)1; /* Can wrap */
 				}
-				if(!janus_seq_in_range(new_seqn, cur_seqn, LAST_SEQS_MAX_LEN) &&
-						!janus_seq_in_range(cur_seqn, new_seqn, 1000)) {
-					/* Jump too big, start fresh */
+				/* 判断序列号是否在范围（ 当前序列号-上一个序列号是否小于160)*/
+				if(!janus_seq_in_range(new_seqn, cur_seqn, LAST_SEQS_MAX_LEN) && !janus_seq_in_range(cur_seqn, new_seqn, 1000)) {
+					/* Jump too big, start fresh 当前序列号比上一个存储的序列号大160以上，说明丢包过于严重，之前存储的包没有再发送的必要，否则客户端延时会加大*/
 					JANUS_LOG(LOG_WARN, "[%"SCNu64"] Big sequence number jump %hu -> %hu (%s stream #%d)\n",
 						handle->handle_id, cur_seqn, new_seqn, video ? "video" : "audio", vindex);
 					janus_seq_list_free(last_seqs);
 					cur_seq = NULL;
 					cur_seqn = new_seqn - (guint16)1;
 				}
-
+				/*丢包重传列表*/
 				GSList *nacks = NULL;
 				gint64 now = janus_get_monotonic_time();
-
 				if(janus_seq_in_range(new_seqn, cur_seqn, LAST_SEQS_MAX_LEN)) {
-					/* Add new seq objs forward */
+					/* Add new seq objs forward 如果缺失的序列号在范围内，把 cur_seqn - > new_seqn之间的序列号补全 */
 					while(cur_seqn != new_seqn) {
 						cur_seqn += (guint16)1; /* can wrap */
+						/* 创建一个新序列号 */
 						janus_seq_info *seq_obj = g_malloc0(sizeof(janus_seq_info));
 						seq_obj->seq = cur_seqn;
 						seq_obj->ts = now;
+						/* 当 cur_seqn == new_seqn 不满足之前 说明都是补充的缺失序列号  */
 						seq_obj->state = (cur_seqn == new_seqn) ? SEQ_RECVED : SEQ_MISSING;
 						janus_seq_append(last_seqs, seq_obj);
 						last_seqs_len++;
 					}
 				}
 				if(cur_seq) {
-					/* Scan old seq objs backwards */
+					/* Scan old seq objs backwards 向后寻找旧序列objs 不包含上面创建的新janus_seq_info 因为创建时间和当前时间不会满足时间差 */
 					while(cur_seq != NULL) {
 						last_seqs_len++;
 						if(cur_seq->seq == new_seqn) {
+							/* 如果这是当前接收的序列 cur_seq->state 改为 接收（3） */
 							JANUS_LOG(LOG_HUGE, "[%"SCNu64"] Received missed sequence number %"SCNu16" (%s stream #%d)\n",
 								handle->handle_id, cur_seq->seq, video ? "video" : "audio", vindex);
 							cur_seq->state = SEQ_RECVED;
 						} else if(cur_seq->state == SEQ_MISSING && now - cur_seq->ts > SEQ_MISSING_WAIT) {
+							/* 如果这是缺失的序列号，而且 序列号生产的时间跟现在的时间相差12ms  cur_seq->state 改为 需要丢包重传（1）这次发送了下次可能还会重新被要求重传*/
 							JANUS_LOG(LOG_HUGE, "[%"SCNu64"] Missed sequence number %"SCNu16" (%s stream #%d), sending 1st NACK\n",
 								handle->handle_id, cur_seq->seq, video ? "video" : "audio", vindex);
+							/*添加到丢包重传队列，创建一个新的指针指向cur_seq->seq 放到队列中（将uint类型转换成gpointer类型）*/
 							nacks = g_slist_prepend(nacks, GUINT_TO_POINTER(cur_seq->seq));
 							cur_seq->state = SEQ_NACKED;
 							if(video && janus_flags_is_set(&handle->webrtc_flags, JANUS_ICE_HANDLE_WEBRTC_RFC4588_RTX)) {
-								/* Keep track of this sequence number, we need to avoid duplicates */
+								/* 如果这是视频而且是使用RFC4588传输 */
+								/* Keep track of this sequence number, we need to avoid duplicates 保持对序列号的追踪，我们需要避免重复 */
 								JANUS_LOG(LOG_HUGE, "[%"SCNu64"] Tracking NACKed packet %"SCNu16" (SSRC %"SCNu32", vindex %d)...\n",
 									handle->handle_id, cur_seq->seq, packet_ssrc, vindex);
 								if(stream->rtx_nacked[vindex] == NULL)
 									stream->rtx_nacked[vindex] = g_hash_table_new(NULL, NULL);
 								g_hash_table_insert(stream->rtx_nacked[vindex], GUINT_TO_POINTER(cur_seq->seq), GINT_TO_POINTER(1));
-								/* We don't track it forever, though: add a timed source to remove it in a few seconds */
+								/* We don't track it forever, though: add a timed source to remove it in a few seconds 
+								但是，我们不会永远跟踪它：添加一个定时源以在几秒钟内将其删除 */
 								janus_ice_nacked_packet *np = g_malloc(sizeof(janus_ice_nacked_packet));
 								np->handle = handle;
 								np->seq_number = cur_seq->seq;
@@ -2956,8 +3008,10 @@ static void janus_ice_cb_nice_recv(NiceAgent *agent, guint stream_id, guint comp
 								g_hash_table_insert(stream->pending_nacked_cleanup, GUINT_TO_POINTER(np->source_id), timeout_source);
 							}
 						} else if(cur_seq->state == SEQ_NACKED  && now - cur_seq->ts > SEQ_NACKED_WAIT) {
+							/* 如果这是 已经丢包重传 的序列号，而且 序列号生产的时间跟现在的时间相差155ms cur_seq->state 改为 放弃（2） 这次发送了下次就不会再处理该数据 */
 							JANUS_LOG(LOG_HUGE, "[%"SCNu64"] Missed sequence number %"SCNu16" (%s stream #%d), sending 2nd NACK\n",
 								handle->handle_id, cur_seq->seq, video ? "video" : "audio", vindex);
+							/*添加到丢包重传队列，创建一个新的指针指向cur_seq->seq 放到队列中（将uint类型转换成gpointer类型）*/
 							nacks = g_slist_prepend(nacks, GUINT_TO_POINTER(cur_seq->seq));
 							cur_seq->state = SEQ_GIVEUP;
 						}
@@ -2969,27 +3023,31 @@ static void janus_ice_cb_nice_recv(NiceAgent *agent, guint stream_id, guint comp
 					}
 				}
 				while(last_seqs_len > LAST_SEQS_MAX_LEN) {
+					/*让存储的序列号列表大小保留在160*/
 					janus_seq_info *node = janus_seq_pop_head(last_seqs);
 					g_free(node);
 					last_seqs_len--;
 				}
-
+                /*丢包重传的包数量*/
 				guint nacks_count = g_slist_length(nacks);
 				if(nacks_count) {
-					/* Generate a NACK and send it */
+					/* Generate a NACK and send it 发送需要丢包重传的包*/
 					JANUS_LOG(LOG_DBG, "[%"SCNu64"] Now sending NACK for %u missed packets (%s stream #%d)\n",
 						handle->handle_id, nacks_count, video ? "video" : "audio", vindex);
 					char nackbuf[120];
+					/* 组装RTCP 丢包重传 包  */
 					int res = janus_rtcp_nacks(nackbuf, sizeof(nackbuf), nacks);
 					if(res > 0) {
-						/* Set the right local and remote SSRC in the RTCP packet */
+						/* Set the right local and remote SSRC in the RTCP packet
+						在 RTCP 数据包中设置正确的本地和远程 SSRC  */
 						janus_rtcp_fix_ssrc(NULL, nackbuf, res, 1,
 							video ? stream->video_ssrc : stream->audio_ssrc,
 							video ? stream->video_ssrc_peer[vindex] : stream->audio_ssrc_peer);
 						janus_plugin_rtcp rtcp = { .video = video, .buffer = nackbuf, .length = res };
+						/*转发 RTCP 消息的内部方法，可选择过滤它们 如果它们来自插件*/
 						janus_ice_relay_rtcp_internal(handle, &rtcp, FALSE);
 					}
-					/* Update stats */
+					/* Update stats 更新统计信息 */
 					component->nack_sent_recent_cnt += nacks_count;
 					if(video) {
 						component->out_stats.video[vindex].nacks += nacks_count;
@@ -2997,8 +3055,7 @@ static void janus_ice_cb_nice_recv(NiceAgent *agent, guint stream_id, guint comp
 						component->out_stats.audio.nacks += nacks_count;
 					}
 				}
-				if(component->nack_sent_recent_cnt &&
-						(now - component->nack_sent_log_ts) > 5*G_USEC_PER_SEC) {
+				if(component->nack_sent_recent_cnt && (now - component->nack_sent_log_ts) > 5*G_USEC_PER_SEC) {
 					JANUS_LOG(LOG_VERB, "[%"SCNu64"] Sent NACKs for %u missing packets (%s stream #%d)\n",
 						handle->handle_id, component->nack_sent_recent_cnt, video ? "video" : "audio", vindex);
 					component->nack_sent_recent_cnt = 0;
@@ -3011,54 +3068,68 @@ static void janus_ice_cb_nice_recv(NiceAgent *agent, guint stream_id, guint comp
 		}
 		return;
 	} else if(janus_is_rtcp(buf, len)) {
-		/* This is RTCP */
+		/* This is RTCP 如果是RTCP数据 */
 		JANUS_LOG(LOG_HUGE, "[%"SCNu64"]  Got an RTCP packet\n", handle->handle_id);
+		/* 我们看看我们是否打开了加密，SRTCP，看看能不能解密*/
 		if(janus_is_webrtc_encryption_enabled() && (!component->dtls || !component->dtls->srtp_valid || !component->dtls->srtp_in)) {
+			/*缺失解密配置，或者包来的太早了，还没有准备好配置*/
 			JANUS_LOG(LOG_WARN, "[%"SCNu64"]     Missing valid SRTP session (packet arrived too early?), skipping...\n", handle->handle_id);
 		} else {
 			int buflen = len;
-			srtp_err_status_t res = janus_is_webrtc_encryption_enabled() ?
-				srtp_unprotect_rtcp(component->dtls->srtp_in, buf, &buflen) : srtp_err_status_ok;
+			/*如果没有打开加密，那没事，如果打开了加密，看看能不能解密成功*/
+			srtp_err_status_t res = janus_is_webrtc_encryption_enabled() ? srtp_unprotect_rtcp(component->dtls->srtp_in, buf, &buflen) : srtp_err_status_ok;
 			if(res != srtp_err_status_ok) {
+				/*解密失败*/
 				JANUS_LOG(LOG_ERR, "[%"SCNu64"]     SRTCP unprotect error: %s (len=%d-->%d)\n", handle->handle_id, janus_srtp_error_str(res), len, buflen);
 			} else {
-				/* Do we need to dump this packet for debugging? */
+				/* Do we need to dump this packet for debugging? 我们是否需要打印包用于debugging */
 				if(g_atomic_int_get(&handle->dump_packets))
 					janus_text2pcap_dump(handle->text2pcap, JANUS_TEXT2PCAP_RTCP, TRUE, buf, buflen,
 						"[session=%"SCNu64"][handle=%"SCNu64"]", session->session_id, handle->handle_id);
-				/* Check if there's an RTCP BYE: in case, let's log it */
+				/* Check if there's an RTCP BYE: in case, let's log it 
+				检查这是否是一个RTCP BYE数据，以防万一，我们打印一下
+				*/
 				if(janus_rtcp_has_bye(buf, buflen)) {
 					/* Note: we used to use this as a trigger to close the PeerConnection, but not anymore
-					 * Discussion here, https://groups.google.com/forum/#!topic/meetecho-janus/4XtfbYB7Jvc */
+					 * Discussion here, https://groups.google.com/forum/#!topic/meetecho-janus/4XtfbYB7Jvc 
+					 我们曾经使用它作为关闭 PeerConnection 的触发器，但现在不在这里讨论 */
 					JANUS_LOG(LOG_VERB, "[%"SCNu64"] Got RTCP BYE on stream %u (component %u)\n", handle->handle_id, stream->stream_id, component->component_id);
 				}
-				/* Is this audio or video? */
+				/* Is this audio or video?  判断是音频还是视频 */
 				int video = 0, vindex = 0;
 				if(janus_flags_is_set(&handle->webrtc_flags, JANUS_ICE_HANDLE_WEBRTC_RFC4588_RTX)) {
+					/*我们现在通过RFC4588进行传输*/
 					janus_rtcp_swap_report_blocks(buf, buflen, stream->video_ssrc_rtx);
 				}
-				/* Bundled streams, should we check the SSRCs? */
+				/* Bundled streams, should we check the SSRCs? 绑定流，我们是否应该检查一下SSRCs */
 				if(!janus_flags_is_set(&handle->webrtc_flags, JANUS_ICE_HANDLE_WEBRTC_HAS_AUDIO)) {
-					/* No audio has been negotiated, definitely video */
+					/* No audio has been negotiated, definitely video 没有音频被协商 */
 					JANUS_LOG(LOG_HUGE, "[%"SCNu64"] Incoming RTCP, bundling: this is video (no audio has been negotiated)\n", handle->handle_id);
 					if(stream->video_ssrc_peer[0] == 0) {
 						/* We don't know the remote SSRC: this can happen for recvonly clients
 						 * (see https://groups.google.com/forum/#!topic/discuss-webrtc/5yuZjV7lkNc)
-						 * Check the local SSRC, compare it to what we have */
+						 * Check the local SSRC, compare it to what we have
+						 * 我们不知道远程 SSRC：recvonly 客户端可能会发生这种情况，
+						 * 不发送数据的客户端可能会设置成recvonly，于是也就stream->video_ssrc_peer[0] == 0
+						 * 检查本地 SSRC，将其与我们拥有的进行比较 */
 						guint32 rtcp_ssrc = janus_rtcp_get_receiver_ssrc(buf, buflen);
 						if(rtcp_ssrc == 0) {
-							/* No SSRC, maybe an empty RR? */
+							/* No SSRC, maybe an empty RR? 没有SSRC数据 */
 							return;
 						}
 						if(rtcp_ssrc == stream->video_ssrc) {
+							/* 如果远端SSRC和本地SSRC相同 */
 							video = 1;
 						} else if(rtcp_ssrc == stream->video_ssrc_rtx) {
-							/* rtx SSRC, we don't care */
+							/* rtx SSRC, we don't care 
+							如果远端SSRC和本地SSRC_RTX相同 我们不处理这个*/
 							return;
 						} else if(janus_rtcp_has_fir(buf, buflen) || janus_rtcp_has_pli(buf, buflen) || janus_rtcp_get_remb(buf, buflen)) {
-							/* Mh, no SR or RR? Try checking if there's any FIR, PLI or REMB */
+							/* Mh, no SR or RR? Try checking if there's any FIR, PLI or REMB 
+							如果SSRC和本地SSRC，SSRC_RTX都不相同 尝试检查是否有任何 FIR、PLI 或 REMB*/
 							video = 1;
 						} else {
+							/*传来的SSRC没有和任何一个想要的数据匹配上*/
 							JANUS_LOG(LOG_VERB, "[%"SCNu64"] Dropping RTCP packet with unknown SSRC (%"SCNu32")\n", handle->handle_id, rtcp_ssrc);
 							return;
 						}
@@ -3066,10 +3137,13 @@ static void janus_ice_cb_nice_recv(NiceAgent *agent, guint stream_id, guint comp
 							handle->handle_id, video ? "video" : "audio", stream->video_ssrc, rtcp_ssrc);
 					} else {
 						/* Check the remote SSRC, compare it to what we have: in case
-							* we're simulcasting, let's compare to the other SSRCs too */
+							* we're simulcasting, let's compare to the other SSRCs too 
+							如果 stream->video_ssrc_peer[0] ！= 0 说明我们至少有一路视频流
+							检查远程 SSRC，将其与我们拥有的进行比较：如果我们正在simulcasting，让我们也与其他 SSRC 进行比较
+							*/
 						guint32 rtcp_ssrc = janus_rtcp_get_sender_ssrc(buf, buflen);
 						if(rtcp_ssrc == 0) {
-							/* No SSRC, maybe an empty RR? */
+							/* No SSRC, maybe an empty RR? 没有SSRC数据*/
 							return;
 						}
 						if(stream->video_ssrc_peer[0] && rtcp_ssrc == stream->video_ssrc_peer[0]) {
@@ -3089,17 +3163,20 @@ static void janus_ice_cb_nice_recv(NiceAgent *agent, guint stream_id, guint comp
 							handle->handle_id, video ? "video" : "audio", stream->video_ssrc_peer[vindex], vindex, rtcp_ssrc);
 					}
 				} else if(!janus_flags_is_set(&handle->webrtc_flags, JANUS_ICE_HANDLE_WEBRTC_HAS_VIDEO)) {
-					/* No video has been negotiated, definitely audio */
+					/* No video has been negotiated, definitely audio 没有视频被协商 */
 					JANUS_LOG(LOG_HUGE, "[%"SCNu64"] Incoming RTCP, bundling: this is audio (no video has been negotiated)\n", handle->handle_id);
 					video = 0;
 				} else {
 					if(stream->audio_ssrc_peer == 0 || stream->video_ssrc_peer[0] == 0) {
 						/* We don't know the remote SSRC: this can happen for recvonly clients
 						 * (see https://groups.google.com/forum/#!topic/discuss-webrtc/5yuZjV7lkNc)
-						 * Check the local SSRC, compare it to what we have */
+						 * Check the local SSRC, compare it to what we have
+						 * 我们不知道远程 SSRC：recvonly 客户端可能会发生这种情况，
+						 * 不发送数据的客户端可能会设置成recvonly，于是也就stream->video_ssrc_peer[0] == 0
+						 * 检查本地 SSRC，将其与我们拥有的进行比较 */
 						guint32 rtcp_ssrc = janus_rtcp_get_receiver_ssrc(buf, buflen);
 						if(rtcp_ssrc == 0) {
-							/* No SSRC, maybe an empty RR? */
+							/* No SSRC, maybe an empty RR? 没有SSRC数据 */
 							return;
 						}
 						if(rtcp_ssrc == stream->audio_ssrc) {
@@ -3107,10 +3184,12 @@ static void janus_ice_cb_nice_recv(NiceAgent *agent, guint stream_id, guint comp
 						} else if(rtcp_ssrc == stream->video_ssrc) {
 							video = 1;
 						} else if(rtcp_ssrc == stream->video_ssrc_rtx) {
-							/* rtx SSRC, we don't care */
+						    /* rtx SSRC, we don't care 
+							如果远端SSRC和本地SSRC_RTX相同 我们不处理这个*/
 							return;
 						} else if(janus_rtcp_has_fir(buf, buflen) || janus_rtcp_has_pli(buf, buflen) || janus_rtcp_get_remb(buf, buflen)) {
-							/* Mh, no SR or RR? Try checking if there's any FIR, PLI or REMB */
+							/* Mh, no SR or RR? Try checking if there's any FIR, PLI or REMB 
+							如果SSRC和本地SSRC，SSRC_RTX都不相同 尝试检查是否有任何 FIR、PLI 或 REMB*/
 							video = 1;
 						} else {
 							JANUS_LOG(LOG_VERB, "[%"SCNu64"] Dropping RTCP packet with unknown SSRC (%"SCNu32")\n", handle->handle_id, rtcp_ssrc);
@@ -3120,10 +3199,13 @@ static void janus_ice_cb_nice_recv(NiceAgent *agent, guint stream_id, guint comp
 							handle->handle_id, video ? "video" : "audio", stream->video_ssrc, stream->audio_ssrc, rtcp_ssrc);
 					} else {
 						/* Check the remote SSRC, compare it to what we have: in case
-						 * we're simulcasting, let's compare to the other SSRCs too */
+							* we're simulcasting, let's compare to the other SSRCs too 
+							如果 stream->video_ssrc_peer[0] ！= 0 说明我们至少有一路视频流
+							检查远程 SSRC，将其与我们拥有的进行比较：如果我们正在simulcasting，让我们也与其他 SSRC 进行比较
+							*/
 						guint32 rtcp_ssrc = janus_rtcp_get_sender_ssrc(buf, buflen);
 						if(rtcp_ssrc == 0) {
-							/* No SSRC, maybe an empty RR? */
+							/* No SSRC, maybe an empty RR? 没有SSRC数据*/
 							return;
 						}
 						if(rtcp_ssrc == stream->audio_ssrc_peer) {
@@ -3145,28 +3227,36 @@ static void janus_ice_cb_nice_recv(NiceAgent *agent, guint stream_id, guint comp
 					}
 				}
 
-				/* Let's process this RTCP (compound?) packet, and update the RTCP context for this stream in case */
+				/* Let's process this RTCP (compound?) packet, and update the RTCP context for this stream in case
+				让我们处理这个 RTCP数据包，并更新这个流的 RTCP 上下文，以防万一
+				 */
+				/* 获取音频或者视频流的RTCP上下文 根据RTCP前面解析的内容决定是音频还是视频，如果是视频，定位到具体的流（如果开启simulcasting） */
 				rtcp_context *rtcp_ctx = video ? stream->video_rtcp_ctx[vindex] : stream->audio_rtcp_ctx;
+				/* 预计往返时间 */
 				uint32_t rtt = rtcp_ctx ? rtcp_ctx->rtt : 0;
+				/*解析RTCP包并给RTCP上下文更新数据*/
 				if(janus_rtcp_parse(rtcp_ctx, buf, buflen) < 0) {
-					/* Drop the packet if the parsing function returns with an error */
+					/* Drop the packet if the parsing function returns with an error 
+					丢弃这个包，如果解析函数返回错误 */
 					return;
 				}
 				if(rtcp_ctx && rtcp_ctx->rtt != rtt) {
 					/* Check the current RTT, to see if we need to update the size of the queue: we take
-					 * the highest RTT (audio or video) and add 100ms just to be conservative */
-					uint32_t audio_rtt = janus_rtcp_context_get_rtt(stream->audio_rtcp_ctx),
-						video_rtt = janus_rtcp_context_get_rtt(stream->video_rtcp_ctx[0]);
+					 * the highest RTT (audio or video) and add 100ms just to be conservative 
+					 检查当前的 预计往返时间，看看我们是否需要更新队列的大小：我们取最高的 预计往返时间（音频或视频）并为了保守添加 100ms */
+					uint32_t audio_rtt = janus_rtcp_context_get_rtt(stream->audio_rtcp_ctx);
+					uint32_t video_rtt = janus_rtcp_context_get_rtt(stream->video_rtcp_ctx[0]);
 					uint16_t nack_queue_ms = (audio_rtt > video_rtt ? audio_rtt : video_rtt) + 100;
 					if(nack_queue_ms > DEFAULT_MAX_NACK_QUEUE)
-						nack_queue_ms = DEFAULT_MAX_NACK_QUEUE;
-					else if(nack_queue_ms < min_nack_queue)
+						nack_queue_ms = DEFAULT_MAX_NACK_QUEUE;//1000
+					else if(nack_queue_ms < min_nack_queue) //默认200 最大1000，取决于 janus.jcfg is中 min_nack_queue参数
 						nack_queue_ms = min_nack_queue;
 					uint16_t mavg = rtt ? ((7*stream->nack_queue_ms + nack_queue_ms)/8) : nack_queue_ms;
 					if(mavg > DEFAULT_MAX_NACK_QUEUE)
 						mavg = DEFAULT_MAX_NACK_QUEUE;
 					else if(mavg < min_nack_queue)
 						mavg = min_nack_queue;
+					/*根据发送音频或者视频的往返时间，动态更新 丢包重传队列大小 如果延迟大 会增加队列长度*/
 					stream->nack_queue_ms = mavg;
 				}
 				JANUS_LOG(LOG_HUGE, "[%"SCNu64"] Got %s RTCP (%d bytes)\n", handle->handle_id, video ? "video" : "audio", buflen);
@@ -3175,34 +3265,42 @@ static void janus_ice_cb_nice_recv(NiceAgent *agent, guint stream_id, guint comp
 				if(bitrate > 0)
 					stream->remb_bitrate = bitrate;
 
-				/* Now let's see if there are any NACKs to handle */
+				/* Now let's see if there are any NACKs to handle 现在我们看看是否有 丢包重传数据 需要去处理*/
 				gint64 now = janus_get_monotonic_time();
+				/*解析 RTCP NACK 消息*/
 				GSList *nacks = janus_rtcp_get_nacks(buf, buflen);
+				/*RTCP NACK 数量*/
 				guint nacks_count = g_slist_length(nacks);
 				if(nacks_count && ((!video && component->do_audio_nacks) || (video && component->do_video_nacks))) {
-					/* Handle NACK */
+					/* Handle NACK 处理 */
 					JANUS_LOG(LOG_HUGE, "[%"SCNu64"]     Just got some NACKS (%d) we should handle...\n", handle->handle_id, nacks_count);
 					GHashTable *retransmit_seqs = (video ? component->video_retransmit_seqs : component->audio_retransmit_seqs);
+					/*新建指针管理nacks，为了不对原数据造成影响 */
 					GSList *list = (retransmit_seqs != NULL ? nacks : NULL);
+					/*重新传输的包数量*/
 					int retransmits_cnt = 0;
 					janus_mutex_lock(&component->mutex);
 					while(list) {
+						/*获取需要丢包重传的序列号*/
 						unsigned int seqnr = GPOINTER_TO_UINT(list->data);
 						JANUS_LOG(LOG_DBG, "[%"SCNu64"]   >> %u\n", handle->handle_id, seqnr);
 						int in_rb = 0;
-						/* Check if we have the packet */
+						/* Check if we have the packet 检查我们是否有该序列包 */
 						janus_rtp_packet *p = g_hash_table_lookup(retransmit_seqs, GUINT_TO_POINTER(seqnr));
 						if(p == NULL) {
+							/*无法丢包重传，因为我们已经丢失了该包*/
 							JANUS_LOG(LOG_HUGE, "[%"SCNu64"]   >> >> Can't retransmit packet %u, we don't have it...\n", handle->handle_id, seqnr);
 						} else {
-							/* Should we retransmit this packet? */
+							/* Should we retransmit this packet? 我们是否应该重新传输这个数据包 */
 							if((p->last_retransmit > 0) && (now-p->last_retransmit < MAX_NACK_IGNORE)) {
+								/*如果我们已经重传过该包，并且现在的时间距离上次重传时间已经超过200ms */
 								JANUS_LOG(LOG_HUGE, "[%"SCNu64"]   >> >> Packet %u was retransmitted just %"SCNi64"ms ago, skipping\n", handle->handle_id, seqnr, now-p->last_retransmit);
 								list = list->next;
 								continue;
 							}
 							in_rb = 1;
 							JANUS_LOG(LOG_HUGE, "[%"SCNu64"]   >> >> Scheduling %u for retransmission due to NACK\n", handle->handle_id, seqnr);
+							/*更新重传时间为当前时间*/
 							p->last_retransmit = now;
 							retransmits_cnt++;
 							/* Enqueue it */
@@ -3216,12 +3314,16 @@ static void janus_ice_cb_nice_recv(NiceAgent *agent, guint stream_id, guint comp
 							pkt->label = NULL;
 							pkt->protocol = NULL;
 							pkt->added = janus_get_monotonic_time();
-							/* What to send and how depends on whether we're doing RFC4588 or not */
+							/* What to send and how depends on whether we're doing RFC4588 or not 
+							发送什么以及如何发送取决于我们是否在执行 RFC4588 */
 							if(!video || !janus_flags_is_set(&handle->webrtc_flags, JANUS_ICE_HANDLE_WEBRTC_RFC4588_RTX)) {
-								/* We're not: just clarify the packet was already encrypted before */
+								/* We're not: just clarify the packet was already encrypted before 
+								这是不是一个视频，或者 我们没有执行 RFC4588
+								*/
 								pkt->encrypted = TRUE;
 							} else {
-								/* We are: overwrite the RTP header (which means we'll need a new SRTP encrypt) */
+								/* We are: overwrite the RTP header (which means we'll need a new SRTP encrypt) 
+								重写 RTP 标头（这意味着我们需要新的 SRTP 加密）*/
 								pkt->encrypted = FALSE;
 								janus_rtp_header *header = (janus_rtp_header *)pkt->data;
 								header->type = stream->video_rtx_payload_type;
@@ -3233,22 +3335,25 @@ static void janus_ice_cb_nice_recv(NiceAgent *agent, guint stream_id, guint comp
 #if GLIB_CHECK_VERSION(2, 46, 0)
 								g_async_queue_push_front(handle->queued_packets, pkt);
 #else
+                                /*异步队列重传RTP包*/
 								g_async_queue_push(handle->queued_packets, pkt);
 #endif
+                                /*唤醒handle线程去处理RTP包*/
 								g_main_context_wakeup(handle->mainctx);
 							} else {
 								janus_ice_free_queued_packet(pkt);
 							}
 						}
 						if(rtcp_ctx != NULL && in_rb) {
+							/* 增加RTCP上下文内容：重传次数*/
 							g_atomic_int_inc(&rtcp_ctx->nack_count);
 						}
 						list = list->next;
 					}
 					component->retransmit_recent_cnt += retransmits_cnt;
-					/* FIXME Remove the NACK compound packet, we've handled it */
+					/* FIXME Remove the NACK compound packet, we've handled it 去掉 NACK 包，我们已经处理好了*/
 					buflen = janus_rtcp_remove_nacks(buf, buflen);
-					/* Update stats */
+					/* Update stats 更新统计信息 */
 					if(video) {
 						component->in_stats.video[vindex].nacks += nacks_count;
 					} else {
@@ -3258,21 +3363,23 @@ static void janus_ice_cb_nice_recv(NiceAgent *agent, guint stream_id, guint comp
 					g_slist_free(nacks);
 					nacks = NULL;
 				}
-				if(component->retransmit_recent_cnt &&
-						now - component->retransmit_log_ts > 5*G_USEC_PER_SEC) {
+				if(component->retransmit_recent_cnt && now - component->retransmit_log_ts > 5*G_USEC_PER_SEC) {
+					/* 间隔 5秒 打印重传信息 */
 					JANUS_LOG(LOG_VERB, "[%"SCNu64"] Retransmitted %u packets due to NACK (%s stream #%d)\n",
 						handle->handle_id, component->retransmit_recent_cnt, video ? "video" : "audio", vindex);
 					component->retransmit_recent_cnt = 0;
 					component->retransmit_log_ts = now;
 				}
 
-				/* Fix packet data for RTCP SR and RTCP RR */
+				/* Fix packet data for RTCP SR and RTCP RR 
+				修复 RTCP SR 和 RTCP RR 的数据包数据 */
 				janus_rtp_switching_context *rtp_ctx = video ? &stream->rtp_ctx[vindex] : &stream->rtp_ctx[0];
 				uint32_t base_ts = video ? rtp_ctx->v_base_ts : rtp_ctx->a_base_ts;
 				uint32_t base_ts_prev = video ? rtp_ctx->v_base_ts_prev : rtp_ctx->a_base_ts_prev;
 				uint32_t ssrc_peer = video ? stream->video_ssrc_peer_orig[vindex] : stream->audio_ssrc_peer_orig;
 				uint32_t ssrc_local = video ? stream->video_ssrc : stream->audio_ssrc;
 				uint32_t ssrc_expected = video ? rtp_ctx->v_last_ssrc : rtp_ctx->a_last_ssrc;
+				/*修复传入 RTCP SR 和 RR 数据*/
 				if (janus_rtcp_fix_report_data(buf, buflen, base_ts, base_ts_prev, ssrc_peer, ssrc_local, ssrc_expected, video) < 0) {
 					/* Drop packet in case of parsing error or SSRC different from the one expected. */
 					/* This might happen at the very beginning of the communication or early after */
@@ -3282,6 +3389,7 @@ static void janus_ice_cb_nice_recv(NiceAgent *agent, guint stream_id, guint comp
 
 				janus_plugin_rtcp rtcp = { .video = video, .buffer = buf, .length = buflen };
 				janus_plugin *plugin = (janus_plugin *)handle->app;
+				/* 插件处理RTCP数据 */
 				if(plugin && plugin->incoming_rtcp && handle->app_handle &&
 						!g_atomic_int_get(&handle->app_handle->stopped) &&
 						!g_atomic_int_get(&handle->destroyed))
@@ -3290,9 +3398,10 @@ static void janus_ice_cb_nice_recv(NiceAgent *agent, guint stream_id, guint comp
 		}
 		return;
 	} else {
+		/* 不是RTP 也不是RTCP 数据，可能是一些其他数据*/
 		JANUS_LOG(LOG_VERB, "[%"SCNu64"] Not RTP and not RTCP... may these be data channels?\n", handle->handle_id);
 		janus_dtls_srtp_incoming_msg(component->dtls, buf, len);
-		/* Update stats (only overall data received) */
+		/* Update stats (only overall data received) 更新统计信息（仅收到全部数据）*/
 		if(len > 0) {
 			component->in_stats.data.packets++;
 			component->in_stats.data.bytes += len;
@@ -3300,6 +3409,8 @@ static void janus_ice_cb_nice_recv(NiceAgent *agent, guint stream_id, guint comp
 		return;
 	}
 }
+
+
 
 void janus_ice_incoming_data(janus_ice_handle *handle, char *label, char *protocol, gboolean textdata, char *buffer, int length) {
 	if(handle == NULL || buffer == NULL || length <= 0)
@@ -3313,7 +3424,7 @@ void janus_ice_incoming_data(janus_ice_handle *handle, char *label, char *protoc
 }
 
 
-/* Helper: encoding local candidates to string/SDP */
+/* Helper: encoding local candidates to string/SDP 把本地candidate编码成SDP */
 static int janus_ice_candidate_to_string(janus_ice_handle *handle, NiceCandidate *c, char *buffer, int buflen, gboolean log_candidate, gboolean force_private, guint public_ip_index) {
 	if(!handle || !handle->agent || !c || !buffer || buflen < 1)
 		return -1;
@@ -3326,17 +3437,19 @@ static int janus_ice_candidate_to_string(janus_ice_handle *handle, NiceCandidate
 	char *host_ip = NULL;
 	gboolean ipv6 = (nice_address_ip_version(&c->addr) == 6);
 	if(nat_1_1_enabled && !force_private) {
-		/* A 1:1 NAT mapping was specified, either overwrite all the host addresses with the public IP, or add new candidates */
+		/* A 1:1 NAT mapping was specified, either overwrite all the host addresses with the public IP, or add new candidates 
+		指定了 1:1 NAT 映射，要么用公共 IP 覆盖所有主机地址，要么添加新的candidates */
 		host_ip = janus_get_public_ip(public_ip_index);
 		gboolean host_ip_v6 = (strchr(host_ip, ':') != NULL);
 		if(host_ip_v6 != ipv6) {
-			/* nat-1-1 address and candidate are not the same address family, don't do anything */
+			/* nat-1-1 address and candidate are not the same address family, don't do anything 
+			nat-1-1 地址和候选地址不是同一个地址簇，什么都不做 */
 			buffer[0] = '\0';
 			return 0;
 		}
 		JANUS_LOG(LOG_VERB, "[%"SCNu64"] Public IP specified and 1:1 NAT mapping enabled (%s), using that as host address in the candidates\n", handle->handle_id, host_ip);
 	}
-	/* Encode the candidate to a string */
+	/* Encode the candidate to a string 把candidate编码成string */
 	gchar address[NICE_ADDRESS_STRING_LEN], base_address[NICE_ADDRESS_STRING_LEN];
 	gint port = 0, base_port = 0;
 	nice_address_to_string(&(c->addr), (gchar *)&address);
@@ -3346,23 +3459,25 @@ static int janus_ice_candidate_to_string(janus_ice_handle *handle, NiceCandidate
 	JANUS_LOG(LOG_VERB, "[%"SCNu64"]   Address:    %s:%d\n", handle->handle_id, address, port);
 	JANUS_LOG(LOG_VERB, "[%"SCNu64"]   Priority:   %d\n", handle->handle_id, c->priority);
 	JANUS_LOG(LOG_VERB, "[%"SCNu64"]   Foundation: %s\n", handle->handle_id, c->foundation);
-	/* Start */
+	/* Start 开始编码 */
 	if(c->type == NICE_CANDIDATE_TYPE_HOST) {
-		/* 'host' candidate */
+		/* 'host' candidate 主机candidate */
 		if(c->transport == NICE_CANDIDATE_TRANSPORT_UDP) {
+			/* 如果candidate传输类型是UDP*/
 			g_snprintf(buffer, buflen,
 				"%s %d %s %d %s %d typ host",
 					c->foundation, c->component_id,
 					"udp", c->priority,
 					host_ip ? host_ip : address, port);
 		} else {
+			/* 如果candidate传输类型是TCP*/
 			if(!janus_ice_tcp_enabled) {
-				/* ICE-TCP support disabled */
+				/* ICE-TCP support disabled 如果TCP candidate被禁用*/
 				JANUS_LOG(LOG_VERB, "[%"SCNu64"] Skipping host TCP candidate, ICE-TCP support disabled...\n", handle->handle_id);
 				return -4;
 			}
 #ifndef HAVE_LIBNICE_TCP
-			/* TCP candidates are only supported since libnice 0.1.8 */
+			/* TCP candidates are only supported since libnice 0.1.8 TCP candidate 只有在libnice 0.1.8 中被支持 */
 			JANUS_LOG(LOG_VERB, "[%"SCNu64"] Skipping host TCP candidate, the libnice version doesn't support it...\n", handle->handle_id);
 			return -4;
 #else
@@ -3381,7 +3496,7 @@ static int janus_ice_candidate_to_string(janus_ice_handle *handle, NiceCandidate
 					break;
 			}
 			if(type == NULL) {
-				/* FIXME Unsupported transport */
+				/* FIXME Unsupported transport 不支持的传输类型 */
 				JANUS_LOG(LOG_WARN, "[%"SCNu64"] Unsupported transport, skipping non-UDP/TCP host candidate...\n", handle->handle_id);
 				return -5;
 			}
@@ -3392,10 +3507,9 @@ static int janus_ice_candidate_to_string(janus_ice_handle *handle, NiceCandidate
 					host_ip ? host_ip : address, port, type);
 #endif
 		}
-	} else if(c->type == NICE_CANDIDATE_TYPE_SERVER_REFLEXIVE ||
-			c->type == NICE_CANDIDATE_TYPE_PEER_REFLEXIVE ||
-			c->type == NICE_CANDIDATE_TYPE_RELAYED) {
-		/* 'srflx', 'prflx', or 'relay' candidate: what is this, exactly? */
+	} else if(c->type == NICE_CANDIDATE_TYPE_SERVER_REFLEXIVE || c->type == NICE_CANDIDATE_TYPE_PEER_REFLEXIVE || c->type == NICE_CANDIDATE_TYPE_RELAYED) {
+		/* 'srflx', 'prflx', or 'relay' candidate: what is this, exactly? 
+		判断传输类型是srflx，prflx，relay中的哪一种 */
 		const char *ltype = NULL;
 		switch(c->type) {
 			case NICE_CANDIDATE_TYPE_SERVER_REFLEXIVE:
@@ -3411,8 +3525,10 @@ static int janus_ice_candidate_to_string(janus_ice_handle *handle, NiceCandidate
 				break;
 		}
 		if(ltype == NULL)
+		    /* 不知名的传输类型 */
 			return -5;
 		if(c->transport == NICE_CANDIDATE_TRANSPORT_UDP) {
+			/* 如果candidate传输类型是UDP*/
 			nice_address_to_string(&(c->base_addr), (gchar *)&base_address);
 			gint base_port = nice_address_get_port(&(c->base_addr));
 			g_snprintf(buffer, buflen,
@@ -3423,12 +3539,12 @@ static int janus_ice_candidate_to_string(janus_ice_handle *handle, NiceCandidate
 					base_address, base_port);
 		} else {
 			if(!janus_ice_tcp_enabled) {
-				/* ICE-TCP support disabled */
+				/* ICE-TCP support disabled 如果TCP candidate被禁用*/
 				JANUS_LOG(LOG_VERB, "[%"SCNu64"] Skipping srflx TCP candidate, ICE-TCP support disabled...\n", handle->handle_id);
 				return -4;
 			}
 #ifndef HAVE_LIBNICE_TCP
-			/* TCP candidates are only supported since libnice 0.1.8 */
+			/* TCP candidates are only supported since libnice 0.1.8 TCP candidate 只有在libnice 0.1.8 中被支持 */
 			JANUS_LOG(LOG_VERB, "[%"SCNu64"] Skipping srflx TCP candidate, the libnice version doesn't support it...\n", handle->handle_id);
 			return -4;
 #else
@@ -3447,7 +3563,7 @@ static int janus_ice_candidate_to_string(janus_ice_handle *handle, NiceCandidate
 					break;
 			}
 			if(type == NULL) {
-				/* FIXME Unsupported transport */
+				/* FIXME Unsupported transport 不支持的传输类型 */
 				JANUS_LOG(LOG_WARN, "[%"SCNu64"] Unsupported transport, skipping non-UDP/TCP srflx candidate...\n", handle->handle_id);
 				return -5;
 			} else {
@@ -3463,9 +3579,9 @@ static int janus_ice_candidate_to_string(janus_ice_handle *handle, NiceCandidate
 	}
 	JANUS_LOG(LOG_VERB, "[%"SCNu64"]     %s\n", handle->handle_id, buffer);
 	if(log_candidate) {
-		/* Save for the summary, in case we need it */
+		/* Save for the summary, in case we need it 保存一些概况，以防我们需要它们 */
 		component->local_candidates = g_slist_append(component->local_candidates, g_strdup(buffer));
-		/* Notify event handlers */
+		/* Notify event handlers 通知事件 */
 		if(janus_events_is_enabled()) {
 			janus_session *session = (janus_session *)handle->session;
 			json_t *info = json_object();
@@ -3479,6 +3595,14 @@ static int janus_ice_candidate_to_string(janus_ice_handle *handle, NiceCandidate
 	return 0;
 }
 
+/**
+ * @brief 把candidate 编码成 sdp
+ * 
+ * @param handle 
+ * @param mline 
+ * @param stream_id 
+ * @param component_id 
+ */
 void janus_ice_candidates_to_sdp(janus_ice_handle *handle, janus_sdp_mline *mline, guint stream_id, guint component_id) {
 	if(!handle || !handle->agent || !mline)
 		return;
@@ -3492,21 +3616,26 @@ void janus_ice_candidates_to_sdp(janus_ice_handle *handle, janus_sdp_mline *mlin
 		JANUS_LOG(LOG_ERR, "[%"SCNu64"]     No component %d in stream %d??\n", handle->handle_id, component_id, stream_id);
 		return;
 	}
+	/*ICE代理*/
 	NiceAgent *agent = handle->agent;
-	/* Iterate on all */
+	/* Iterate on all 迭代candidate*/
 	gchar buffer[200];
 	GSList *candidates, *i;
+	/* 从handle的ICE代理中获取candidates */
 	candidates = nice_agent_get_local_candidates (agent, stream_id, component_id);
 	JANUS_LOG(LOG_VERB, "[%"SCNu64"] We have %d candidates for Stream #%d, Component #%d\n", handle->handle_id, g_slist_length(candidates), stream_id, component_id);
+	/*如果 此组件的本地候选者的 GLib 列表为空 log_candidates==ture 后续会 对local_candidates 进行赋值，否之则不会*/
 	gboolean log_candidates = (component->local_candidates == NULL);
 	for(i = candidates; i; i = i->next) {
+		/*获取具体的candidat数据*/
 		NiceCandidate *c = (NiceCandidate *) i->data;
 		gboolean ipv6 = (nice_address_ip_version(&c->addr) == 6);
 		gboolean same_family = (!ipv6 && janus_has_public_ipv4_ip()) || (ipv6 && janus_has_public_ipv6_ip());
 		guint public_ip_index = 0;
 		do {
 			if(janus_ice_candidate_to_string(handle, c, buffer, sizeof(buffer), log_candidates, FALSE, public_ip_index) == 0) {
-				/* Candidate encoded, add to the SDP (but only if it's not a 'prflx') */
+				/* Candidate encoded, add to the SDP (but only if it's not a 'prflx') 
+				候选编码，添加到 SDP（但仅当它不是“prflx”时） */
 				if(c->type == NICE_CANDIDATE_TYPE_PEER_REFLEXIVE) {
 					JANUS_LOG(LOG_VERB, "[%"SCNu64"] Skipping prflx candidate...\n", handle->handle_id);
 				} else {
@@ -3516,7 +3645,8 @@ void janus_ice_candidates_to_sdp(janus_ice_handle *handle, janus_sdp_mline *mlin
 					}
 					if(nat_1_1_enabled && public_ip_index == 0 && (keep_private_host || !same_family) &&
 							janus_ice_candidate_to_string(handle, c, buffer, sizeof(buffer), log_candidates, TRUE, public_ip_index) == 0) {
-						/* Candidate with private host encoded, add to the SDP (but only if it's not a 'prflx') */
+						/* Candidate with private host encoded, add to the SDP (but only if it's not a 'prflx') 
+						具有私有主机编码的Candidate，添加到 SDP（但仅当它不是“prflx”时）*/
 						if(c->type == NICE_CANDIDATE_TYPE_PEER_REFLEXIVE) {
 							JANUS_LOG(LOG_VERB, "[%"SCNu64"] Skipping prflx candidate...\n", handle->handle_id);
 						} else if(strlen(buffer) > 0) {
@@ -4993,7 +5123,8 @@ static gboolean janus_ice_outgoing_traffic_handle(janus_ice_handle *handle, janu
 
 static void janus_ice_queue_packet(janus_ice_handle *handle, janus_ice_queued_packet *pkt) {
 	/* TODO: There is a potential race condition where the "queued_packets"
-	 * could get released between the condition and pushing the packet. */
+	 * could get released between the condition and pushing the packet.
+	 存在潜在的竞争条件，其中“queued_packets”可能在推送数据包之间被释放  */
 	if(handle->queued_packets != NULL) {
 		g_async_queue_push(handle->queued_packets, pkt);
 		g_main_context_wakeup(handle->mainctx);
@@ -5145,20 +5276,32 @@ void janus_ice_relay_rtp(janus_ice_handle *handle, janus_plugin_rtp *packet) {
 	header->extension = origext;
 }
 
+/**
+ * @brief 转发 RTCP 消息的内部方法，可选择过滤它们 如果它们来自插件
+ * 
+ * @param handle 
+ * @param packet 
+ * @param filter_rtcp 
+ */
 void janus_ice_relay_rtcp_internal(janus_ice_handle *handle, janus_plugin_rtcp *packet, gboolean filter_rtcp) {
 	if(!handle || handle->queued_packets == NULL || packet == NULL || packet->buffer == NULL ||
 			!janus_is_rtcp(packet->buffer, packet->length))
 		return;
 	/* We use this internal method to check whether we need to filter RTCP (e.g., to make
 	 * sure we don't just forward any SR/RR from peers/plugins, but use our own) or it has
-	 * already been done, and so this is actually a packet added by the ICE send thread */
+	 * already been done, and so this is actually a packet added by the ICE send thread 
+	 * 我们使用这个内部方法来检查我们是否需要过滤 RTCP 或者它已经完成了
+	 * （例如，确保我们不只是转发来自对等/插件的任何 SR/RR，而是使用我们自己的）
+	 * 所以这是 实际上是ICE发送线程添加的一个数据包 */
 	char *rtcp_buf = packet->buffer;
 	int rtcp_len = packet->length;
 	if(filter_rtcp) {
-		/* FIXME Strip RR/SR/SDES/NACKs/etc. */
+		/* FIXME Strip RR/SR/SDES/NACKs/etc. 剥离 RR/SR/SDES/NACKs/等。 */
 		janus_ice_stream *stream = handle->stream;
 		if(stream == NULL)
+		    /*没有stream数据，不需要通过RTCP进行控制*/
 			return;
+		/*过滤RTCP信息*/
 		rtcp_buf = janus_rtcp_filter(packet->buffer, packet->length, &rtcp_len);
 		if(rtcp_buf == NULL || rtcp_len < 1) {
 			g_free(rtcp_buf);
@@ -5166,7 +5309,10 @@ void janus_ice_relay_rtcp_internal(janus_ice_handle *handle, janus_plugin_rtcp *
 		}
 		/* Fix all SSRCs before enqueueing, as we need to use the ones for this media
 		 * leg. Note that this is only needed for RTCP packets coming from plugins: the
-		 * ones created by the core already have the right SSRCs in the right place */
+		 * ones created by the core already have the right SSRCs in the right place 
+		 * 在入队之前修复所有 SSRC，因为我们需要将这些 SSRC 用于此媒体分发。 
+		 * 请注意，这只需要处理来自插件的 RTCP 数据包
+		 * 由core创建的数据包已经在正确的地方拥有正确的SSRC，不需要处理*/
 		JANUS_LOG(LOG_HUGE, "[%"SCNu64"] Fixing SSRCs (local %u, peer %u)\n", handle->handle_id,
 			packet->video ? stream->video_ssrc : stream->audio_ssrc,
 			packet->video ? stream->video_ssrc_peer[0] : stream->audio_ssrc_peer);
@@ -5174,7 +5320,7 @@ void janus_ice_relay_rtcp_internal(janus_ice_handle *handle, janus_plugin_rtcp *
 			packet->video ? stream->video_ssrc : stream->audio_ssrc,
 			packet->video ? stream->video_ssrc_peer[0] : stream->audio_ssrc_peer);
 	}
-	/* Queue this packet */
+	/* Queue this packet  入队数据包 */
 	janus_ice_queued_packet *pkt = g_malloc(sizeof(janus_ice_queued_packet));
 	pkt->data = g_malloc(rtcp_len+SRTP_MAX_TAG_LEN+4);
 	memcpy(pkt->data, rtcp_buf, rtcp_len);
@@ -5188,7 +5334,9 @@ void janus_ice_relay_rtcp_internal(janus_ice_handle *handle, janus_plugin_rtcp *
 	pkt->added = janus_get_monotonic_time();
 	janus_ice_queue_packet(handle, pkt);
 	if(rtcp_buf != packet->buffer) {
-		/* We filtered the original packet, deallocate it */
+		/* We filtered the original packet, deallocate it
+		我们已经过滤了原始包，释放它
+		 */
 		g_free(rtcp_buf);
 	}
 }

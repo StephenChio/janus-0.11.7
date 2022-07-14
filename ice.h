@@ -264,32 +264,32 @@ typedef struct janus_ice_trickle janus_ice_trickle;
 /*! \brief Janus media statistics
  * \note To improve with more stuff */
 typedef struct janus_ice_stats_info {
-	/*! \brief Packets sent or received */
+	/*! \brief Packets sent or received 这是一个发送包或者接收包 */
 	guint32 packets;
-	/*! \brief Bytes sent or received */
+	/*! \brief Bytes sent or received 这是发送数据或者是接收数据 */
 	guint64 bytes;
-	/*! \brief Bytes sent or received in the last second */
+	/*! \brief Bytes sent or received in the last second 我们会在最后一秒发送或者接收的 Bytes*/
 	guint32 bytes_lastsec, bytes_lastsec_temp;
-	/*! \brief Time we last updated the last second counter */
+	/*! \brief Time we last updated the last second counter 最后一次更新最后一秒计数器的时刻 */
 	gint64 updated;
-	/*! \brief Whether or not we notified about lastsec issues already */
+	/*! \brief Whether or not we notified about lastsec issues already 我们是否已经通知过 lastsec 问题 */
 	gboolean notified_lastsec;
-	/*! \brief Number of NACKs sent or received */
+	/*! \brief Number of NACKs sent or received 发送获接收 丢包重传的次数 */
 	guint32 nacks;
 } janus_ice_stats_info;
 
 /*! \brief Janus media statistics container
  * \note To improve with more stuff */
 typedef struct janus_ice_stats {
-	/*! \brief Audio info */
+	/*! \brief Audio info 音频信息 */
 	janus_ice_stats_info audio;
-	/*! \brief Video info (considering we may be simulcasting) */
+	/*! \brief Video info (considering we may be simulcasting) 视频信息（考虑到可能会有多个，因为如果是simulcasting）*/
 	janus_ice_stats_info video[3];
-	/*! \brief Data info */
+	/*! \brief Data info 数据信息 */
 	janus_ice_stats_info data;
-	/*! \brief Last known count of lost audio packets (for slow_link) */
+	/*! \brief Last known count of lost audio packets (for slow_link) 丢失音频数据包的最后已知计数 */
 	guint sl_lost_count_audio;
-	/*! \brief Last known count of lost video packets (for slow_link) */
+	/*! \brief Last known count of lost video packets (for slow_link) 丢失视频数据包的最后已知计数 */
 	guint sl_lost_count_video;
 } janus_ice_stats;
 
@@ -338,7 +338,7 @@ struct janus_ice_handle {
 	void *app;
 	/*! \brief Opaque core/plugin session pointer 指向插件session的指针 每一个handle添加到一个插件上都会创建一个session */
 	janus_plugin_session *app_handle;
-	/*! \brief Mask of WebRTC-related flags for this handle */
+	/*! \brief Mask of WebRTC-related flags for this handle 此handle 的 WebRTC 相关标志的掩码*/
 	janus_flags webrtc_flags;
 	/*! \brief Number of gathered candidates 收集的candidate数量*/
 	gint cdone;
@@ -412,19 +412,19 @@ struct janus_ice_stream {
 	janus_ice_handle *handle;
 	/*! \brief libnice ICE stream ID */
 	guint stream_id;
-	/*! \brief Whether this stream is ready to be used */
+	/*! \brief Whether this stream is ready to be used 此stream是否已经被使用 */
 	gint cdone:1;
-	/*! \brief Audio SSRC of the server for this stream */
+	/*! \brief Audio SSRC of the server for this stream 此流的服务器的音频 SSRC*/
 	guint32 audio_ssrc;
-	/*! \brief Video SSRC of the server for this stream */
+	/*! \brief Video SSRC of the server for this stream 此流的服务器的视频 SSRC*/
 	guint32 video_ssrc;
-	/*! \brief Video retransmission SSRC of the peer for this stream */
+	/*! \brief Video retransmission SSRC of the peer for this stream 此流的对端视频重传 SSRC */
 	guint32 video_ssrc_rtx;
 	/*! \brief Audio SSRC of the peer for this stream 音频的SSRC值*/
 	guint32 audio_ssrc_peer, audio_ssrc_peer_new, audio_ssrc_peer_orig;
-	/*! \brief Video SSRC(s) of the peer for this stream (may be simulcasting) */
+	/*! \brief Video SSRC(s) of the peer for this stream (may be simulcasting) 此流的对等方的视频 SSRC（可能是联播）*/
 	guint32 video_ssrc_peer[3], video_ssrc_peer_new[3], video_ssrc_peer_orig[3], video_ssrc_peer_temp;
-	/*! \brief Video retransmissions SSRC(s) of the peer for this stream */
+	/*! \brief Video retransmissions SSRC(s) of the peer for this stream  此流的对等方的视频重传 SSRC */
 	guint32 video_ssrc_peer_rtx[3], video_ssrc_peer_rtx_new[3], video_ssrc_peer_rtx_orig[3];
 	/*! \brief Array of RTP Stream IDs (for Firefox simulcasting, if enabled) */
 	char *rid[3];
@@ -432,7 +432,7 @@ struct janus_ice_stream {
 	gboolean rids_hml;
 	/*! \brief Whether we should use the legacy simulcast syntax (a=simulcast:recv rid=..) or the proper one (a=simulcast:recv ..) */
 	gboolean legacy_rid;
-	/*! \brief RTP switching context(s) in case of renegotiations (audio+video and/or simulcast) */
+	/*! \brief RTP switching context(s) in case of renegotiations (audio+video and/or simulcast) 重新协商时的 RTP 切换上下文（音频+视频和/或联播）*/
 	janus_rtp_switching_context rtp_ctx[3];
 	/*! \brief List of payload types we can expect for audio */
 	GList *audio_payload_types;
@@ -440,7 +440,7 @@ struct janus_ice_stream {
 	GList *video_payload_types;
 	/*! \brief Mapping of rtx payload types to actual media-related packet types */
 	GHashTable *rtx_payload_types;
-	/*! \brief Mapping of payload types to their clock rates, as advertised in the SDP */
+	/*! \brief Mapping of payload types to their clock rates, as advertised in the SDP 将有效负载类型映射到其时钟速率，如 SDP 中所设置的那样*/
 	GHashTable *clock_rates;
 	/*! \brief RTP payload types of this stream */
 	gint audio_payload_type, video_payload_type, video_rtx_payload_type;
@@ -450,13 +450,13 @@ struct janus_ice_stream {
 	gboolean (* video_is_keyframe)(const char* buffer, int len);
 	/*! \brief Media direction */
 	gboolean audio_send, audio_recv, video_send, video_recv;
-	/*! \brief RTCP context for the audio stream */
+	/*! \brief RTCP context for the audio stream 音频流的 RTCP 上下文*/
 	janus_rtcp_context *audio_rtcp_ctx;
-	/*! \brief RTCP context(s) for the video stream (may be simulcasting) */
+	/*! \brief RTCP context(s) for the video stream (may be simulcasting) 视频流的 RTCP 上下文（可能是联播） */
 	janus_rtcp_context *video_rtcp_ctx[3];
-	/*! \brief Latest REMB feedback we received */
+	/*! \brief Latest REMB feedback we received 我们收到的最新 REMB 反馈*/
 	uint32_t remb_bitrate;
-	/*! \brief Size of the NACK queue (in ms), dynamically updated per the RTT */
+	/*! \brief Size of the NACK queue (in ms), dynamically updated per the RTT  # NACK 队列的大小（以毫秒为单位），根据 RTT 动态更新 */
 	uint16_t nack_queue_ms;
 	/*! \brief Map(s) of the NACKed packets (to track retransmissions and avoid duplicates) */
 	GHashTable *rtx_nacked[3];
@@ -482,9 +482,9 @@ struct janus_ice_stream {
 	gint mid_ext_id;
 	/*! \brief RTP Stream extension ID, and the related rtx one */
 	gint rid_ext_id, ridrtx_ext_id;
-	/*! \brief Audio levels extension ID */
+	/*! \brief Audio levels extension ID 音频级别拓展id*/
 	gint audiolevel_ext_id;
-	/*! \brief Video orientation extension ID */
+	/*! \brief Video orientation extension ID 视频旋转拓展id*/
 	gint videoorientation_ext_id;
 	/*! \brief Absolute Send Time ext ID */
 	gint abs_send_time_ext_id;
@@ -543,9 +543,9 @@ struct janus_ice_component {
 	gint64 component_connected;
 	/*! \brief GLib list of libnice remote candidates for this component */
 	GSList *candidates;
-	/*! \brief GLib list of local candidates for this component (summary) */
+	/*! \brief GLib list of local candidates for this component (summary) 此组件的本地候选者的 GLib 列表（摘要）*/
 	GSList *local_candidates;
-	/*! \brief GLib list of remote candidates for this component (summary) */
+	/*! \brief GLib list of remote candidates for this component (summary) 此组件的远端候选者的 GLib 列表（摘要） */
 	GSList *remote_candidates;
 	/*! \brief String representation of the selected pair as notified by libnice (foundations) */
 	gchar *selected_pair;
@@ -559,29 +559,33 @@ struct janus_ice_component {
 	GSource *dtlsrt_source;
 	/*! \brief DTLS-SRTP stack */
 	janus_dtls_srtp *dtls;
-	/*! \brief Whether we should do NACKs (in or out) for audio */
+	/*! \brief Whether we should do NACKs (in or out) for audio 我们是否需要对上行或者下行的音频包做丢包重传处理*/
 	gboolean do_audio_nacks;
-	/*! \brief Whether we should do NACKs (in or out) for video */
+	/*! \brief Whether we should do NACKs (in or out) for video 我们是否需要对上行或者下行的视频包做丢包重传处理*/
 	gboolean do_video_nacks;
-	/*! \brief List of previously sent janus_rtp_packet RTP packets, in case we receive NACKs */
+	/*! \brief List of previously sent janus_rtp_packet RTP packets, in case we receive NACKs 
+	先前发送的 janus_rtp_packet RTP 数据包列表，以防我们收到 丢包重传 */
 	GQueue *audio_retransmit_buffer, *video_retransmit_buffer;
-	/*! \brief HashTable of retransmittable sequence numbers, in case we receive NACKs */
+	/*! \brief HashTable of retransmittable sequence numbers, in case we receive NACKs 
+	可重传序列号的哈希表，以防我们收到 丢包重传*/
 	GHashTable *audio_retransmit_seqs, *video_retransmit_seqs;
-	/*! \brief Current sequence number for the RFC4588 rtx SSRC session */
+	/*! \brief Current sequence number for the RFC4588 rtx SSRC session #RFC4588 rtx SSRC 会话的当前序列号 */
 	guint16 rtx_seq_number;
-	/*! \brief Last time a log message about sending retransmits was printed */
+	/*! \brief Last time a log message about sending retransmits was printed 上次打印有关发送重传的日志消息的时间 */
 	gint64 retransmit_log_ts;
-	/*! \brief Number of retransmitted packets since last log message */
+	/*! \brief Number of retransmitted packets since last log message 自上次日志消息以来重传的数据包数 */
 	guint retransmit_recent_cnt;
 	/*! \brief Last time a log message about sending NACKs was printed */
 	gint64 nack_sent_log_ts;
-	/*! \brief Number of NACKs sent since last log message */
+	/*! \brief Number of NACKs sent since last log message 自上次日志消息以来发送的 NACK 数 */
 	guint nack_sent_recent_cnt;
-	/*! \brief List of recently received audio sequence numbers (as a support to NACK generation) */
+	/*! \brief List of recently received audio sequence numbers (as a support to NACK generation) 
+	最近收到的音频序列号列表（作为 丢包重传 生成的支持）*/
 	janus_seq_info *last_seqs_audio;
-	/*! \brief List of recently received video sequence numbers (as a support to NACK generation, for each simulcast SSRC) */
+	/*! \brief List of recently received video sequence numbers (as a support to NACK generation, for each simulcast SSRC) 
+	最近收到的视频序列号列表（作为对 丢包重传 生成的支持，对于每个联播 SSRC）*/
 	janus_seq_info *last_seqs_video[3];
-	/*! \brief Stats for incoming data (audio/video/data) */
+	/*! \brief Stats for incoming data (audio/video/data) 输入数据的统计信息（音频/视频/数据）*/
 	janus_ice_stats in_stats;
 	/*! \brief Stats for outgoing data (audio/video/data) */
 	janus_ice_stats out_stats;

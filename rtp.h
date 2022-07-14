@@ -59,6 +59,7 @@ typedef struct janus_rtp_packet {
 	char *data;
 	gint length;
 	gint64 created;
+	/** @brief 上次重传时间 */
 	gint64 last_retransmit;
 } janus_rtp_packet;
 

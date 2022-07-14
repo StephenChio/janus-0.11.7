@@ -546,55 +546,58 @@ void janus_plugin_result_destroy(janus_plugin_result *result);
  *
  */
 ///@{
-/*! \brief Janus plugin RTP extensions */
+/*! \brief Janus plugin RTP extensions Janus插件RTP拓展*/
 struct janus_plugin_rtp_extensions {
-	/*! \brief Audio level, in DB (0-127, 127=silence); -1 means no extension */
+	/*! \brief Audio level, in DB (0-127, 127=silence); -1 means no extension :音频级拓展 0-127 127代表静音，-1意味着不使用该拓展*/
 	int8_t audio_level;
-	/*! \brief Whether the encoder detected voice activity (part of audio-level extension)
-	 * @note Browsers apparently always set this to 1, so it's unreliable and should be ignored */
+	/*! \brief Whether the encoder detected voice activity (part of audio-level extension):编码器是否检测到音频活动（音频级扩展的一部分）
+	 * @note Browsers apparently always set this to 1, so it's unreliable and should be ignored 
+	 浏览器显然总是将此设置为 1，因此它不可靠，应该被忽略
+	 */
 	gboolean audio_level_vad;
-	/*! \brief Video orientation rotation (0, 90, 180, 270); -1 means no extension */
+	/*! \brief Video orientation rotation (0, 90, 180, 270); -1 means no extension 视频翻转角度 (0, 90, 180, 270), -1意味着不使用该拓展*/
 	int16_t video_rotation;
-	/*! \brief Whether the video orientation extension says this is the back camera
-	 * @note Will be ignored if no rotation value is set */
+	/*! \brief Whether the video orientation extension says this is the back camera 视频翻转是否作用在后置摄像头
+	 * @note Will be ignored if no rotation value is set 如果没有设置video_rotation，会被忽略 */
 	gboolean video_back_camera;
-	/*! \brief Whether the video orientation extension says it's flipped horizontally
-	 * @note Will be ignored if no rotation value is set */
+	/*! \brief Whether the video orientation extension says it's flipped horizontally 视频翻转是否作用水平翻转
+	 * @note Will be ignored if no rotation value is set 如果没有设置video_rotation，会被忽略 */
 	gboolean video_flipped;
 };
-/*! \brief Helper method to initialise/reset the RTP extensions field
+/*! \brief Helper method to initialise/reset the RTP extensions field 这个方法帮助我们去初始化RTP拓展部分的一些字段
  * @note This is important because each of the supported extensions may
  * use a different value to specify an "extension missing" state, which
  * may be different from a 0 or a NULL (e.g., a -1 instead)
- * @param[in] extensions Pointer to the janus_plugin_rtp_extensions instance to reset
+ * 这非常重要，因为每一个支持拓展头的都会使用不同的值去区分“拓展部分缺失”状态，就算是0或者NULL也可能是代表不一样的含义
+ * @param[in] extensions Pointer to the janus_plugin_rtp_extensions instance to reset 指向需要重新设置的RTP拓展实例的指针
 */
 void janus_plugin_rtp_extensions_reset(janus_plugin_rtp_extensions *extensions);
 
-/*! \brief Janus plugin RTP packet */
+/*! \brief Janus plugin RTP packet RTP包*/
 struct janus_plugin_rtp {
-	/*! \brief Whether this is an audio or video RTP packet */
+	/*! \brief Whether this is an audio or video RTP packet 是否标识是视频，0音频1视频*/
 	gboolean video;
-	/*! \brief The packet data */
+	/*! \brief The packet data 包内容 */
 	char *buffer;
-	/*! \brief The packet length */
+	/*! \brief The packet length 包长度*/
 	uint16_t length;
-	/*! \brief RTP extensions */
+	/*! \brief RTP extensions RTP拓展部分 */
 	janus_plugin_rtp_extensions extensions;
 };
-/*! \brief Helper method to initialise/reset the RTP packet
+/*! \brief Helper method to initialise/reset the RTP packet 这个方法帮助我们去初始化RTP包一些字段
  * @note The main motivation for this method comes from the presence of the
  * extensions as a janus_plugin_rtp_extensions instance.
  * @param[in] packet Pointer to the janus_plugin_rtp packet to reset
 */
 void janus_plugin_rtp_reset(janus_plugin_rtp *packet);
 
-/*! \brief Janus plugin RTCP packet */
+/*! \brief Janus plugin RTCP packet RTCP包*/
 struct janus_plugin_rtcp {
-	/*! \brief Whether this is an audio or video RTCP packet */
+	/*! \brief Whether this is an audio or video RTCP packet  是否标识是视频，0音频1视频*/
 	gboolean video;
-	/*! \brief The packet data */
+	/*! \brief The packet data 包内容*/
 	char *buffer;
-	/*! \brief The packet length */
+	/*! \brief The packet length 包长度*/
 	uint16_t length;
 };
 /*! \brief Helper method to initialise/reset the RTCP packet

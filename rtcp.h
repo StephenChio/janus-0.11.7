@@ -252,7 +252,7 @@ typedef struct rtcp_context
 	/* Last RR/SR we sent */
 	int64_t last_sent;
 
-	/* Estimated round-trip time */
+	/* Estimated round-trip time 预计往返时间*/
 	uint32_t rtt;
 
 	/* RFC 3550 A.3 */
@@ -382,7 +382,7 @@ gboolean janus_is_rtcp(char *buf, guint len);
  * @returns 0 in case of success, -1 on errors */
 int janus_rtcp_parse(janus_rtcp_context *ctx, char *packet, int len);
 
-/*! \brief Method to fix incoming RTCP SR and RR data
+/*! \brief Method to fix incoming RTCP SR and RR data 修复传入 RTCP SR 和 RR 数据
  * @param[in] packet The message data
  * @param[in] len The message data length in bytes
  * @param[in] base_ts RTP context base timestamp to compute offset
@@ -394,7 +394,7 @@ int janus_rtcp_parse(janus_rtcp_context *ctx, char *packet, int len);
  * @returns The number of fields updated, negative values on errors */
 int janus_rtcp_fix_report_data(char *packet, int len, uint32_t base_ts, uint32_t base_ts_prev, uint32_t ssrc_peer, uint32_t ssrc_local, uint32_t ssrc_expected, gboolean video);
 
-/*! \brief Method to fix an RTCP message (http://tools.ietf.org/html/draft-ietf-straw-b2bua-rtcp-00)
+/*! \brief Method to fix an RTCP message 修复RTCP消息 (http://tools.ietf.org/html/draft-ietf-straw-b2bua-rtcp-00)
  * @param[in] ctx RTCP context to update, if needed (optional)
  * @param[in] packet The message data
  * @param[in] len The message data length in bytes
@@ -404,7 +404,7 @@ int janus_rtcp_fix_report_data(char *packet, int len, uint32_t base_ts, uint32_t
  * @returns 0 in case of success, -1 on errors */
 int janus_rtcp_fix_ssrc(janus_rtcp_context *ctx, char *packet, int len, int fixssrc, uint32_t newssrcl, uint32_t newssrcr);
 
-/*! \brief Method to filter an outgoing RTCP message (http://tools.ietf.org/html/draft-ietf-straw-b2bua-rtcp-00)
+/*! \brief Method to filter an outgoing RTCP message 过滤离开的RTCP信息 (http://tools.ietf.org/html/draft-ietf-straw-b2bua-rtcp-00)
  * @param[in] packet The message data
  * @param[in] len The message data length in bytes
  * @param[in,out] newlen The data length of the filtered RTCP message
@@ -458,7 +458,7 @@ gboolean janus_rtcp_has_fir(char *packet, int len);
  * @returns TRUE in case of success, FALSE otherwise */
 gboolean janus_rtcp_has_pli(char *packet, int len);
 
-/*! \brief Method to parse an RTCP NACK message
+/*! \brief Method to parse an RTCP NACK message 解析 RTCP NACK 消息
  * @param[in] packet The message data
  * @param[in] len The message data length in bytes
  * @returns A list of janus_nack elements containing the sequence numbers to send again */
@@ -531,7 +531,7 @@ int janus_rtcp_fir_legacy(char *packet, int len, int *seqnr);
  * @returns The message data length in bytes, if successful, -1 on errors */
 int janus_rtcp_pli(char *packet, int len);
 
-/*! \brief Method to generate a new RTCP NACK message to report lost packets
+/*! \brief Method to generate a new RTCP NACK message to report lost packets 生成新的 RTCP 丢包重传 消息以报告丢失数据包
  * @param[in] packet The buffer data (MUST be at least 16 chars)
  * @param[in] len The message data length in bytes (MUST be 16)
  * @param[in] nacks List of packets to NACK
