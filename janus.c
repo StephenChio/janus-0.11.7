@@ -5399,7 +5399,7 @@ gint main(int argc, char *argv[])
 		janus_ice_allow_force_relay();
 	}
 	/* Do we need a limited number of static event loops, or is it ok to have one per handle (the default)?
-	我们是否需要限制静态事件循环数量？即开启线程池？ */
+	我们是否需要限制ICE静态事件循环数量？*/
 	item = janus_config_get(config, config_general, janus_config_type_item, "event_loops");
 	if(item && item->value) {
 		int loops = atoi(item->value);

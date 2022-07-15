@@ -35,7 +35,7 @@
 #include "ip-utils.h"
 #include "events.h"
 
-/* STUN server/port, if any */
+/* STUN server/port, if any STUN服务和端口 如果有*/
 static char *janus_stun_server = NULL;
 static uint16_t janus_stun_port = 0;
 
@@ -47,7 +47,7 @@ uint16_t janus_ice_get_stun_port(void) {
 }
 
 
-/* TURN server/port and credentials, if any */
+/* TURN server/port and credentials, if any TURN服务和端口 如果有*/
 static char *janus_turn_server = NULL;
 static uint16_t janus_turn_port = 0;
 static char *janus_turn_user = NULL, *janus_turn_pwd = NULL;
@@ -61,7 +61,7 @@ uint16_t janus_ice_get_turn_port(void) {
 }
 
 
-/* TURN REST API support, if any */
+/* TURN REST API support, if any TURN服务REST API支持 如果有*/
 char *janus_ice_get_turn_rest_api(void) {
 #ifndef HAVE_TURNRESTAPI
 	return NULL;
@@ -70,7 +70,7 @@ char *janus_ice_get_turn_rest_api(void) {
 #endif
 }
 
-/* Force relay settings */
+/* Force relay settings 强制使用relay设置 */
 static gboolean force_relay_allowed = FALSE;
 void janus_ice_allow_force_relay(void) {
 	force_relay_allowed = TRUE;
@@ -136,7 +136,7 @@ const char *janus_ice_get_nomination_mode(void) {
 }
 #endif
 
-/* Keepalive via connectivity checks */
+/* Keepalive via connectivity checks 通过连接检查保持活跃 */
 static gboolean janus_ice_keepalive_connchecks = FALSE;
 void janus_ice_set_keepalive_conncheck_enabled(gboolean enabled) {
 	janus_ice_keepalive_connchecks = enabled;
@@ -151,7 +151,9 @@ gboolean janus_ice_is_keepalive_conncheck_enabled(void) {
 
 /* Opaque IDs set by applications are by default only passed to event handlers
  * for correlation purposes, but not sent back to the user or application in
- * the related Janus API responses or events, unless configured otherwise */
+ * the related Janus API responses or events, unless configured otherwise 
+ * 默认情况下，应用程序设置的Opaque ID 仅传递给事件处理程序以用于关联目的，
+ * 但不会在相关的 Janus API 响应或事件中发送回用户或应用程序，除非另有配置 */
 static gboolean opaqueid_in_api = FALSE;
 void janus_enable_opaqueid_in_api(void) {
 	opaqueid_in_api = TRUE;
@@ -160,17 +162,27 @@ gboolean janus_is_opaqueid_in_api_enabled(void) {
 	return opaqueid_in_api;
 }
 
-/* Only needed in case we're using static event loops spawned at startup (disabled by default) */
+/* Only needed in case we're using static event loops spawned at startup (disabled by default)
+仅在我们使用启动时产生的静态事件循环时才需要（默认禁用） */
 typedef struct janus_ice_static_event_loop {
 	int id;
 	GMainContext *mainctx;
 	GMainLoop *mainloop;
 	GThread *thread;
 } janus_ice_static_event_loop;
+
+
 static int static_event_loops = 0;
 static gboolean allow_loop_indication = FALSE;
 static GSList *event_loops = NULL, *current_loop = NULL;
 static janus_mutex event_loops_mutex = JANUS_MUTEX_INITIALIZER;
+
+/**
+ * @brief 执行静态事件循环的线程
+ * 
+ * @param data 
+ * @return void* 
+ */
 static void *janus_ice_static_event_loop_thread(void *data) {
 	janus_ice_static_event_loop *loop = data;
 	JANUS_LOG(LOG_VERB, "[loop#%d] Event loop thread started\n", loop->id);
@@ -181,18 +193,27 @@ static void *janus_ice_static_event_loop_thread(void *data) {
 	}
 	JANUS_LOG(LOG_DBG, "[loop#%d] Looping...\n", loop->id);
 	g_main_loop_run(loop->mainloop);
-	/* When the loop quits, we can unref it */
+	/* When the loop quits, we can unref it 当循环退出时，我们可以取消它*/
 	g_main_loop_unref(loop->mainloop);
 	g_main_context_unref(loop->mainctx);
 	JANUS_LOG(LOG_VERB, "[loop#%d] Event loop thread ended!\n", loop->id);
 	return NULL;
 }
+
+
 int janus_ice_get_static_event_loops(void) {
 	return static_event_loops;
 }
 gboolean janus_ice_is_loop_indication_allowed(void) {
 	return allow_loop_indication;
 }
+
+/**
+ * @brief 设置ICE的静态事件loops
+ * 
+ * @param loops 
+ * @param allow_api 
+ */
 void janus_ice_set_static_event_loops(int loops, gboolean allow_api) {
 	if(loops == 0)
 		return;
@@ -200,14 +221,14 @@ void janus_ice_set_static_event_loops(int loops, gboolean allow_api) {
 		JANUS_LOG(LOG_WARN, "Invalid number of static event loops (%d), disabling\n", loops);
 		return;
 	}
-	/* Create a pool of new event loops */
+	/* Create a pool of new event loops 创建一个新事件循环池 */
 	int i = 0;
 	for(i=0; i<loops; i++) {
 		janus_ice_static_event_loop *loop = g_malloc0(sizeof(janus_ice_static_event_loop));
 		loop->id = static_event_loops;
 		loop->mainctx = g_main_context_new();
 		loop->mainloop = g_main_loop_new(loop->mainctx, FALSE);
-		/* Now spawn a thread for this loop */
+		/* Now spawn a thread for this loop 现在为这个循环生成一个线程 */
 		GError *error = NULL;
 		char tname[16];
 		g_snprintf(tname, sizeof(tname), "hloop %d", loop->id);
@@ -231,10 +252,15 @@ void janus_ice_set_static_event_loops(int loops, gboolean allow_api) {
 		allow_loop_indication ? "will" : "will NOT");
 	return;
 }
+
+/**
+ * @brief 停止静态事件循环：退出所有静态循环并等待线程离开
+ * 
+ */
 void janus_ice_stop_static_event_loops(void) {
 	if(static_event_loops < 1)
 		return;
-	/* Quit all the static loops and wait for the threads to leave */
+	/* Quit all the static loops and wait for the threads to leave 退出所有静态循环并等待线程离开 */
 	janus_mutex_lock(&event_loops_mutex);
 	GSList *l = event_loops;
 	while(l) {
@@ -446,11 +472,13 @@ static void janus_ice_outgoing_traffic_finalize(GSource *source) {
 	janus_ice_outgoing_traffic *t = (janus_ice_outgoing_traffic *)source;
 	JANUS_LOG(LOG_VERB, "[%"SCNu64"] Finalizing loop source\n", t->handle->handle_id);
 	if(static_event_loops > 0) {
-		/* This handle was sharing an event loop with others */
+		/* This handle was sharing an event loop with others 
+		此 handle 与其他人共享事件循环*/
 		janus_ice_webrtc_free(t->handle);
 		janus_refcount_decrease(&t->handle->ref);
 	} else if(t->handle->mainloop != NULL && g_main_loop_is_running(t->handle->mainloop)) {
-		/* This handle had a dedicated event loop, quit it */
+		/* This handle had a dedicated event loop, quit it 
+		这个 handle 有一个专门的事件循环，退出它 */
 		g_main_loop_quit(t->handle->mainloop);
 	}
 	janus_refcount_decrease(&t->handle->ref);
@@ -3658,16 +3686,24 @@ void janus_ice_candidates_to_sdp(janus_ice_handle *handle, janus_sdp_mline *mlin
 			}
 			public_ip_index++;
 			if(!same_family) {
-				/* We don't have any nat-1-1 address of the same family as this candidate, we're done */
+				/* We don't have any nat-1-1 address of the same family as this candidate, we're done
+				当我们配置了IPv4却没有IPv4地址或者我们配置了IPv6却没有IPv6地址时，离开*/
 				break;
 			}
 		} while (public_ip_index < janus_get_public_ip_count());
+		/*释放candidate内存*/
 		nice_candidate_free(c);
 	}
-	/* Done */
+	/* Done  释放candidates内存 */
 	g_slist_free(candidates);
 }
 
+/**
+ * @brief 添加远端candidate到队列等待处理
+ * 
+ * @param handle 
+ * @param c 
+ */
 void janus_ice_add_remote_candidate(janus_ice_handle *handle, NiceCandidate *c) {
 	JANUS_LOG(LOG_VERB, "[%"SCNu64"] Queueing candidate %p\n", handle->handle_id, c);
 	if(handle->queued_candidates != NULL)
@@ -3682,6 +3718,13 @@ void janus_ice_add_remote_candidate(janus_ice_handle *handle, NiceCandidate *c) 
 	}
 }
 
+/**
+ * @brief 处理远程候选人并开始连接检查
+ * 
+ * @param handle 
+ * @param stream_id 
+ * @param component_id 
+ */
 void janus_ice_setup_remote_candidates(janus_ice_handle *handle, guint stream_id, guint component_id) {
 	if(!handle || !handle->agent)
 		return;
@@ -4180,38 +4223,56 @@ void janus_ice_resend_trickles(janus_ice_handle *handle) {
 	janus_ice_notify_trickle(handle, NULL);
 }
 
+
+/**
+ * @brief 比较两个RTCP拥塞传输的序列号，使用该比较器供list进行排序 （升序）
+ * 
+ * @param item1 
+ * @param item2 
+ * @return gint 
+ */
 static gint rtcp_transport_wide_cc_stats_comparator(gconstpointer item1, gconstpointer item2) {
 	return ((rtcp_transport_wide_cc_stats*)item1)->transport_seq_num - ((rtcp_transport_wide_cc_stats*)item2)->transport_seq_num;
 }
+
+/**
+ * @brief 发送传输拥塞控制反馈信息
+ * 
+ * @param user_data 
+ * @return gboolean 
+ */
 static gboolean janus_ice_outgoing_transport_wide_cc_feedback(gpointer user_data) {
 	janus_ice_handle *handle = (janus_ice_handle *)user_data;
 	janus_ice_stream *stream = handle->stream;
 	if(stream && stream->video_recv && stream->do_transport_wide_cc) {
-		/* Create a transport wide feedback message */
+		/* Create a transport wide feedback message  创建拥塞控制反馈信息 */
 		size_t size = 1300;
 		char rtcpbuf[1300];
-		/* Order packet list */
+		/* Order packet list 对拥塞控制接收到的序列号进行从小到大排序 */
 		stream->transport_wide_received_seq_nums = g_slist_sort(stream->transport_wide_received_seq_nums,
 			rtcp_transport_wide_cc_stats_comparator);
-		/* Create full stats queue */
+		/* Create full stats queue 创建包队列 */
 		GQueue *packets = g_queue_new();
-		/* For all packets */
+		/* For all packets 对所有排序好的序列号进行迭代 */
 		GSList *it = NULL;
+		/* 补齐每一个缺失的序列号 */
 		for(it = stream->transport_wide_received_seq_nums; it; it = it->next) {
-			/* Get stat */
+			/* Get stat 获取统计信息 */
 			janus_rtcp_transport_wide_cc_stats *stats = (janus_rtcp_transport_wide_cc_stats *)it->data;
-			/* Get transport seq */
+			/* Get transport seq 获取传输序列号 */
 			guint32 transport_seq_num = stats->transport_seq_num;
-			/* Check if it is an out of order  */
+			/* Check if it is an out of order 检查它是否小于最后一次反馈的序列号，我们只发送大于最后一次反馈的序列号 */
 			if(transport_seq_num < stream->transport_wide_cc_last_feedback_seq_num) {
-				/* Skip, it was already reported as lost */
+				/* Skip, it was already reported as lost 跳过，它已经被报告成丢失了  */
 				g_free(stats);
 				continue;
 			}
-			/* If not first */
+			/* If not first 检查之前有没有反馈过 */
 			if(stream->transport_wide_cc_last_feedback_seq_num) {
+				/* 如果当前 stream 有反馈过拥塞控制的序列号 */
 				/* For each lost */
 				guint32 i = 0;
+				/* 从上一次反馈的序列号+1 -> 该循环当前序列号-1 标记成missing 说明之前的反馈都没有收到 */
 				for(i = stream->transport_wide_cc_last_feedback_seq_num+1; i<transport_seq_num; ++i) {
 					/* Create new stat */
 					janus_rtcp_transport_wide_cc_stats *missing = g_malloc(sizeof(janus_rtcp_transport_wide_cc_stats));
@@ -4222,21 +4283,23 @@ static gboolean janus_ice_outgoing_transport_wide_cc_feedback(gpointer user_data
 					g_queue_push_tail(packets, missing);
 				}
 			}
-			/* Store last */
+			/* Store last 把最后一次反馈的序列号设置成该循环当前的反馈序列号 */
 			stream->transport_wide_cc_last_feedback_seq_num = transport_seq_num;
-			/* Add this one */
+			/* Add this one 把该循环当前序列号也丢进队列等待处理 */
 			g_queue_push_tail(packets, stats);
 		}
-		/* Free and reset stats list */
+		/* Free and reset stats list 释放一些资源 */
 		g_slist_free(stream->transport_wide_received_seq_nums);
 		stream->transport_wide_received_seq_nums = NULL;
-		/* Create and enqueue RTCP packets */
+		/* Create and enqueue RTCP packets 创建 RTCP 数据包并将其排入队列 */
 		guint packets_len = 0;
 		while((packets_len = g_queue_get_length(packets)) > 0) {
 			GQueue *packets_to_process;
-			/* If we have more than 400 packets to acknowledge, let's send more than one message */
+			/* If we have more than 400 packets to acknowledge, let's send more than one message 
+			如果我们要确认的数据包超过 400 个，让我们一次发送多个消息
+			*/
 			if(packets_len > 400) {
-				/* Split the queue into two */
+				/* Split the queue into two 将队列分成两部分 */
 				GList *new_head = g_queue_peek_nth_link(packets, 400);
 				GList *new_tail = new_head->prev;
 				new_head->prev = NULL;
@@ -4246,17 +4309,18 @@ static gboolean janus_ice_outgoing_transport_wide_cc_feedback(gpointer user_data
 				packets_to_process->tail = new_tail;
 				packets_to_process->length = 400;
 				packets->head = new_head;
-				/* packets->tail is unchanged */
+				/* packets->tail is unchanged packets->tail没有改变 */
 				packets->length = packets_len - 400;
 			} else {
 				packets_to_process = packets;
 			}
-			/* Get feedback packet count and increase it for next one */
+			/* Get feedback packet count and increase it for next one
+			获取反馈数据包计数并递增  */
 			guint8 feedback_packet_count = stream->transport_wide_cc_feedback_count++;
-			/* Create RTCP packet */
+			/* Create RTCP packet 创建RTCP包 */
 			int len = janus_rtcp_transport_wide_cc_feedback(rtcpbuf, size,
 				stream->video_ssrc, stream->video_ssrc_peer[0], feedback_packet_count, packets_to_process);
-			/* Enqueue it, we'll send it later */
+			/* Enqueue it, we'll send it later 入队，我们会稍后发送 */
 			if(len > 0) {
 				janus_plugin_rtcp rtcp = { .video = TRUE, .buffer = rtcpbuf, .length = len };
 				janus_ice_relay_rtcp_internal(handle, &rtcp, FALSE);
@@ -4265,7 +4329,7 @@ static gboolean janus_ice_outgoing_transport_wide_cc_feedback(gpointer user_data
 				g_queue_free(packets_to_process);
 			}
 		}
-		/* Free mem */
+		/* Free mem 释放一些资源 */
 		g_queue_free(packets);
 	}
 	return G_SOURCE_CONTINUE;
@@ -4403,7 +4467,8 @@ static gboolean janus_ice_outgoing_rtcp_handle(gpointer user_data) {
 		janus_slow_link_update(stream->component, handle, TRUE, FALSE, lost);
 	}
 	if(twcc_period == 1000) {
-		/* The Transport Wide CC feedback period is 1s as well, send it here */
+		/* The Transport Wide CC feedback period is 1s as well, send it here
+		Transport Wide CC 反馈周期也是1s，通过这里发送 */
 		janus_ice_outgoing_transport_wide_cc_feedback(handle);
 	}
 	return G_SOURCE_CONTINUE;
@@ -5121,6 +5186,12 @@ static gboolean janus_ice_outgoing_traffic_handle(janus_ice_handle *handle, janu
 	return G_SOURCE_CONTINUE;
 }
 
+/**
+ * @brief 入队RTP/RTCP包 供ICE传输
+ * 
+ * @param handle 
+ * @param pkt 
+ */
 static void janus_ice_queue_packet(janus_ice_handle *handle, janus_ice_queued_packet *pkt) {
 	/* TODO: There is a potential race condition where the "queued_packets"
 	 * could get released between the condition and pushing the packet.
@@ -5341,9 +5412,16 @@ void janus_ice_relay_rtcp_internal(janus_ice_handle *handle, janus_plugin_rtcp *
 	}
 }
 
+/**
+ * @brief 核心的RTCP回调函数，在插件有需要发送到对端的RTCP包时被调用
+ * 
+ * @param handle 
+ * @param packet 
+ */
 void janus_ice_relay_rtcp(janus_ice_handle *handle, janus_plugin_rtcp *packet) {
 	janus_ice_relay_rtcp_internal(handle, packet, TRUE);
-	/* If this is a PLI and we're simulcasting, send a PLI on other layers as well */
+	/* If this is a PLI and we're simulcasting, send a PLI on other layers as well 
+	如果这是一个 PLI 并且我们正在simulcasting，那么也在其他层上发送一个 PLI */
 	if(janus_rtcp_has_pli(packet->buffer, packet->length)) {
 		janus_ice_stream *stream = handle->stream;
 		if(stream == NULL)
@@ -5369,6 +5447,11 @@ void janus_ice_relay_rtcp(janus_ice_handle *handle, janus_plugin_rtcp *packet) {
 	}
 }
 
+/**
+ * @brief 在插件想要去发送RTCP PLI到对端时调用
+ * 
+ * @param handle 
+ */
 void janus_ice_send_pli(janus_ice_handle *handle) {
 	char rtcpbuf[12];
 	memset(rtcpbuf, 0, 12);
@@ -5377,6 +5460,12 @@ void janus_ice_send_pli(janus_ice_handle *handle) {
 	janus_ice_relay_rtcp(handle, &rtcp);
 }
 
+/**
+ * @brief 在插件想要去发送RTCP PLI到对端时调用
+ * 
+ * @param handle 
+ * @param bitrate 
+ */
 void janus_ice_send_remb(janus_ice_handle *handle, uint32_t bitrate) {
 	char rtcpbuf[24];
 	janus_rtcp_remb((char *)&rtcpbuf, 24, bitrate);
@@ -5404,6 +5493,13 @@ void janus_ice_relay_data(janus_ice_handle *handle, janus_plugin_data *packet) {
 }
 #endif
 
+/**
+ * @brief 核心 SCTP/DataChannel 回调，当有数据要发送 时 由 SCTP 堆栈调用
+ * 
+ * @param handle 
+ * @param buffer 
+ * @param length 
+ */
 void janus_ice_relay_sctp(janus_ice_handle *handle, char *buffer, int length) {
 #ifdef HAVE_SCTP
 	if(!handle || handle->queued_packets == NULL || buffer == NULL || length < 1)
@@ -5424,6 +5520,11 @@ void janus_ice_relay_sctp(janus_ice_handle *handle, char *buffer, int length) {
 #endif
 }
 
+/**
+ * @brief 插件 SCTP/DataChannel 回调，在可以写入数据 时 由 SCTP 堆栈调用
+ * 
+ * @param handle 
+ */
 void janus_ice_notify_data_ready(janus_ice_handle *handle) {
 #ifdef HAVE_SCTP
 	if(!handle || handle->queued_packets == NULL)
@@ -5438,6 +5539,11 @@ void janus_ice_notify_data_ready(janus_ice_handle *handle) {
 #endif
 }
 
+/**
+ * @brief 核心 SDP 回调，当stream 被协商暂停 时 由 SDP 堆栈调用
+ * 
+ * @param handle 
+ */
 void janus_ice_notify_media_stopped(janus_ice_handle *handle) {
 	if(!handle || handle->queued_packets == NULL)
 		return;
@@ -5450,34 +5556,41 @@ void janus_ice_notify_media_stopped(janus_ice_handle *handle) {
 	g_main_context_wakeup(handle->mainctx);
 }
 
+/**
+ * @brief 当特定组件的 DTLS 握手完成时通知回调函数
+ * 
+ * @param handle 
+ * @param component 
+ */
 void janus_ice_dtls_handshake_done(janus_ice_handle *handle, janus_ice_component *component) {
 	if(!handle || !component)
 		return;
 	JANUS_LOG(LOG_VERB, "[%"SCNu64"] The DTLS handshake for the component %d in stream %d has been completed\n",
 		handle->handle_id, component->component_id, component->stream_id);
-	/* Check if all components are ready */
+	/* Check if all components are ready 检查是否所有组件都已经准备好 */
 	janus_mutex_lock(&handle->mutex);
 	if(handle->stream && janus_is_webrtc_encryption_enabled()) {
-		if(handle->stream->component && (!handle->stream->component->dtls ||
-				!handle->stream->component->dtls->srtp_valid)) {
-			/* Still waiting for this component to become ready */
+		if(handle->stream->component && (!handle->stream->component->dtls ||!handle->stream->component->dtls->srtp_valid)) {
+			/* Still waiting for this component to become ready 还在等待组件准备完毕 */
 			janus_mutex_unlock(&handle->mutex);
 			return;
 		}
 	}
 	if(janus_flags_is_set(&handle->webrtc_flags, JANUS_ICE_HANDLE_WEBRTC_READY)) {
-		/* Already notified */
+		/* Already notified 已经通知过了 */
 		janus_mutex_unlock(&handle->mutex);
 		return;
 	}
 	janus_flags_set(&handle->webrtc_flags, JANUS_ICE_HANDLE_WEBRTC_READY);
-	/* Create a source for RTCP and one for stats */
+	/* Create a source for RTCP and one for stats
+	为 RTCP 和 stats 各创建一个源 */
 	handle->rtcp_source = g_timeout_source_new_seconds(1);
 	g_source_set_priority(handle->rtcp_source, G_PRIORITY_DEFAULT);
 	g_source_set_callback(handle->rtcp_source, janus_ice_outgoing_rtcp_handle, handle, NULL);
 	g_source_attach(handle->rtcp_source, handle->mainctx);
 	if(twcc_period != 1000) {
-		/* The Transport Wide CC feedback period is different, create another source */
+		/* The Transport Wide CC feedback period is different, create another source
+		Transport Wide CC 反馈周期不同，创建另一个源 */
 		handle->twcc_source = g_timeout_source_new(twcc_period);
 		g_source_set_priority(handle->twcc_source, G_PRIORITY_DEFAULT);
 		g_source_set_callback(handle->twcc_source, janus_ice_outgoing_transport_wide_cc_feedback, handle, NULL);
@@ -5491,14 +5604,14 @@ void janus_ice_dtls_handshake_done(janus_ice_handle *handle, janus_ice_component
 	g_source_attach(handle->stats_source, handle->mainctx);
 	janus_mutex_unlock(&handle->mutex);
 	JANUS_LOG(LOG_INFO, "[%"SCNu64"] The DTLS handshake has been completed\n", handle->handle_id);
-	/* Notify the plugin that the WebRTC PeerConnection is ready to be used */
+	/* Notify the plugin that the WebRTC PeerConnection is ready to be used 通知插件，WebRTC PeerConnection 可以准备被使用了 */
 	janus_plugin *plugin = (janus_plugin *)handle->app;
 	if(plugin != NULL) {
 		JANUS_LOG(LOG_VERB, "[%"SCNu64"] Telling the plugin about it (%s)\n", handle->handle_id, plugin->get_name());
 		if(plugin && plugin->setup_media && janus_plugin_session_is_alive(handle->app_handle))
 			plugin->setup_media(handle->app_handle);
 	}
-	/* Also prepare JSON event to notify user/application */
+	/* Also prepare JSON event to notify user/application 也准备JSON 事件去同时用户/应用程序 */
 	janus_session *session = (janus_session *)handle->session;
 	if(session == NULL)
 		return;
@@ -5508,10 +5621,10 @@ void janus_ice_dtls_handshake_done(janus_ice_handle *handle, janus_ice_component
 	json_object_set_new(event, "sender", json_integer(handle->handle_id));
 	if(opaqueid_in_api && handle->opaque_id != NULL)
 		json_object_set_new(event, "opaque_id", json_string(handle->opaque_id));
-	/* Send the event */
+	/* Send the event 发送事件 */
 	JANUS_LOG(LOG_VERB, "[%"SCNu64"] Sending event to transport...; %p\n", handle->handle_id, handle);
 	janus_session_notify_event(session, event);
-	/* Notify event handlers as well */
+	/* Notify event handlers as well 如果广播事件允许，我们也同步发送 */
 	if(janus_events_is_enabled()) {
 		json_t *info = json_object();
 		json_object_set_new(info, "connection", json_string("webrtcup"));

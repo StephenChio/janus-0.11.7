@@ -1576,6 +1576,17 @@ int janus_rtcp_nacks(char *packet, int len, GSList *nacks) {
 	return words*4+4;
 }
 
+/**
+ * @brief 创建RTCP拥塞控制反馈包
+ * 
+ * @param packet 
+ * @param size 
+ * @param ssrc 
+ * @param media 
+ * @param feedback_packet_count 
+ * @param transport_wide_cc_stats 
+ * @return int 
+ */
 int janus_rtcp_transport_wide_cc_feedback(char *packet, size_t size, guint32 ssrc, guint32 media, guint8 feedback_packet_count, GQueue *transport_wide_cc_stats) {
 	if(packet == NULL || size < sizeof(janus_rtcp_header) || transport_wide_cc_stats == NULL || g_queue_is_empty(transport_wide_cc_stats))
 		return -1;

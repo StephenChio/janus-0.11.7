@@ -510,22 +510,22 @@ int janus_rtcp_remb(char *packet, int len, uint32_t bitrate);
  * @returns The message data length in bytes, if successful, -1 on errors */
 int janus_rtcp_remb_ssrcs(char *packet, int len, uint32_t bitrate, uint8_t numssrc);
 
-/*! \brief Method to generate a new RTCP FIR message to request a key frame
+/*! \brief Method to generate a new RTCP FIR message to request a key frame 生成新的 RTCP FIR 消息以请求关键帧
  * @param[in] packet The buffer data (MUST be at least 20 chars)
  * @param[in] len The message data length in bytes (MUST be 20)
  * @param[in,out] seqnr The current FIR sequence number (will be incremented by the method)
  * @returns The message data length in bytes, if successful, -1 on errors */
 int janus_rtcp_fir(char *packet, int len, int *seqnr);
 
-/*! \brief Method to generate a new legacy RTCP FIR (RFC2032) message to request a key frame
- * \note This is actually identical to janus_rtcp_fir(), with the difference that we set 192 as packet type
+/*! \brief Method to generate a new legacy RTCP FIR (RFC2032) message to request a key frame 生成新的传统 RTCP FIR (RFC2032) 消息以请求关键帧
+ * \note This is actually identical to janus_rtcp_fir(), with the difference that we set 192 as packet type 这实际上与 janus_rtcp_fir() 相同，不同之处在于我们将 192 设置为数据包类型
  * @param[in] packet The buffer data (MUST be at least 20 chars)
  * @param[in] len The message data length in bytes (MUST be 20)
  * @param[in,out] seqnr The current FIR sequence number (will be incremented by the method)
  * @returns The message data length in bytes, if successful, -1 on errors */
 int janus_rtcp_fir_legacy(char *packet, int len, int *seqnr);
 
-/*! \brief Method to generate a new RTCP PLI message to request a key frame
+/*! \brief Method to generate a new RTCP PLI message to request a key frame 生成新的 RTCP PLI 消息以请求关键帧
  * @param[in] packet The buffer data (MUST be at least 12 chars)
  * @param[in] len The message data length in bytes (MUST be 12)
  * @returns The message data length in bytes, if successful, -1 on errors */
@@ -538,7 +538,7 @@ int janus_rtcp_pli(char *packet, int len);
  * @returns The message data length in bytes, if successful, -1 on errors */
 int janus_rtcp_nacks(char *packet, int len, GSList *nacks);
 
-/*! \brief Method to generate a new RTCP transport wide message to report reception stats
+/*! \brief Method to generate a new RTCP transport wide message to report reception stats 生成新的 RTCP 拥塞控制消息以报告接收统计信息
  * @param[in] packet The buffer data (MUST be at least 16 chars)
  * @param[in] len The message data length in bytes
  * @param[in] ssrc SSRC of the origin stream

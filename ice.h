@@ -496,7 +496,7 @@ struct janus_ice_stream {
 	guint16 transport_wide_cc_out_seq_num;
 	/*! \brief Last received transport wide seq num */
 	guint32 transport_wide_cc_last_seq_num;
-	/*! \brief Last transport wide seq num sent on feedback */
+	/*! \brief Last transport wide seq num sent on feedback 最后一个拥塞控制反馈的序列号 */
 	guint32 transport_wide_cc_last_feedback_seq_num;
 	/*! \brief Transport wide cc transport seq num wrap cycles */
 	guint16 transport_wide_cc_cycles;
@@ -614,18 +614,18 @@ struct janus_ice_trickle {
 /** @name Janus ICE trickle candidates methods
  */
 ///@{
-/*! \brief Helper method to allocate a janus_ice_trickle instance
+/*! \brief Helper method to allocate a janus_ice_trickle instance 初始化 janus_ice_trickle 实例
  * @param[in] transaction The Janus API ID of the original trickle request
  * @param[in] candidate The trickle candidate, as a Jansson object
  * @returns a pointer to the new instance, if successful, NULL otherwise */
 janus_ice_trickle *janus_ice_trickle_new(const char *transaction, json_t *candidate);
-/*! \brief Helper method to parse trickle candidates
+/*! \brief Helper method to parse trickle candidates 解析trickle candidates
  * @param[in] handle The Janus ICE handle this candidate belongs to
  * @param[in] candidate The trickle candidate to parse, as a Jansson object
  * @param[in,out] error Error string describing the failure, if any
  * @returns 0 in case of success, any code from apierror.h in case of failure */
 gint janus_ice_trickle_parse(janus_ice_handle *handle, json_t *candidate, const char **error);
-/*! \brief Helper method to destroy a janus_ice_trickle instance
+/*! \brief Helper method to destroy a janus_ice_trickle instance 销毁 janus_ice_trickle 实例
  * @param[in] trickle The janus_ice_trickle instance to destroy */
 void janus_ice_trickle_destroy(janus_ice_trickle *trickle);
 ///@}
@@ -634,13 +634,13 @@ void janus_ice_trickle_destroy(janus_ice_trickle *trickle);
 /** @name Janus ICE handle methods
  */
 ///@{
-/*! \brief Method to create a new Janus ICE handle
+/*! \brief Method to create a new Janus ICE handle 创建一个新的ICE handle
  * @param[in] core_session The core/peer session this ICE handle will belong to
  * @param[in] opaque_id The opaque identifier provided by the creator, if any (optional)
  * @param[in] token The auth token provided by the creator, if any (optional)
  * @returns The created Janus ICE handle if successful, NULL otherwise */
 janus_ice_handle *janus_ice_handle_create(void *core_session, const char *opaque_id, const char *token);
-/*! \brief Method to attach a Janus ICE handle to a plugin
+/*! \brief Method to attach a Janus ICE handle to a plugin 把ICE handle加载到插件去使用，这个方法非常重要，它赋予插件去发送/接收 媒体信息（RTP/RTCP）到 WebRTC 对端的能力
  * \details This method is very important, as it allows plugins to send/receive media (RTP/RTCP) to/from a WebRTC peer.
  * @param[in] core_session The core/peer session this ICE handle belongs to
  * @param[in] handle The Janus ICE handle
@@ -649,19 +649,19 @@ janus_ice_handle *janus_ice_handle_create(void *core_session, const char *opaque
  * (-1 will let the core pick one; in case API selection is disabled in the settings, this value is ignored)
  * @returns 0 in case of success, a negative integer otherwise */
 gint janus_ice_handle_attach_plugin(void *core_session, janus_ice_handle *handle, janus_plugin *plugin, int loop_index);
-/*! \brief Method to destroy a Janus ICE handle
+/*! \brief Method to destroy a Janus ICE handle 销毁ICE handle
  * @param[in] core_session The core/peer session this ICE handle belongs to
  * @param[in] handle The Janus ICE handle to destroy
  * @returns 0 in case of success, a negative integer otherwise */
 gint janus_ice_handle_destroy(void *core_session, janus_ice_handle *handle);
-/*! \brief Method to only hangup (e.g., DTLS alert) the WebRTC PeerConnection allocated by a Janus ICE handle
+/*! \brief Method to only hangup (e.g., DTLS alert) the WebRTC PeerConnection allocated by a Janus ICE handle 仅挂断由 Janus ICE handle 分配的 WebRTC PeerConnection（例如，DTLS 警报）
  * @param[in] handle The Janus ICE handle instance managing the WebRTC PeerConnection to hangup
  * @param[in] reason A description of why this happened */
 void janus_ice_webrtc_hangup(janus_ice_handle *handle, const char *reason);
-/*! \brief Method to only free resources related to a specific ICE stream allocated by a Janus ICE handle
+/*! \brief Method to only free resources related to a specific ICE stream allocated by a Janus ICE handle 仅销毁由 Janus ICE handle 分配的特定ICE stream 的资源
  * @param[in] stream The Janus ICE stream instance to free */
 void janus_ice_stream_destroy(janus_ice_stream *stream);
-/*! \brief Method to only free resources related to a specific ICE component allocated by a Janus ICE handle
+/*! \brief Method to only free resources related to a specific ICE component allocated by a Janus ICE handle 仅销毁由 Janus ICE handle 分配的特定ICE component 的资源
  * @param[in] component The Janus ICE component instance to free */
 void janus_ice_component_destroy(janus_ice_component *component);
 ///@}
@@ -670,26 +670,26 @@ void janus_ice_component_destroy(janus_ice_component *component);
 /** @name Janus ICE media relaying callbacks
  */
 ///@{
-/*! \brief Core RTP callback, called when a plugin has an RTP packet to send to a peer
+/*! \brief Core RTP callback, called when a plugin has an RTP packet to send to a peer 核心的RTP回调函数，在插件有需要发送到对端的RTP包时被调用
  * @param[in] handle The Janus ICE handle associated with the peer
  * @param[in] packet The RTP packet to send */
 void janus_ice_relay_rtp(janus_ice_handle *handle, janus_plugin_rtp *packet);
-/*! \brief Core RTCP callback, called when a plugin has an RTCP message to send to a peer
+/*! \brief Core RTCP callback, called when a plugin has an RTCP message to send to a peer 核心的RTCP回调函数，在插件有需要发送到对端的RTCP包时被调用
  * @param[in] handle The Janus ICE handle associated with the peer
  * @param[in] packet The RTCP message to send */
 void janus_ice_relay_rtcp(janus_ice_handle *handle, janus_plugin_rtcp *packet);
-/*! \brief Core SCTP/DataChannel callback, called when a plugin has data to send to a peer
+/*! \brief Core SCTP/DataChannel callback, called when a plugin has data to send to a peer 核心的SCTP/DataChannel回调函数，在插件有需要发送到对端的data时被调用
  * @param[in] handle The Janus ICE handle associated with the peer
  * @param[in] packet The message to send */
 void janus_ice_relay_data(janus_ice_handle *handle, janus_plugin_data *packet);
-/*! \brief Helper core callback, called when a plugin wants to send a RTCP PLI to a peer
+/*! \brief Helper core callback, called when a plugin wants to send a RTCP PLI to a peer 在插件想要去发送RTCP PLI到对端时调用
  * @param[in] handle The Janus ICE handle associated with the peer */
 void janus_ice_send_pli(janus_ice_handle *handle);
-/*! \brief Helper core callback, called when a plugin wants to send a RTCP REMB to a peer
+/*! \brief Helper core callback, called when a plugin wants to send a RTCP REMB to a peer 在插件想要去发送RTCP REMB到对端时调用
  * @param[in] handle The Janus ICE handle associated with the peer
  * @param[in] bitrate The bitrate value to put in the REMB message */
 void janus_ice_send_remb(janus_ice_handle *handle, uint32_t bitrate);
-/*! \brief Plugin SCTP/DataChannel callback, called by the SCTP stack when when there's data for a plugin
+/*! \brief Plugin SCTP/DataChannel callback, called by the SCTP stack when when there's data for a plugin 插件 SCTP/DataChannel 回调，当有插件数据 时 由 SCTP 堆栈调用
  * @param[in] handle The Janus ICE handle associated with the peer
  * @param[in] label The label of the data channel the message is from
  * @param[in] protocol The protocol of the data channel to use
@@ -697,15 +697,15 @@ void janus_ice_send_remb(janus_ice_handle *handle, uint32_t bitrate);
  * @param[in] buffer The message data (buffer)
  * @param[in] length The buffer length */
 void janus_ice_incoming_data(janus_ice_handle *handle, char *label, char *protocol, gboolean textdata, char *buffer, int length);
-/*! \brief Core SCTP/DataChannel callback, called by the SCTP stack when when there's data to send.
+/*! \brief Core SCTP/DataChannel callback, called by the SCTP stack when when there's data to send. 核心 SCTP/DataChannel 回调，当有数据要发送 时 由 SCTP 堆栈调用。
  * @param[in] handle The Janus ICE handle associated with the peer
  * @param[in] buffer The message data (buffer)
  * @param[in] length The buffer length */
 void janus_ice_relay_sctp(janus_ice_handle *handle, char *buffer, int length);
-/*! \brief Plugin SCTP/DataChannel callback, called by the SCTP stack when data can be written
+/*! \brief Plugin SCTP/DataChannel callback, called by the SCTP stack when data can be written 插件 SCTP/DataChannel 回调，在可以写入数据 时 由 SCTP 堆栈调用
  * @param[in] handle The Janus ICE handle associated with the peer */
 void janus_ice_notify_data_ready(janus_ice_handle *handle);
-/*! \brief Core SDP callback, called by the SDP stack when a stream has been paused by a negotiation
+/*! \brief Core SDP callback, called by the SDP stack when a stream has been paused by a negotiation 核心 SDP 回调，当stream 被协商暂停 时 由 SDP 堆栈调用
  * @param[in] handle The Janus ICE handle associated with the peer */
 void janus_ice_notify_media_stopped(janus_ice_handle *handle);
 ///@}
@@ -714,7 +714,7 @@ void janus_ice_notify_media_stopped(janus_ice_handle *handle);
 /** @name Janus ICE handle helpers
  */
 ///@{
-/*! \brief Method to locally set up the ICE candidates (initialization and gathering)
+/*! \brief Method to locally set up the ICE candidates (initialization and gathering) 本地设置 ICE 候选人（初始化和收集）
  * @param[in] handle The Janus ICE handle this method refers to
  * @param[in] offer Whether this is for an OFFER or an ANSWER
  * @param[in] audio Whether audio is enabled
@@ -723,48 +723,48 @@ void janus_ice_notify_media_stopped(janus_ice_handle *handle);
  * @param[in] trickle Whether ICE trickling is supported or not
  * @returns 0 in case of success, a negative integer otherwise */
 int janus_ice_setup_local(janus_ice_handle *handle, int offer, int audio, int video, int data, int trickle);
-/*! \brief Method to add local candidates to a janus_sdp SDP object representation
+/*! \brief Method to add local candidates to a janus_sdp SDP object representation 将本地候选者添加到 janus_sdp SDP 对象表示
  * @param[in] handle The Janus ICE handle this method refers to
  * @param[in] mline The Janus SDP m-line object to add candidates to
  * @param[in] stream_id The stream ID of the candidate to add to the SDP
  * @param[in] component_id The component ID of the candidate to add to the SDP */
 void janus_ice_candidates_to_sdp(janus_ice_handle *handle, janus_sdp_mline *mline, guint stream_id, guint component_id);
-/*! \brief Method to queue a remote candidate for processing
+/*! \brief Method to queue a remote candidate for processing 排队等待处理的远程candidate
  * @param[in] handle The Janus ICE handle this method refers to
  * @param[in] c The remote NiceCandidate to process */
 void janus_ice_add_remote_candidate(janus_ice_handle *handle, NiceCandidate *c);
-/*! \brief Method to handle remote candidates and start the connectivity checks
+/*! \brief Method to handle remote candidates and start the connectivity checks 处理远程候选人并开始连接检查
  * @param[in] handle The Janus ICE handle this method refers to
  * @param[in] stream_id The stream ID of the candidate to add to the SDP
  * @param[in] component_id The component ID of the candidate to add to the SDP */
 void janus_ice_setup_remote_candidates(janus_ice_handle *handle, guint stream_id, guint component_id);
-/*! \brief Callback to be notified when the DTLS handshake for a specific component has been completed
+/*! \brief Callback to be notified when the DTLS handshake for a specific component has been completed 当特定组件的 DTLS 握手完成时通知回调
  * \details This method also decides when to notify attached plugins about the availability of a reliable PeerConnection
  * @param[in] handle The Janus ICE handle this callback refers to
  * @param[in] component The Janus ICE component that is now ready to be used */
 void janus_ice_dtls_handshake_done(janus_ice_handle *handle, janus_ice_component *component);
-/*! \brief Method to restart ICE and the connectivity checks
+/*! \brief Method to restart ICE and the connectivity checks 重新启动 ICE 和连接检查
  * @param[in] handle The Janus ICE handle this method refers to */
 void janus_ice_restart(janus_ice_handle *handle);
-/*! \brief Method to resend all the existing candidates via trickle (e.g., after an ICE restart)
+/*! \brief Method to resend all the existing candidates via trickle (e.g., after an ICE restart) 通过trickle重新发送所有现有candidates（例如，在 ICE 重启后）
  * @param[in] handle The Janus ICE handle this method refers to */
 void janus_ice_resend_trickles(janus_ice_handle *handle);
 ///@}
 
 
-/*! \brief Method to configure the static event loops mechanism at startup
+/*! \brief Method to configure the static event loops mechanism at startup 在启动时配置静态事件loop机制
  * @note Check the \c event_loops property in the \c janus.jcfg configuration
  * for an explanation of this feature, and the possible impact on Janus and users
  * @param[in] loops The number of static event loops to start (0 to disable the feature)
  * @param[in] allow_api Whether allocation on a specific loop driven via API should be allowed or not (false by default) */
 void janus_ice_set_static_event_loops(int loops, gboolean allow_api);
-/*! \brief Method to return the number of static event loops, if enabled
+/*! \brief Method to return the number of static event loops, if enabled 如果启用，则返回静态事件loop的数量
  * @returns The number of static event loops, if configured, or 0 if the feature is disabled */
 int janus_ice_get_static_event_loops(void);
-/*! \brief Method to check whether loop indication via API is allowed
+/*! \brief Method to check whether loop indication via API is allowed 检查是否允许通过 API 进行 loop 的指令
  * @returns true if allowed, false otherwise */
 gboolean janus_ice_is_loop_indication_allowed(void);
-/*! \brief Method to stop all the static event loops, if enabled
+/*! \brief Method to stop all the static event loops, if enabled 停止所有静态事件loop，如果启用
  * @note This will wait for the related threads to exit, and so may delay the shutdown process */
 void janus_ice_stop_static_event_loops(void);
 
