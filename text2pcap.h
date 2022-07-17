@@ -45,7 +45,7 @@
 
 #include "mutex.h"
 
-/*! \brief Instance of a text2pcap recorder */
+/*! \brief Instance of a text2pcap recorder #text2pcap 记录器*/
 typedef struct janus_text2pcap {
 	/*! \brief Absolute path to where the text2pcap file is stored */
 	char *filename;
@@ -69,7 +69,7 @@ typedef enum janus_text2pcap_packet {
 } janus_text2pcap_packet;
 const char *janus_text2pcap_packet_string(janus_text2pcap_packet type);
 
-/*! \brief Create a text2pcap recorder
+/*! \brief Create a text2pcap recorder 创建一个 text2pcap 记录器
  * \note If no target directory is provided, the current directory will be used. If no filename
  * is passed, a random filename will be used.
  * @param[in] dir Path of the directory to save the recording into (will try to create it if it doesn't exist)
@@ -79,7 +79,7 @@ const char *janus_text2pcap_packet_string(janus_text2pcap_packet type);
  * @returns A valid janus_text2pcap instance in case of success, NULL otherwise */
 janus_text2pcap *janus_text2pcap_create(const char *dir, const char *filename, int truncate, gboolean text);
 
-/*! \brief Dump an RTP or RTCP packet
+/*! \brief Dump an RTP or RTCP packet 转储 RTP 或 RTCP 数据包
  * @param[in] instance Instance of the janus_text2pcap recorder to dump the packet to
  * @param[in] type Type of the packet we're going to dump
  * @param[in] incoming Whether this is an incoming or outgoing packet
@@ -90,12 +90,12 @@ janus_text2pcap *janus_text2pcap_create(const char *dir, const char *filename, i
 int janus_text2pcap_dump(janus_text2pcap *instance,
 	janus_text2pcap_packet type, gboolean incoming, char *buf, int len, const char *format, ...) G_GNUC_PRINTF(6, 7);
 
-/*! \brief Close a text2pcap recorder
+/*! \brief Close a text2pcap recorder 关闭 text2pcap 记录器
  * @param[in] instance Instance of the janus_text2pcap recorder to close
  * @returns 0 in case of success, a negative integer otherwise */
 int janus_text2pcap_close(janus_text2pcap *instance);
 
-/*! \brief Free a text2pcap instance
+/*! \brief Free a text2pcap instance 释放 text2pcap 记录器
  * @param[in] instance Instance of the janus_text2pcap recorder to free */
 void janus_text2pcap_free(janus_text2pcap *instance);
 

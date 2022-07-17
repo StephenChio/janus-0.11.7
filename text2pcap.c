@@ -309,6 +309,12 @@ int janus_text2pcap_dump(janus_text2pcap *instance,
 	return 0;
 }
 
+/**
+ * @brief 关闭 text2pcap 记录器
+ * 
+ * @param instance 
+ * @return int 
+ */
 int janus_text2pcap_close(janus_text2pcap *instance) {
 	if(instance == NULL)
 		return -1;
@@ -323,6 +329,11 @@ int janus_text2pcap_close(janus_text2pcap *instance) {
 	return 0;
 }
 
+/**
+ * @brief 释放 text2pcap 记录器
+ * 
+ * @param instance 
+ */
 void janus_text2pcap_free(janus_text2pcap *instance) {
 	if(instance == NULL)
 		return;

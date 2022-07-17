@@ -130,7 +130,7 @@ void janus_dtls_srtp_incoming_msg(janus_dtls_srtp *dtls, char *buf, uint16_t len
 /*! \brief Send an alert on a janus_dtls_srtp instance
  * @param[in] dtls The janus_dtls_srtp instance to send the alert on */
 void janus_dtls_srtp_send_alert(janus_dtls_srtp *dtls);
-/*! \brief Destroy a janus_dtls_srtp instance
+/*! \brief Destroy a janus_dtls_srtp instance 销毁 janus_dtls_srtp 实例
  * @param[in] dtls The janus_dtls_srtp instance to destroy */
 void janus_dtls_srtp_destroy(janus_dtls_srtp *dtls);
 

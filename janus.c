@@ -605,8 +605,11 @@ static void janus_termination_handler(void) {
  * These are the callbacks implemented by the Janus core, as part of
  * the janus_transport_callbacks interface. Everything the transport
  * plugins send the core is handled here.
+ * 传输插件回调接口 
+ * 这些是由 Janus core实现的回调
+ * 作为 janus_transport_callbacks 接口的一部分
+ * 传输插件发送给core的所有内容都在这里处理
  */
-///@{
 void janus_transport_incoming_request(janus_transport *plugin, janus_transport_session *transport, void *request_id, gboolean admin, json_t *message, json_error_t *error);
 void janus_transport_gone(janus_transport *plugin, janus_transport_session *transport);
 gboolean janus_transport_is_api_secret_needed(janus_transport *plugin);
@@ -637,6 +640,10 @@ void janus_transport_task(gpointer data, gpointer user_data);
  * These are the callbacks implemented by the Janus core, as part of
  * the janus_callbacks interface. Everything the plugins send the
  * core is handled here.
+ * 插件回调接口
+ * 这些是 Janus core实现的回调
+ * 作为 janus_callbacks 接口的一部分
+ * 插件发送给core的所有内容都在这里处理。
  */
 ///@{
 int janus_plugin_push_event(janus_plugin_session *plugin_session, janus_plugin *plugin, const char *transaction, json_t *message, json_t *jsep);
@@ -687,13 +694,15 @@ static void janus_ice_handle_dereference(janus_ice_handle *handle) {
 }
 
 /**
- * @brief 释放该会话
+ * @brief 释放session
  * 
  * @param session_ref 
  */
 static void janus_session_free(const janus_refcount *session_ref) {
 	janus_session *session = janus_refcount_containerof(session_ref, janus_session, ref);
-	/* This session can be destroyed, free all the resources */
+	/* This session can be destroyed, free all the resources
+	session可以被销毁了,释放所有资源内存
+	 */
 	if(session->ice_handles != NULL) {
 		g_hash_table_destroy(session->ice_handles);
 		session->ice_handles = NULL;
@@ -1287,7 +1296,7 @@ int janus_process_incoming_request(janus_request *request) {
 			}
 		}
 
-		/* Handle it */
+		/* Handle it 创建session */
 		session = janus_session_create(session_id);
 		if(session == NULL) {
 			ret = janus_process_error(request, session_id, transaction_text, JANUS_ERROR_UNKNOWN, "Memory error");
@@ -1649,7 +1658,7 @@ int janus_process_incoming_request(janus_request *request) {
 				goto jsondone;
 			}
 			json_t *sdp = json_object_get(jsep, "sdp");
-			/*获取sdp内容*/
+			/* 获取sdp内容 */
 			jsep_sdp = (char *)json_string_value(sdp);
 			JANUS_LOG(LOG_VERB, "[%"SCNu64"] Remote SDP:\n%s", handle->handle_id, jsep_sdp);
 			/* Is this valid SDP? */

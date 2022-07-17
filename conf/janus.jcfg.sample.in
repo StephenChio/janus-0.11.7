@@ -120,7 +120,7 @@ general: {
 									# As such, if you want to use this you should
 									# provision the correct value according to the
 									# available resources (e.g., CPUs available).
-									# 默认情况下，Janus handles 每个都有自己的事件循环和用于所有媒体路由和管理的相关线程。
+									# 默认情况下，Janus handles 每个都有自己的事件循环和用于所有媒体路由和管理的 相关线程。
 									# 如果出于某种原因，您希望限制循环/线程的数量，并且希望handles共享这些线程，
 									# 那么可以通过配置event_loops属性来实现：
 									# 这将在启动时生成指定数量的线程，在每个线程上运行单独的事件循环，并在附加时向其中一个线程添加新handles。

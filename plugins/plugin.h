@@ -250,7 +250,7 @@ struct janus_plugin_session {
 
 /*! \brief The plugin session and callbacks interface */
 struct janus_plugin {
-	/*! \brief Plugin initialization/constructor
+	/*! \brief Plugin initialization/constructor 插件初始化
 	 * @param[in] callback The callback instance the plugin can use to contact the Janus core
 	 * @param[in] config_path Path of the folder where the configuration for this plugin can be found
 	 * @returns 0 in case of success, a negative integer in case of error */
@@ -258,31 +258,32 @@ struct janus_plugin {
 	/*! \brief Plugin deinitialization/destructor */
 	void (* const destroy)(void);
 
-	/*! \brief Informative method to request the API version this plugin was compiled against
+	/*! \brief Informative method to request the API version this plugin was compiled against 请求此插件编译时所针对的 API 版本的信息方法
 	 *  \note This was added in version 0.0.7 of Janus, to address changes
 	 * to the API that might break existing plugin or the core itself. All
 	 * plugins MUST implement this method and return JANUS_PLUGIN_API_VERSION
 	 * to make this work, or they will be rejected by the core. Do NOT try
 	 * to launch a <= 0.0.7 plugin on a >= 0.0.7 Janus or it will crash. */
 	int (* const get_api_compatibility)(void);
-	/*! \brief Informative method to request the numeric version of the plugin */
+	/*! \brief Informative method to request the numeric version of the plugin 请求插件版本的信息方法 返回int*/
 	int (* const get_version)(void);
-	/*! \brief Informative method to request the string version of the plugin */
+	/*! \brief Informative method to request the string version of the plugin 请求插件版本的信息方法 返回string*/
 	const char *(* const get_version_string)(void);
-	/*! \brief Informative method to request a description of the plugin */
+	/*! \brief Informative method to request a description of the plugin 请求插件的描述 */
 	const char *(* const get_description)(void);
-	/*! \brief Informative method to request the name of the plugin */
+	/*! \brief Informative method to request the name of the plugin 请求插件的名称*/
 	const char *(* const get_name)(void);
-	/*! \brief Informative method to request the author of the plugin */
+	/*! \brief Informative method to request the author of the plugin 请求插件的作者*/
 	const char *(* const get_author)(void);
-	/*! \brief Informative method to request the package name of the plugin (what will be used in web applications to refer to it) */
+	/*! \brief Informative method to request the package name of the plugin (what will be used in web applications to refer to it) 
+	请求插件的包名（在web应用程序中将使用什么来引用它）*/
 	const char *(* const get_package)(void);
 
-	/*! \brief Method to create a new session/handle for a peer
+	/*! \brief Method to create a new session/handle for a peer 为对等方创建一个新的session/handle
 	 * @param[in] handle The plugin/gateway session that will be used for this peer
 	 * @param[out] error An integer that may contain information about any error */
 	void (* const create_session)(janus_plugin_session *handle, int *error);
-	/*! \brief Method to handle an incoming message/request from a peer
+	/*! \brief Method to handle an incoming message/request from a peer 处理来自对等方的传入消息/请求
 	 * @param[in] handle The plugin/gateway session used for this peer
 	 * @param[in] transaction The transaction identifier for this message/request
 	 * @param[in] message The json_t object containing the message/request JSON
@@ -290,36 +291,36 @@ struct janus_plugin {
 	 * @returns A janus_plugin_result instance that may contain a response (for immediate/synchronous replies), an ack
 	 * (for asynchronously managed requests) or an error */
 	struct janus_plugin_result * (* const handle_message)(janus_plugin_session *handle, char *transaction, json_t *message, json_t *jsep);
-	/*! \brief Method to handle an incoming Admin API message/request
+	/*! \brief Method to handle an incoming Admin API message/request 处理传入插件的Amin api请求
 	 * @param[in] message The json_t object containing the message/request JSON
 	 * @returns A json_t instance containing the response */
 	struct json_t * (* const handle_admin_message)(json_t *message);
-	/*! \brief Callback to be notified when the associated PeerConnection is up and ready to be used
+	/*! \brief Callback to be notified when the associated PeerConnection is up and ready to be used 当关联的 PeerConnection 启动并准备好使用时通知回调
 	 * @param[in] handle The plugin/gateway session used for this peer */
 	void (* const setup_media)(janus_plugin_session *handle);
-	/*! \brief Method to handle an incoming RTP packet from a peer
+	/*! \brief Method to handle an incoming RTP packet from a peer 处理对方的传入RTP包
 	 * @param[in] handle The plugin/gateway session used for this peer
 	 * @param[in] packet The RTP packet and related data */
 	void (* const incoming_rtp)(janus_plugin_session *handle, janus_plugin_rtp *packet);
-	/*! \brief Method to handle an incoming RTCP packet from a peer
+	/*! \brief Method to handle an incoming RTCP packet from a peer 处理对方的传入RTCP包
 	 * @param[in] handle The plugin/gateway session used for this peer
 	 * @param[in] packet The RTP packet and related data */
 	void (* const incoming_rtcp)(janus_plugin_session *handle, janus_plugin_rtcp *packet);
-	/*! \brief Method to handle incoming SCTP/DataChannel data from a peer (text only, for the moment)
+	/*! \brief Method to handle incoming SCTP/DataChannel data from a peer (text only, for the moment) 处理对方传入的SCTP/DataChannel数据（目前只有text内容）
 	 * \note We currently only support text data, binary data will follow... please also notice that
 	 * DataChannels send unterminated strings, so you'll have to terminate them with a \0 yourself to
 	 * use them.
 	 * @param[in] handle The plugin/gateway session used for this peer
 	 * @param[in] packet The message data and related info */
 	void (* const incoming_data)(janus_plugin_session *handle, janus_plugin_data *packet);
-	/*! \brief Method to be notified about the fact that the datachannel is ready to be written
+	/*! \brief Method to be notified about the fact that the datachannel is ready to be written 当dataChannel已经准备可以写入的时候通知
 	 * \note This is not only called when the PeerConnection first becomes available, but also
 	 * when the SCTP socket becomes writable again, e.g., because the internal buffer is empty.
 	 * @param[in] handle The plugin/gateway session used for this peer */
 	void (* const data_ready)(janus_plugin_session *handle);
 	/*! \brief Method to be notified by the core when too many NACKs have
 	 * been received or sent by Janus, and so a slow or potentially
-	 * unreliable network is to be expected for this peer
+	 * unreliable network is to be expected for this peer 当 Janus 接收或发送太多 NACK 时，由核心通知，因此预计此对等点的网络速度较慢或可能不可靠
 	 * \note Beware that this callback may be called more than once in a row,
 	 * (even though never more than once per second), until things go better for that
 	 * PeerConnection. You may or may not want to handle this callback and
@@ -333,15 +334,15 @@ struct janus_plugin {
 	 * @param[in] uplink Whether this is related to the uplink (Janus to peer)
 	 * or downlink (peer to Janus)
 	 * @param[in] video Whether this is related to an audio or a video stream */
-	void (* const slow_link)(janus_plugin_session *handle, gboolean uplink, gboolean video);
-	/*! \brief Callback to be notified about DTLS alerts from a peer (i.e., the PeerConnection is not valid any more)
+	void (* const slow_link)(janus_plugin_session *handle, gboolean uplink, gboolean video); 
+	/*! \brief Callback to be notified about DTLS alerts from a peer (i.e., the PeerConnection is not valid any more) 回调以通知来自对等方的 DTLS 警报（即，PeerConnection 不再有效）
 	 * @param[in] handle The plugin/gateway session used for this peer */
 	void (* const hangup_media)(janus_plugin_session *handle);
-	/*! \brief Method to destroy a session/handle for a peer
+	/*! \brief Method to destroy a session/handle for a peer 销毁对方的的session/handle
 	 * @param[in] handle The plugin/gateway session used for this peer
 	 * @param[out] error An integer that may contain information about any error */
 	void (* const destroy_session)(janus_plugin_session *handle, int *error);
-	/*! \brief Method to get plugin-specific info of a session/handle
+	/*! \brief Method to get plugin-specific info of a session/handle 获取session/handle的一些插件特别信息
 	 *  \note This was added in version 0.0.7 of Janus. Janus assumes
 	 * the string is always allocated, so don't return constants here
 	 * @param[in] handle The plugin/gateway session used for this peer
@@ -352,7 +353,7 @@ struct janus_plugin {
 
 /*! \brief Callbacks to contact the Janus core */
 struct janus_callbacks {
-	/*! \brief Callback to push events/messages to a peer
+	/*! \brief Callback to push events/messages to a peer 这是向对端推送事件消息的回调
 	 * @note The Janus core increases the references to both the message and jsep
 	 * json_t objects. This means that you'll have to decrease your own
 	 * reference yourself with a \c json_decref after calling push_event.
@@ -363,15 +364,15 @@ struct janus_callbacks {
 	 * @param[in] jsep The json_t object containing the JSEP type, the SDP attached to the message/event, if any (offer/answer), and whether this is an update */
 	int (* const push_event)(janus_plugin_session *handle, janus_plugin *plugin, const char *transaction, json_t *message, json_t *jsep);
 
-	/*! \brief Callback to relay RTP packets to a peer
+	/*! \brief Callback to relay RTP packets to a peer 这是向对端传输RTP包的回调
 	 * @param[in] handle The plugin/gateway session used for this peer
 	 * @param[in] packet The RTP packet and related data */
 	void (* const relay_rtp)(janus_plugin_session *handle, janus_plugin_rtp *packet);
-	/*! \brief Callback to relay RTCP messages to a peer
+	/*! \brief Callback to relay RTCP messages to a peer 是向对端传输RTCP包的回调
 	 * @param[in] handle The plugin/gateway session that will be used for this peer
 	 * @param[in] packet The RTCP packet and related data */
 	void (* const relay_rtcp)(janus_plugin_session *handle, janus_plugin_rtcp *packet);
-	/*! \brief Callback to relay SCTP/DataChannel messages to a peer
+	/*! \brief Callback to relay SCTP/DataChannel messages to a peer 是向对端传输STCP/DataChannel包的回调
 	 * @note The protocol is only used for the first message sent on a new data
 	 * channel, as it will be used to create it; it will be ignored for following
 	 * messages on the same label, so you can set NULL after that
@@ -379,48 +380,48 @@ struct janus_callbacks {
 	 * @param[in] packet The message data and related info */
 	void (* const relay_data)(janus_plugin_session *handle, janus_plugin_data *packet);
 
-	/*! \brief Helper to ask for a keyframe via a RTCP PLI
+	/*! \brief Helper to ask for a keyframe via a RTCP PLI 通过 RTCP PLI 请求关键帧
 	 * @note This is a shortcut, as it is also possible to do the same by crafting
 	 * an RTCP PLI message manually, and passing it to the core via relay_rtcp
 	 * @param[in] handle The plugin/gateway session that will be used for this peer */
 	void (* const send_pli)(janus_plugin_session *handle);
-	/*! \brief Helper to ask for a keyframe via a RTCP PLI
+	/*! \brief Helper to ask for a keyframe via a RTCP PLI 通过 RTCP PLI 请求关键帧
 	 * @note This is a shortcut, as it is also possible to do the same by crafting
 	 * an RTCP REMB message manually, and passing it to the core via relay_rtcp
 	 * @param[in] handle The plugin/gateway session that will be used for this peer
 	 * @param[in] bitrate The bitrate value to send in the REMB message */
 	void (* const send_remb)(janus_plugin_session *handle, guint32 bitrate);
 
-	/*! \brief Callback to ask the core to close a WebRTC PeerConnection
+	/*! \brief Callback to ask the core to close a WebRTC PeerConnection 要求核心关闭 WebRTC PeerConnection的回调
 	 * \note A call to this method will result in the core invoking the hangup_media
 	 * callback on this plugin when done
 	 * @param[in] handle The plugin/gateway session that the PeerConnection is related to */
 	void (* const close_pc)(janus_plugin_session *handle);
-	/*! \brief Callback to ask the core to get rid of a plugin/gateway session
+	/*! \brief Callback to ask the core to get rid of a plugin/gateway session 要求core摆脱插件/网关会话的回调
 	 * \note A call to this method will result in the core invoking the destroy_session
 	 * callback on this plugin when done
 	 * @param[in] handle The plugin/gateway session to get rid of */
 	void (* const end_session)(janus_plugin_session *handle);
 
-	/*! \brief Callback to check whether the event handlers mechanism is enabled
+	/*! \brief Callback to check whether the event handlers mechanism is enabled 检查是否启用了事件处理机制的回调
 	 * @returns TRUE if it is, FALSE if it isn't (which means notify_event should NOT be called) */
 	gboolean (* const events_is_enabled)(void);
-	/*! \brief Callback to notify an event to the registered and subscribed event handlers
+	/*! \brief Callback to notify an event to the registered and subscribed event handlers 将事件通知给已注册和订阅的事件处理handle
 	 * \note Don't unref the event object, the core will do that for you
 	 * @param[in] plugin The plugin originating the event
 	 * @param[in] handle The plugin/gateway session originating the event, if any
 	 * @param[in] event The event to notify as a Jansson json_t object */
 	void (* const notify_event)(janus_plugin *plugin, janus_plugin_session *handle, json_t *event);
 
-	/*! \brief Method to check whether the core is using signed tokens
+	/*! \brief Method to check whether the core is using signed tokens 检查核心是否使用签名令牌
 	 * @returns TRUE if signed tokens are in use, FALSE otherwise */
 	gboolean (* const auth_is_signed)(void);
-	/*! \brief Method to check whether a signed token is valid
+	/*! \brief Method to check whether a signed token is valid 检查签名令牌是否有效
 	 * \note accepts only tokens with the plugin identifier as realm
 	 * @param[in] token The token to validate
 	 * @returns TRUE if the signature is valid and not expired, FALSE otherwise */
 	gboolean (* const auth_is_signature_valid)(janus_plugin *plugin, const char *token);
-	/*! \brief Method to verify a signed token grants access to a descriptor
+	/*! \brief Method to verify a signed token grants access to a descriptor 验证签名令牌授予对描述符的访问权限
 	 * \note accepts only tokens with the plugin identifier as realm
 	 * @param[in] token The token to validate
 	 * @param[in] desc The descriptor to search for
@@ -428,11 +429,11 @@ struct janus_callbacks {
 	gboolean (* const auth_signature_contains)(janus_plugin *plugin, const char *token, const char *descriptor);
 };
 
-/*! \brief The hook that plugins need to implement to be created from the Janus core */
+/*! \brief The hook that plugins need to implement to be created from the Janus core 从 Janus 核心创建插件需要实现的钩子 */
 typedef janus_plugin* create_p(void);
 
 
-/** @name Janus plugin results
+/** @name Janus plugin results Janus插件返回结果
  * @brief When a client sends a message to a plugin (e.g., a request or a
  * command) this is notified to the plugin through a handle_message()
  * callback. The plugin can then either handle the request immediately
@@ -451,28 +452,30 @@ typedef janus_plugin* create_p(void);
  * the error.
  */
 ///@{
-/*! \brief Result types */
+/*! \brief Result types 结果类型 */
 typedef enum janus_plugin_result_type {
-	/*! \brief A severe error happened (not an application level error) */
+	/*! \brief A severe error happened (not an application level error) 一个服务器级别的错误发生（非应用程序错误）*/
 	JANUS_PLUGIN_ERROR = -1,
-	/*! \brief The request was correctly handled and a response is provided (synchronous) */
+	/*! \brief The request was correctly handled and a response is provided (synchronous) 这个请求已经被正确处理，并且返回的结果（同步请求）*/
 	JANUS_PLUGIN_OK,
-	/*! \brief The request was correctly handled and notifications will follow with more info (asynchronous) */
+	/*! \brief The request was correctly handled and notifications will follow with more info (asynchronous) 
+	这个请求已经被正确处理，并且会稍后通知更多的内容（异步请求）
+	*/
 	JANUS_PLUGIN_OK_WAIT,
 } janus_plugin_result_type;
 
-/*! \brief Janus plugin result */
+/*! \brief Janus plugin result 请求插件结果 */
 struct janus_plugin_result {
-	/*! \brief Result type */
+	/*! \brief Result type 结果类型（看上面描述）*/
 	janus_plugin_result_type type;
-	/*! \brief Text associated with this plugin result.
+	/*! \brief Text associated with this plugin result. 与此插件结果关联的文本
 	 * @note This is ONLY used for JANUS_PLUGIN_OK_WAIT (to provide hints on
 	 * why a request is being handled asynchronously) and JANUS_PLUGIN_ERROR
 	 * (to provide a reason for the error). It is ignored for JANUS_PLUGIN_OK.
 	 * Besides, it is NOT freed when destroying the janus_plugin_result instance,
 	 * so if you allocated a string for that, you'll have to free it yourself. */
 	const char *text;
-	/*! \brief Result content
+	/*! \brief Result content 结果内容，json格式
 	 * @note This is ONLY used for JANUS_PLUGIN_OK, and is ignored otherwise.
 	 * It MUST be a valid JSON payload (even when returning application
 	 * level errors). Its reference is decremented automatically when destroying
@@ -482,21 +485,21 @@ struct janus_plugin_result {
 	json_t *content;
 };
 
-/*! \brief Helper to quickly create a janus_plugin_result instance
+/*! \brief Helper to quickly create a janus_plugin_result instance 快速创建一个Janus_plugin_result 实例
  * @param[in] type The type of result
  * @param[in] text String to add to the result (for JANUS_PLUGIN_OK_WAIT or JANUS_PLUGIN_ERROR), if any
  * @param[in] content The json_t object with the content of the result, if any
  * @returns A valid janus_plugin_result instance, if successful, or NULL otherwise */
 janus_plugin_result *janus_plugin_result_new(janus_plugin_result_type type, const char *text, json_t *content);
 
-/*! \brief Helper to quickly destroy a janus_plugin_result instance
+/*! \brief Helper to quickly destroy a janus_plugin_result instance 快速销毁一个Janus_plugin_result 实例
  * @param[in] result The janus_plugin_result instance to destroy
  * @returns A valid janus_plugin_result instance, if successful, or NULL otherwise */
 void janus_plugin_result_destroy(janus_plugin_result *result);
 ///@}
 
 
-/** @name Janus plugin media packets
+/** @name Janus plugin media packets 插件媒体包数据
  * @brief The Janus core and plugins exchange different kind of media
  * packets, specifically RTP packets, RTCP messages and datachannel data.
  * While previously these were exchanged between core and plugins using
@@ -600,28 +603,28 @@ struct janus_plugin_rtcp {
 	/*! \brief The packet length 包长度*/
 	uint16_t length;
 };
-/*! \brief Helper method to initialise/reset the RTCP packet
+/*! \brief Helper method to initialise/reset the RTCP packet 初始化/重置 RTCP 数据包的方法
  * @param[in] packet Pointer to the janus_plugin_rtcp packet to reset
 */
 void janus_plugin_rtcp_reset(janus_plugin_rtcp *packet);
 
-/*! \brief Janus plugin data message
+/*! \brief Janus plugin data message 插件data信息
  * @note At the moment, we only support text based datachannels. In the
  * future, once we add support for binary data, this structure may be
  * extended to include info on the nature of the data itself */
 struct janus_plugin_data {
-	/*! \brief The label this message belongs to */
+	/*! \brief The label this message belongs to 此消息所属的标签 */
 	char *label;
-	/*! \brief The subprotocol this message refers to */
+	/*! \brief The subprotocol this message refers to 消息所用的子协议 */
 	char *protocol;
-	/*! \brief Whether the message data is text (default=FALSE) or binary */
+	/*! \brief Whether the message data is text (default=FALSE) or binary 是文本还是二进制数据（默认是文本）*/
 	gboolean binary;
-	/*! \brief The message data */
+	/*! \brief The message data 数据data内容 buffer */
 	char *buffer;
-	/*! \brief The message length */
+	/*! \brief The message length 数据长度 */
 	uint16_t length;
 };
-/*! \brief Helper method to initialise/reset the data message
+/*! \brief Helper method to initialise/reset the data message 初始化/重置数据消息的方法
  * @param[in] packet Pointer to the janus_plugin_data message to reset
 */
 void janus_plugin_data_reset(janus_plugin_data *packet);

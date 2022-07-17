@@ -301,7 +301,7 @@ void janus_ice_debugging_disable(void) {
 }
 
 
-/* NAT 1:1 stuff */
+/* NAT 1:1 stuff 1对1 nat的一些东西 */
 static gboolean nat_1_1_enabled = FALSE;
 static gboolean keep_private_host = FALSE;
 void janus_ice_enable_nat_1_1(gboolean kph) {
@@ -309,10 +309,15 @@ void janus_ice_enable_nat_1_1(gboolean kph) {
 	keep_private_host = kph;
 }
 
-/* Interface/IP enforce/ignore lists */
+/* Interface/IP enforce/ignore lists 强制使用/忽略的 地址 */
 GList *janus_ice_enforce_list = NULL, *janus_ice_ignore_list = NULL;
 janus_mutex ice_list_mutex;
 
+/**
+ * @brief 强制使用接口
+ * 
+ * @param ip 
+ */
 void janus_ice_enforce_interface(const char *ip) {
 	if(ip == NULL)
 		return;
@@ -321,6 +326,13 @@ void janus_ice_enforce_interface(const char *ip) {
 	janus_ice_enforce_list = g_list_append(janus_ice_enforce_list, (gpointer)ip);
 	janus_mutex_unlock(&ice_list_mutex);
 }
+
+/**
+ * @brief 判断这个地址是否强制使用
+ * 
+ * @param ip 
+ * @return gboolean 
+ */
 gboolean janus_ice_is_enforced(const char *ip) {
 	if(ip == NULL || janus_ice_enforce_list == NULL)
 		return false;
@@ -338,6 +350,11 @@ gboolean janus_ice_is_enforced(const char *ip) {
 	return false;
 }
 
+/**
+ * @brief 强制忽略接口
+ * 
+ * @param ip 
+ */
 void janus_ice_ignore_interface(const char *ip) {
 	if(ip == NULL)
 		return;
@@ -349,6 +366,13 @@ void janus_ice_ignore_interface(const char *ip) {
 	}
 	janus_mutex_unlock(&ice_list_mutex);
 }
+
+/**
+ * @brief ip地址是否被忽略
+ * 
+ * @param ip 
+ * @return gboolean 
+ */
 gboolean janus_ice_is_ignored(const char *ip) {
 	if(ip == NULL || janus_ice_ignore_list == NULL)
 		return false;
@@ -367,7 +391,9 @@ gboolean janus_ice_is_ignored(const char *ip) {
 }
 
 
-/* Frequency of statistics via event handlers (one second by default) */
+/* Frequency of statistics via event handlers (one second by default) 
+统计通过事件处理的频率（默认一秒）
+*/
 static int janus_ice_event_stats_period = 1;
 void janus_ice_set_event_stats_period(int period) {
 	janus_ice_event_stats_period = period;
@@ -376,7 +402,8 @@ int janus_ice_get_event_stats_period(void) {
 	return janus_ice_event_stats_period;
 }
 
-/* How to handle media statistic events (one per media or one per peerConnection) */
+/* How to handle media statistic events (one per media or one per peerConnection)
+如何去处理媒体统计信息事件（每一个媒体或者每一个peerConnection）*/
 static gboolean janus_ice_event_combine_media_stats = false;
 void janus_ice_event_set_combine_media_stats(gboolean combine_media_stats_to_one_event) {
 	janus_ice_event_combine_media_stats = combine_media_stats_to_one_event;
@@ -385,7 +412,7 @@ gboolean janus_ice_event_get_combine_media_stats(void) {
 	return janus_ice_event_combine_media_stats;
 }
 
-/* RTP/RTCP port range */
+/* RTP/RTCP port range RTP/RTCP端口范围*/
 uint16_t rtp_range_min = 0;
 uint16_t rtp_range_max = 0;
 
@@ -395,7 +422,8 @@ uint16_t rtp_range_max = 0;
 #define JANUS_ICE_PACKET_TEXT	2
 #define JANUS_ICE_PACKET_BINARY	3
 #define JANUS_ICE_PACKET_SCTP	4
-/* Janus enqueued (S)RTP/(S)RTCP packet to send */
+/* Janus enqueued (S)RTP/(S)RTCP packet to send 
+Janus 要入队发送的 (S)RTP/(S)RTCP 包 */
 typedef struct janus_ice_queued_packet {
 	char *data;
 	char *label;
@@ -408,7 +436,8 @@ typedef struct janus_ice_queued_packet {
 	gint64 added;
 } janus_ice_queued_packet;
 /* A few static, fake, messages we use as a trigger: e.g., to start a
- * new DTLS handshake, hangup a PeerConnection or close a handle */
+ * new DTLS handshake, hangup a PeerConnection or close a handle 
+ 初始化一些静态结构,分别去处理不同的包 */
 static janus_ice_queued_packet
 	janus_ice_start_gathering,
 	janus_ice_add_candidates,
@@ -418,19 +447,28 @@ static janus_ice_queued_packet
 	janus_ice_detach_handle,
 	janus_ice_data_ready;
 
-/* Janus NACKed packet we're tracking (to avoid duplicates) */
+/* Janus NACKed packet we're tracking (to avoid duplicates) 
+我们在跟踪的Janus NACKed 包（去避免重复）*/
 typedef struct janus_ice_nacked_packet {
 	janus_ice_handle *handle;
 	int vindex;
 	guint16 seq_number;
 	guint source_id;
 } janus_ice_nacked_packet;
+
+/**
+ * @brief 清理nacked 包
+ * 
+ * @param user_data 
+ * @return gboolean 
+ */
 static gboolean janus_ice_nacked_packet_cleanup(gpointer user_data) {
 	janus_ice_nacked_packet *pkt = (janus_ice_nacked_packet *)user_data;
 
 	if(pkt->handle->stream){
 		JANUS_LOG(LOG_HUGE, "[%"SCNu64"] Cleaning up NACKed packet %"SCNu16" (SSRC %"SCNu32", vindex %d)...\n",
 			pkt->handle->handle_id, pkt->seq_number, pkt->handle->stream->video_ssrc_peer[pkt->vindex], pkt->vindex);
+		/* 清理掉该序列号所对应的nacked包和它所待办的回调函数 */
 		g_hash_table_remove(pkt->handle->stream->rtx_nacked[pkt->vindex], GUINT_TO_POINTER(pkt->seq_number));
 		g_hash_table_remove(pkt->handle->stream->pending_nacked_cleanup, GUINT_TO_POINTER(pkt->source_id));
 	}
@@ -438,14 +476,15 @@ static gboolean janus_ice_nacked_packet_cleanup(gpointer user_data) {
 	return G_SOURCE_REMOVE;
 }
 
-/* Deallocation helpers for handles and related structs */
+/* Deallocation helpers for handles and related structs handle和相关结构的释放助手 */
 static void janus_ice_handle_free(const janus_refcount *handle_ref);
+/*释放handle中的一些webRTC的东西*/
 static void janus_ice_webrtc_free(janus_ice_handle *handle);
 static void janus_ice_plugin_session_free(const janus_refcount *app_handle_ref);
 static void janus_ice_stream_free(const janus_refcount *handle_ref);
 static void janus_ice_component_free(const janus_refcount *handle_ref);
 
-/* Custom GSource for outgoing traffic */
+/* Custom GSource for outgoing traffic 用于传出流量的自定义 GSource */
 typedef struct janus_ice_outgoing_traffic {
 	GSource parent;
 	janus_ice_handle *handle;
@@ -454,10 +493,26 @@ typedef struct janus_ice_outgoing_traffic {
 static gboolean janus_ice_outgoing_rtcp_handle(gpointer user_data);
 static gboolean janus_ice_outgoing_stats_handle(gpointer user_data);
 static gboolean janus_ice_outgoing_traffic_handle(janus_ice_handle *handle, janus_ice_queued_packet *pkt);
+/**
+ * @brief 该source是否有用于传出的流量
+ * 
+ * @param source 
+ * @param timeout 
+ * @return gboolean 
+ */
 static gboolean janus_ice_outgoing_traffic_prepare(GSource *source, gint *timeout) {
 	janus_ice_outgoing_traffic *t = (janus_ice_outgoing_traffic *)source;
 	return (g_async_queue_length(t->handle->queued_packets) > 0);
 }
+
+/**
+ * @brief 传出流量的分配处理
+ * 
+ * @param source 
+ * @param callback 
+ * @param user_data 
+ * @return gboolean 
+ */
 static gboolean janus_ice_outgoing_traffic_dispatch(GSource *source, GSourceFunc callback, gpointer user_data) {
 	janus_ice_outgoing_traffic *t = (janus_ice_outgoing_traffic *)source;
 	int ret = G_SOURCE_CONTINUE;
@@ -468,6 +523,12 @@ static gboolean janus_ice_outgoing_traffic_dispatch(GSource *source, GSourceFunc
 	}
 	return ret;
 }
+
+/**
+ * @brief 
+ * 
+ * @param source 
+ */
 static void janus_ice_outgoing_traffic_finalize(GSource *source) {
 	janus_ice_outgoing_traffic *t = (janus_ice_outgoing_traffic *)source;
 	JANUS_LOG(LOG_VERB, "[%"SCNu64"] Finalizing loop source\n", t->handle->handle_id);
@@ -490,6 +551,13 @@ static GSourceFuncs janus_ice_outgoing_traffic_funcs = {
 	janus_ice_outgoing_traffic_finalize,
 	NULL, NULL
 };
+/**
+ * @brief 传出流量、循环 RTCP 和统计信息（以及可选的 TWCC）的 GLib 源 创建
+ * 
+ * @param handle 
+ * @param destroy 
+ * @return GSource* 
+ */
 static GSource *janus_ice_outgoing_traffic_create(janus_ice_handle *handle, GDestroyNotify destroy) {
 	GSource *source = g_source_new(&janus_ice_outgoing_traffic_funcs, sizeof(janus_ice_outgoing_traffic));
 	janus_ice_outgoing_traffic *t = (janus_ice_outgoing_traffic *)source;
@@ -503,7 +571,8 @@ static GSource *janus_ice_outgoing_traffic_create(janus_ice_handle *handle, GDes
 }
 
 /* Time, in seconds, that should pass with no media (audio or video) being
- * received before Janus notifies you about this with a receiving=false */
+ * received before Janus notifies you about this with a receiving=false 
+ 时间 秒 当经过多少秒没有接收到音视频消息之后，进行通知，告诉你没有接收到东西 */
 #define DEFAULT_NO_MEDIA_TIMER	1
 static uint no_media_timer = DEFAULT_NO_MEDIA_TIMER;
 void janus_set_no_media_timer(uint timer) {
@@ -521,7 +590,11 @@ uint janus_get_no_media_timer(void) {
  * audio or video), that should result in a slow-link event to the user.
  * By default the feature is disabled (threshold=0), as it can be quite
  * verbose and is often redundant information, since the same info on lost
- * packets (in and out) can already be retrieved via client-side stats */
+ * packets (in and out) can already be retrieved via client-side stats 
+ * 每一秒媒体的丢包数量（上行或者下行，音频或者视频）会在slow-link事件里通知
+ * 默认这是关闭的，因为它可能非常冗长并且通常是冗余信息，
+ * 因为通过客户端也可以统计出 上行或者下行的 丢包数量
+ * */
 #define DEFAULT_SLOWLINK_THRESHOLD	0
 static uint slowlink_threshold = DEFAULT_SLOWLINK_THRESHOLD;
 void janus_set_slowlink_threshold(uint packets) {
@@ -535,7 +608,8 @@ uint janus_get_slowlink_threshold(void) {
 	return slowlink_threshold;
 }
 
-/* Period, in milliseconds, to refer to for sending TWCC feedback */
+/* Period, in milliseconds, to refer to for sending TWCC feedback 
+间隔，单位毫秒，发送拥塞控制反馈信息 */
 #define DEFAULT_TWCC_PERIOD		200
 static uint twcc_period = DEFAULT_TWCC_PERIOD;
 void janus_set_twcc_period(uint period) {
@@ -551,7 +625,8 @@ uint janus_get_twcc_period(void) {
 	return twcc_period;
 }
 
-/* DSCP value, which we can set via libnice: it's disabled by default */
+/* DSCP value, which we can set via libnice: it's disabled by default 
+DSCP的值，我们可以通过libnice设置，默认这是禁止的 */
 static int dscp_ef = 0;
 void janus_set_dscp(int dscp) {
 	dscp_ef = dscp;
@@ -563,7 +638,11 @@ int janus_get_dscp(void) {
 	return dscp_ef;
 }
 
-
+/**
+ * @brief 释放RTP包资源
+ * 
+ * @param pkt 
+ */
 static inline void janus_ice_free_rtp_packet(janus_rtp_packet *pkt) {
 	if(pkt == NULL) {
 		return;
@@ -573,6 +652,12 @@ static inline void janus_ice_free_rtp_packet(janus_rtp_packet *pkt) {
 	g_free(pkt);
 }
 
+
+/**
+ * @brief 释放ICE队列包
+ * 
+ * @param pkt 
+ */
 static void janus_ice_free_queued_packet(janus_ice_queued_packet *pkt) {
 	if(pkt == NULL || pkt == &janus_ice_start_gathering ||
 			pkt == &janus_ice_add_candidates ||
@@ -589,10 +674,12 @@ static void janus_ice_free_queued_packet(janus_ice_queued_packet *pkt) {
 	g_free(pkt);
 }
 
-/* Minimum and maximum value, in milliseconds, for the NACK queue/retransmissions (default=200ms/1000ms) */
+/* Minimum and maximum value, in milliseconds, for the NACK queue/retransmissions (default=200ms/1000ms) 
+最大值和最小值，单位毫秒，对于NACK 队列/重传 */
 #define DEFAULT_MIN_NACK_QUEUE	200
 #define DEFAULT_MAX_NACK_QUEUE	1000
-/* Maximum ignore count after retransmission (200ms) */
+/* Maximum ignore count after retransmission (200ms)
+重传后的最大忽略计数 */
 #define MAX_NACK_IGNORE			200000
 
 static gboolean nack_optimizations = FALSE;
@@ -614,20 +701,21 @@ void janus_set_min_nack_queue(uint16_t mnq) {
 uint16_t janus_get_min_nack_queue(void) {
 	return min_nack_queue;
 }
-/* Helper to clean old NACK packets in the buffer when they exceed the queue time limit */
+/* Helper to clean old NACK packets in the buffer when they exceed the queue time limit 
+帮助程序在超过队列时间限制时清除缓冲区中的旧 NACK 数据包 */
 static void janus_cleanup_nack_buffer(gint64 now, janus_ice_stream *stream, gboolean audio, gboolean video) {
 	if(stream && stream->component) {
 		janus_ice_component *component = stream->component;
 		if(audio && component->audio_retransmit_buffer) {
 			janus_rtp_packet *p = (janus_rtp_packet *)g_queue_peek_head(component->audio_retransmit_buffer);
 			while(p && (!now || (now - p->created >= (gint64)stream->nack_queue_ms*1000))) {
-				/* Packet is too old, get rid of it */
+				/* Packet is too old, get rid of it 包太旧了，丢了吧*/
 				g_queue_pop_head(component->audio_retransmit_buffer);
-				/* Remove from hashtable too */
+				/* Remove from hashtable too 从hashTable移除 */
 				janus_rtp_header *header = (janus_rtp_header *)p->data;
 				guint16 seq = ntohs(header->seq_number);
 				g_hash_table_remove(component->audio_retransmit_seqs, GUINT_TO_POINTER(seq));
-				/* Free the packet */
+				/* Free the packet 释放包内存 */
 				janus_ice_free_rtp_packet(p);
 				p = (janus_rtp_packet *)g_queue_peek_head(component->audio_retransmit_buffer);
 			}
@@ -635,13 +723,13 @@ static void janus_cleanup_nack_buffer(gint64 now, janus_ice_stream *stream, gboo
 		if(video && component->video_retransmit_buffer) {
 			janus_rtp_packet *p = (janus_rtp_packet *)g_queue_peek_head(component->video_retransmit_buffer);
 			while(p && (!now || (now - p->created >= (gint64)stream->nack_queue_ms*1000))) {
-				/* Packet is too old, get rid of it */
+				/* Packet is too old, get rid of it 包太旧了，丢了吧*/
 				g_queue_pop_head(component->video_retransmit_buffer);
-				/* Remove from hashtable too */
+				/* Remove from hashtable too 从hashTable移除*/
 				janus_rtp_header *header = (janus_rtp_header *)p->data;
 				guint16 seq = ntohs(header->seq_number);
 				g_hash_table_remove(component->video_retransmit_seqs, GUINT_TO_POINTER(seq));
-				/* Free the packet */
+				/* Free the packet 释放包内存*/
 				janus_ice_free_rtp_packet(p);
 				p = (janus_rtp_packet *)g_queue_peek_head(component->video_retransmit_buffer);
 			}
@@ -722,7 +810,7 @@ static int janus_seq_in_range(guint16 seqn, guint16 start, guint16 len) {
 void janus_ice_relay_rtcp_internal(janus_ice_handle *handle, janus_plugin_rtcp *packet, gboolean filter_rtcp);
 
 
-/* Map of active plugin sessions */
+/* Map of active plugin sessions 活跃的插件session map */
 static GHashTable *plugin_sessions;
 static janus_mutex plugin_sessions_mutex;
 gboolean janus_plugin_session_is_alive(janus_plugin_session *plugin_session) {
@@ -743,7 +831,11 @@ static void janus_plugin_session_dereference(janus_plugin_session *plugin_sessio
 		janus_refcount_decrease(&plugin_session->ref);
 }
 
-
+/**
+ * @brief 清除队列中的candidate
+ * 
+ * @param handle 
+ */
 static void janus_ice_clear_queued_candidates(janus_ice_handle *handle) {
 	if(handle == NULL || handle->queued_candidates == NULL) {
 		return;
@@ -752,7 +844,11 @@ static void janus_ice_clear_queued_candidates(janus_ice_handle *handle) {
 		(void)g_async_queue_try_pop(handle->queued_candidates);
 	}
 }
-
+/**
+ * @brief 清除队列中的包
+ * 
+ * @param handle 
+ */
 static void janus_ice_clear_queued_packets(janus_ice_handle *handle) {
 	if(handle == NULL || handle->queued_packets == NULL) {
 		return;
@@ -976,7 +1072,7 @@ void janus_ice_trickle_destroy(janus_ice_trickle *trickle) {
 }
 
 
-/* libnice initialization */
+/* libnice initialization 初始化libnice */
 void janus_ice_init(gboolean ice_lite, gboolean ice_tcp, gboolean full_trickle, gboolean ignore_mdns,
 		gboolean ipv6, gboolean ipv6_linklocal, uint16_t rtp_min_port, uint16_t rtp_max_port) {
 	janus_ice_lite_enabled = ice_lite;
@@ -1001,13 +1097,18 @@ void janus_ice_init(gboolean ice_lite, gboolean ice_tcp, gboolean full_trickle, 
 		}
 #endif
 	}
-	/* libnice debugging is disabled unless explicitly stated */
+	/* libnice debugging is disabled unless explicitly stated 
+	除非明确说明，否则禁用 libnice 调试 */
 	nice_debug_disable(TRUE);
 
 	/*! \note The RTP/RTCP port range configuration may be just a placeholder: for
 	 * instance, libnice supports this since 0.1.0, but the 0.1.3 on Fedora fails
 	 * when linking with an undefined reference to \c nice_agent_set_port_range
-	 * so this is checked by the install.sh script in advance. */
+	 * so this is checked by the install.sh script in advance. 
+	 * RTP/RTCP 端口范围配置可能只是一个占位符：
+	 * 例如，libnice 自 0.1.0 起就支持此功能，
+	 * 但在 Fedora 上的 0.1.3 会失败在链接到nice_agent_set_port_range的未定义引用，因此由 install.sh 脚本检查提前
+	 * */
 	rtp_range_min = rtp_min_port;
 	rtp_range_max = rtp_max_port;
 	if(rtp_range_max < rtp_range_min) {
@@ -1022,12 +1123,14 @@ void janus_ice_init(gboolean ice_lite, gboolean ice_tcp, gboolean full_trickle, 
 	if(!janus_mdns_enabled)
 		JANUS_LOG(LOG_WARN, "mDNS resolution disabled, .local candidates will be ignored\n");
 
-	/* We keep track of plugin sessions to avoid problems */
+	/* We keep track of plugin sessions to avoid problems 
+	我们跟踪插件会话以避免出现问题 */
 	plugin_sessions = g_hash_table_new_full(NULL, NULL, NULL, (GDestroyNotify)janus_plugin_session_dereference);
 	janus_mutex_init(&plugin_sessions_mutex);
 
 #ifdef HAVE_TURNRESTAPI
-	/* Initialize the TURN REST API client stack, whether we're going to use it or not */
+	/* Initialize the TURN REST API client stack, whether we're going to use it or not 
+	初始化 TURN REST API 客户端堆栈，无论我们是否要使用它 */
 	janus_turnrest_init();
 #endif
 
@@ -1039,18 +1142,29 @@ void janus_ice_deinit(void) {
 #endif
 }
 
+/**
+ * @brief 检查 STUN 服务器是否可达
+ * 
+ * @param addr 
+ * @param port 
+ * @param local_port 
+ * @param public_addr 
+ * @param public_port 
+ * @return int 
+ */
 int janus_ice_test_stun_server(janus_network_address *addr, uint16_t port,
 		uint16_t local_port, janus_network_address *public_addr, uint16_t *public_port) {
 	if(!addr || !public_addr)
 		return -1;
-	/* Test the STUN server */
+	/* Test the STUN server 检查 STUN 服务器是否可达*/
 	StunAgent stun;
 	stun_agent_init (&stun, STUN_ALL_KNOWN_ATTRIBUTES, STUN_COMPATIBILITY_RFC5389, 0);
 	StunMessage msg;
 	uint8_t buf[1500];
 	size_t len = stun_usage_bind_create(&stun, &msg, buf, 1500);
 	JANUS_LOG(LOG_INFO, "Testing STUN server: message is of %zu bytes\n", len);
-	/* Use the janus_network_address info to drive the socket creation */
+	/* Use the janus_network_address info to drive the socket creation 
+	使用 janus_network_address 信息来驱动套接字创建 */
 	int fd = socket(addr->family, SOCK_DGRAM, 0);
 	if(fd < 0) {
 		JANUS_LOG(LOG_FATAL, "Error creating socket for STUN BINDING test\n");
@@ -1102,7 +1216,7 @@ int janus_ice_test_stun_server(janus_network_address *addr, uint16_t port,
 	fd_set readfds;
 	FD_ZERO(&readfds);
 	FD_SET(fd, &readfds);
-	timeout.tv_sec = 5;	/* FIXME Don't wait forever */
+	timeout.tv_sec = 5;	/* FIXME Don't wait forever 别一直等 */
 	timeout.tv_usec = 0;
 	int err = select(fd+1, &readfds, NULL, NULL, &timeout);
 	if(err < 0) {
@@ -1168,11 +1282,18 @@ int janus_ice_test_stun_server(janus_network_address *addr, uint16_t port,
 		}
 		return 0;
 	}
-	/* No usable attribute? */
+	/* No usable attribute? 无可用属性 */
 	JANUS_LOG(LOG_ERR, "No XOR-MAPPED-ADDRESS or MAPPED-ADDRESS...\n");
 	return -1;
 }
 
+/**
+ * @brief 设置stun服务
+ * 
+ * @param stun_server 
+ * @param stun_port 
+ * @return int 
+ */
 int janus_ice_set_stun_server(gchar *stun_server, uint16_t stun_port) {
 	if(stun_server == NULL)
 		return 0;	/* No initialization needed */
@@ -1219,6 +1340,16 @@ int janus_ice_set_stun_server(gchar *stun_server, uint16_t stun_port) {
 	return 0;
 }
 
+/**
+ * @brief 设置turn服务
+ * 
+ * @param turn_server 
+ * @param turn_port 
+ * @param turn_type 
+ * @param turn_user 
+ * @param turn_pwd 
+ * @return int 
+ */
 int janus_ice_set_turn_server(gchar *turn_server, uint16_t turn_port, gchar *turn_type, gchar *turn_user, gchar *turn_pwd) {
 	if(turn_server == NULL)
 		return 0;	/* No initialization needed */
@@ -1269,6 +1400,15 @@ int janus_ice_set_turn_server(gchar *turn_server, uint16_t turn_port, gchar *tur
 	return 0;
 }
 
+/**
+ * @brief 设置turn rest api
+ * 
+ * @param api_server 
+ * @param api_key 
+ * @param api_method 
+ * @param api_timeout 
+ * @return int 
+ */
 int janus_ice_set_turn_rest_api(gchar *api_server, gchar *api_key, gchar *api_method, uint api_timeout) {
 #ifndef HAVE_TURNRESTAPI
 	JANUS_LOG(LOG_ERR, "Janus has been built with no libcurl support, TURN REST API unavailable\n");
@@ -1303,7 +1443,9 @@ const gchar *janus_get_ice_state_name(gint state) {
 }
 
 
-/* Thread to take care of the handle loop */
+/* Thread to take care of the handle loop 
+去处理handle循环的线程
+*/
 static void *janus_ice_handle_thread(void *data) {
 	janus_ice_handle *handle = data;
 	JANUS_LOG(LOG_VERB, "[%"SCNu64"] Handle thread started; %p\n", handle->handle_id, handle);
@@ -1325,7 +1467,7 @@ static void *janus_ice_handle_thread(void *data) {
 }
 
 /**
- * @brief 给当前session创建插件
+ * @brief 创建插件
  * 
  */
 janus_ice_handle *janus_ice_handle_create(void *core_session, const char *opaque_id, const char *token) {
@@ -1338,7 +1480,8 @@ janus_ice_handle *janus_ice_handle_create(void *core_session, const char *opaque
 		handle_id = janus_random_uint64();
 		handle = janus_session_handles_find(session, handle_id);
 		if(handle != NULL) {
-			/* Handle ID already taken, try another one */
+			/* Handle ID already taken, try another one 
+			处理ID已被占用，尝试另一个*/
 			janus_refcount_decrease(&handle->ref);	/* janus_session_handles_find increases it */
 			handle_id = 0;
 		}
@@ -1381,7 +1524,8 @@ gint janus_ice_handle_attach_plugin(void *core_session, janus_ice_handle *handle
 	if(handle == NULL)
 		return JANUS_ERROR_HANDLE_NOT_FOUND;
 	if(handle->app != NULL) {
-		/* This handle is already attached to a plugin */
+		/* This handle is already attached to a plugin 
+		这个handle已经添加到插件上了 */
 		return JANUS_ERROR_PLUGIN_ATTACH;
 	}
 	int error = 0;
@@ -1391,26 +1535,32 @@ gint janus_ice_handle_attach_plugin(void *core_session, janus_ice_handle *handle
 	g_atomic_int_set(&session_handle->stopped, 0);
 	plugin->create_session(session_handle, &error);
 	if(error) {
-		/* TODO Make error struct to pass verbose information */
+		/* TODO Make error struct to pass verbose information 制作error结构以传递详细信息*/
 		g_free(session_handle);
 		return error;
 	}
 	janus_refcount_init(&session_handle->ref, janus_ice_plugin_session_free);
-	/* Handle and plugin session reference each other */
+	/* Handle and plugin session reference each other 
+	Handle和插件会话相互引用
+	*/
 	janus_refcount_increase(&session_handle->ref);
 	janus_refcount_increase(&handle->ref);
 	handle->app = plugin;
 	handle->app_handle = session_handle;
-	/* Add this plugin session to active sessions map */
+	/* Add this plugin session to active sessions map 
+	添加插件session去激活session map */
 	janus_mutex_lock(&plugin_sessions_mutex);
 	g_hash_table_insert(plugin_sessions, session_handle, session_handle);
 	janus_mutex_unlock(&plugin_sessions_mutex);
-	/* Create a new context, loop, and source */
+	/* Create a new context, loop, and source 
+	创建glib 上下文，循环，source */
 	if(static_event_loops == 0) {
 		handle->mainctx = g_main_context_new();
 		handle->mainloop = g_main_loop_new(handle->mainctx, FALSE);
 	} else {
-		/* We're actually using static event loops, pick one from the list */
+		/* We're actually using static event loops, pick one from the list 
+		我们配置了静态事件循环，从list里选择一个进行使用
+		*/
 		if(!allow_loop_indication && loop_index > -1) {
 			JANUS_LOG(LOG_WARN, "[%"SCNu64"] Manual allocation of event loops forbidden, ignoring provided loop index %d\n", handle->handle_id, loop_index);
 		}
@@ -1418,7 +1568,9 @@ gint janus_ice_handle_attach_plugin(void *core_session, janus_ice_handle *handle
 		janus_mutex_lock(&event_loops_mutex);
 		gboolean automatic_selection = TRUE;
 		if(allow_loop_indication && loop_index != -1) {
-			/* The API can drive the selection and an index was provided, check if it exists */
+			/* The API can drive the selection and an index was provided, check if it exists 
+			使用loop_index选择一个事件循环进行使用
+			*/
 			janus_ice_static_event_loop *loop = g_slist_nth_data(event_loops, loop_index);
 			if(loop == NULL) {
 				JANUS_LOG(LOG_WARN, "[%"SCNu64"] Invalid loop index %d, picking event loop automatically\n", handle->handle_id, loop_index);
@@ -1430,7 +1582,8 @@ gint janus_ice_handle_attach_plugin(void *core_session, janus_ice_handle *handle
 			}
 		}
 		if(automatic_selection) {
-			/* Pick an available loop automatically (round robin) */
+			/* Pick an available loop automatically (round robin) 
+			如果没有提供loop_index 那么随机挑选一个事件循环 */
 			janus_ice_static_event_loop *loop = (janus_ice_static_event_loop *)current_loop->data;
 			handle->mainctx = loop->mainctx;
 			handle->mainloop = loop->mainloop;
@@ -1441,35 +1594,45 @@ gint janus_ice_handle_attach_plugin(void *core_session, janus_ice_handle *handle
 		}
 		janus_mutex_unlock(&event_loops_mutex);
 	}
+	/* 创建一个ICE传出流量源 */
 	handle->rtp_source = janus_ice_outgoing_traffic_create(handle, (GDestroyNotify)g_free);
 	g_source_set_priority(handle->rtp_source, G_PRIORITY_DEFAULT);
 	g_source_attach(handle->rtp_source, handle->mainctx);
 	if(static_event_loops == 0) {
-		/* Now spawn a thread for this loop */
+		/* Now spawn a thread for this loop 
+		如果没有为这个handle添加静态事件循环，那么我们创建一个线程去处理该handle的ICE事件 */
 		GError *terror = NULL;
 		char tname[16];
 		g_snprintf(tname, sizeof(tname), "hloop %"SCNu64, handle->handle_id);
 		janus_refcount_increase(&handle->ref);
 		handle->thread = g_thread_try_new(tname, &janus_ice_handle_thread, handle, &terror);
 		if(terror != NULL) {
-			/* FIXME We should clear some resources... */
+			/* FIXME We should clear some resources...如果发生了错误，我们需要释放一些资源 */
 			JANUS_LOG(LOG_ERR, "[%"SCNu64"] Got error %d (%s) trying to launch the handle thread...\n",
 				handle->handle_id, terror->code, terror->message ? terror->message : "??");
 			g_error_free(terror);
-			janus_refcount_decrease(&handle->ref);	/* This is for the thread reference we just added */
+			janus_refcount_decrease(&handle->ref);	/* This is for the thread reference we just added 这是我们刚刚添加的线程引用 */
 			janus_ice_handle_destroy(session, handle);
 			return -1;
 		}
 	}
-	/* Notify event handlers */
+	/* Notify event handlers 如果需要，触发通知事件*/
 	if(janus_events_is_enabled())
 		janus_events_notify_handlers(JANUS_EVENT_TYPE_HANDLE, JANUS_EVENT_SUBTYPE_NONE,
 			session->session_id, handle->handle_id, "attached", plugin->get_package(), handle->opaque_id, handle->token);
 	return 0;
 }
 
+/**
+ * @brief 销毁ICE handle
+ * 
+ * @param core_session 
+ * @param handle 
+ * @return gint 
+ */
 gint janus_ice_handle_destroy(void *core_session, janus_ice_handle *handle) {
-	/* session->mutex has to be locked when calling this function */
+	/* session->mutex has to be locked when calling this function 
+	对handle进行销毁的时候，对session进行加锁，防止并发操作对数据造成影响 */
 	janus_session *session = (janus_session *)core_session;
 	if(session == NULL)
 		return JANUS_ERROR_SESSION_NOT_FOUND;
@@ -1477,10 +1640,11 @@ gint janus_ice_handle_destroy(void *core_session, janus_ice_handle *handle) {
 		return JANUS_ERROR_HANDLE_NOT_FOUND;
 	if(!g_atomic_int_compare_and_exchange(&handle->destroyed, 0, 1))
 		return 0;
-	/* First of all, hangup the PeerConnection, if any */
+	/* First of all, hangup the PeerConnection, if any 处理销毁handle之前，先挂断PeerConnection 如果有 */
 	janus_ice_webrtc_hangup(handle, "Detach");
 	janus_flags_set(&handle->webrtc_flags, JANUS_ICE_HANDLE_WEBRTC_STOP);
-	/* Remove the session from active sessions map */
+	/* Remove the session from active sessions map
+	把该handle的session从plugin_sessions map中移除 */
 	janus_mutex_lock(&plugin_sessions_mutex);
 	gboolean found = g_hash_table_remove(plugin_sessions, handle->app_handle);
 	if(!found) {
@@ -1490,7 +1654,9 @@ gint janus_ice_handle_destroy(void *core_session, janus_ice_handle *handle) {
 	janus_mutex_unlock(&plugin_sessions_mutex);
 	janus_plugin *plugin_t = (janus_plugin *)handle->app;
 	if(plugin_t == NULL) {
-		/* There was no plugin attached, probably something went wrong there */
+		/* There was no plugin attached, probably something went wrong there 
+		虽然要我销毁插件，但是没有发现插件,可能有什么地方出错了
+		*/
 		janus_flags_set(&handle->webrtc_flags, JANUS_ICE_HANDLE_WEBRTC_ALERT);
 		janus_flags_set(&handle->webrtc_flags, JANUS_ICE_HANDLE_WEBRTC_STOP);
 		if(handle->mainloop != NULL) {
@@ -1502,28 +1668,36 @@ gint janus_ice_handle_destroy(void *core_session, janus_ice_handle *handle) {
 		return 0;
 	}
 	JANUS_LOG(LOG_INFO, "Detaching handle from %s; %p %p %p %p\n", plugin_t->get_name(), handle, handle->app_handle, handle->app_handle->gateway_handle, handle->app_handle->plugin_handle);
-	/* Actually detach handle... */
+	/* Actually detach handle... 真实移除插件 */
 	if(g_atomic_int_compare_and_exchange(&handle->app_handle->stopped, 0, 1)) {
 		/* Notify the plugin that the session's over (the plugin will
-		 * remove the other reference to the plugin session handle) */
+		 * remove the other reference to the plugin session handle) 
+		 通知插件会话结束（插件将删除对插件会话handle的其他引用）*/
 		g_async_queue_push(handle->queued_packets, &janus_ice_detach_handle);
 		g_main_context_wakeup(handle->mainctx);
 	}
-	/* Get rid of the handle now */
+	/* Get rid of the handle now 立即脱离handle */
 	if(g_atomic_int_compare_and_exchange(&handle->dump_packets, 1, 0)) {
 		janus_text2pcap_close(handle->text2pcap);
 		g_clear_pointer(&handle->text2pcap, janus_text2pcap_free);
 	}
-	/* We only actually destroy the handle later */
+	/* We only actually destroy the handle later 我们会稍后真实销毁handle */
 	JANUS_LOG(LOG_VERB, "[%"SCNu64"] Handle detached, scheduling destruction\n", handle->handle_id);
 	/* Unref the handle: we only unref the session too when actually freeing the handle, so that it is freed before that */
 	janus_refcount_decrease(&handle->ref);
 	return 0;
 }
 
+/**
+ * @brief 释放handle内存
+ * 
+ * @param handle_ref 
+ */
 static void janus_ice_handle_free(const janus_refcount *handle_ref) {
 	janus_ice_handle *handle = janus_refcount_containerof(handle_ref, janus_ice_handle, ref);
-	/* This stack can be destroyed, free all the resources */
+	/* This stack can be destroyed, free all the resources 
+	释放handle的所有内存
+	*/
 	janus_mutex_lock(&handle->mutex);
 	if(handle->queued_candidates != NULL) {
 		janus_ice_clear_queued_candidates(handle);
@@ -1542,9 +1716,11 @@ static void janus_ice_handle_free(const janus_refcount *handle_ref) {
 		handle->mainctx = NULL;
 	}
 	janus_mutex_unlock(&handle->mutex);
+	/*释放handle中的一些webRTC的东西*/
 	janus_ice_webrtc_free(handle);
 	JANUS_LOG(LOG_INFO, "[%"SCNu64"] Handle and related resources freed; %p %p\n", handle->handle_id, handle, handle->session);
-	/* Finally, unref the session and free the handle */
+	/* Finally, unref the session and free the handle 
+	最后释放该插件的session */
 	if(handle->session != NULL) {
 		janus_session *session = (janus_session *)handle->session;
 		janus_refcount_decrease(&session->ref);
@@ -1567,9 +1743,15 @@ static void janus_ice_cb_agent_closed(GObject *src, GAsyncResult *result, gpoint
 }
 #endif
 
+/**
+ * @brief 释放插件session内存
+ * 
+ * @param app_handle_ref 
+ */
 static void janus_ice_plugin_session_free(const janus_refcount *app_handle_ref) {
 	janus_plugin_session *app_handle = janus_refcount_containerof(app_handle_ref, janus_plugin_session, ref);
-	/* This app handle can be destroyed, free all the resources */
+	/* This app handle can be destroyed, free all the resources
+	这个app handle 可以被销毁，释放所有资源 */
 	if(app_handle->gateway_handle != NULL) {
 		janus_ice_handle *handle = (janus_ice_handle *)app_handle->gateway_handle;
 		app_handle->gateway_handle = NULL;
@@ -1580,7 +1762,7 @@ static void janus_ice_plugin_session_free(const janus_refcount *app_handle_ref) 
 }
 
 /**
- * @brief 挂断
+ * @brief 先挂断PeerConnection
  * 
  * @param handle 
  * @param reason 
@@ -1616,11 +1798,17 @@ void janus_ice_webrtc_hangup(janus_ice_handle *handle, const char *reason) {
 	}
 }
 
+/**
+ * @brief 释放handle中的一些webRTC的东西
+ * 
+ * @param handle 
+ */
 static void janus_ice_webrtc_free(janus_ice_handle *handle) {
 	if(handle == NULL)
 		return;
 	janus_mutex_lock(&handle->mutex);
 	if(!handle->agent_created) {
+		/* 清除标识位 */
 		janus_flags_clear(&handle->webrtc_flags, JANUS_ICE_HANDLE_WEBRTC_NEW_DATACHAN_SDP);
 		janus_flags_clear(&handle->webrtc_flags, JANUS_ICE_HANDLE_WEBRTC_READY);
 		janus_flags_clear(&handle->webrtc_flags, JANUS_ICE_HANDLE_WEBRTC_CLEANING);
@@ -1631,6 +1819,7 @@ static void janus_ice_webrtc_free(janus_ice_handle *handle) {
 	}
 	handle->agent_created = 0;
 	if(handle->stream != NULL) {
+		/* 仅销毁由 Janus ICE handle 分配的特定ICE stream 的资源 */
 		janus_ice_stream_destroy(handle->stream);
 		handle->stream = NULL;
 	}
@@ -1644,11 +1833,11 @@ static void janus_ice_webrtc_free(janus_ice_handle *handle) {
 			JANUS_LOG(LOG_VERB, "[%"SCNu64"] Closing nice agent %p\n", handle->handle_id, handle->agent);
 			janus_refcount_increase(&handle->ref);
 			if(handle->rtp_source != NULL) {
-				/* Destroy the agent asynchronously */
+				/* Destroy the agent asynchronously 异步销毁代理 */
 				g_source_ref(handle->rtp_source);
 				nice_agent_close_async(handle->agent, janus_ice_cb_agent_closed, handle->rtp_source);
 			} else {
-				/* No traffic source, destroy it right away */
+				/* No traffic source, destroy it right away 没有传输源,销毁他*/
 				if(G_IS_OBJECT(handle->agent))
 					g_object_unref(handle->agent);
 				handle->agent = NULL;
@@ -1667,10 +1856,12 @@ static void janus_ice_webrtc_free(janus_ice_handle *handle) {
 			handle->pending_trickles = g_list_remove_link(handle->pending_trickles, temp);
 			janus_ice_trickle *trickle = (janus_ice_trickle *)temp->data;
 			g_list_free(temp);
+			/*销毁 janus_ice_trickle 实例*/
 			janus_ice_trickle_destroy(trickle);
 		}
 	}
 	handle->pending_trickles = NULL;
+	/*清除队列中的candidate*/
 	janus_ice_clear_queued_candidates(handle);
 	g_free(handle->rtp_profile);
 	handle->rtp_profile = NULL;
@@ -1692,6 +1883,7 @@ static void janus_ice_webrtc_free(janus_ice_handle *handle) {
 	janus_flags_clear(&handle->webrtc_flags, JANUS_ICE_HANDLE_WEBRTC_HAS_AGENT);
 	janus_flags_clear(&handle->webrtc_flags, JANUS_ICE_HANDLE_WEBRTC_E2EE);
 	if(!janus_flags_is_set(&handle->webrtc_flags, JANUS_ICE_HANDLE_WEBRTC_STOP) && handle->hangup_reason) {
+		/*过 Janus API 通知 WebRTC 挂断*/
 		janus_ice_notify_hangup(handle, handle->hangup_reason);
 	}
 	handle->hangup_reason = NULL;
@@ -1699,13 +1891,20 @@ static void janus_ice_webrtc_free(janus_ice_handle *handle) {
 	JANUS_LOG(LOG_INFO, "[%"SCNu64"] WebRTC resources freed; %p %p\n", handle->handle_id, handle, handle->session);
 }
 
+/**
+ * @brief 仅销毁由 Janus ICE handle 分配的特定ICE stream 的资源
+ * 
+ * @param stream 
+ */
 void janus_ice_stream_destroy(janus_ice_stream *stream) {
 	if(stream == NULL)
 		return;
 	if(stream->component != NULL) {
+		/*仅销毁由 Janus ICE handle 分配的特定ICE component 的资源*/
 		janus_ice_component_destroy(stream->component);
 		stream->component = NULL;
 	}
+	/*代办的 Nacked 包 清理回调函数的Map*/
 	if(stream->pending_nacked_cleanup && g_hash_table_size(stream->pending_nacked_cleanup) > 0) {
 		GHashTableIter iter;
 		gpointer val;
@@ -1725,9 +1924,14 @@ void janus_ice_stream_destroy(janus_ice_stream *stream) {
 	janus_refcount_decrease(&stream->ref);
 }
 
+/**
+ * @brief 释放ice stream 使用的内存
+ * 
+ * @param stream_ref 
+ */
 static void janus_ice_stream_free(const janus_refcount *stream_ref) {
 	janus_ice_stream *stream = janus_refcount_containerof(stream_ref, janus_ice_stream, ref);
-	/* This stream can be destroyed, free all the resources */
+	/* This stream can be destroyed, free all the resources 这个流可以被销毁，释放所有资源*/
 	stream->handle = NULL;
 	g_free(stream->remote_hashing);
 	stream->remote_hashing = NULL;
@@ -1792,6 +1996,11 @@ static void janus_ice_stream_free(const janus_refcount *stream_ref) {
 	stream = NULL;
 }
 
+/**
+ * @brief 仅销毁由 Janus ICE handle 分配的特定ICE component 的资源
+ * 
+ * @param component 
+ */
 void janus_ice_component_destroy(janus_ice_component *component) {
 	if(component == NULL)
 		return;
@@ -1800,12 +2009,19 @@ void janus_ice_component_destroy(janus_ice_component *component) {
 		janus_refcount_decrease(&stream->ref);
 		component->stream = NULL;
 	}
+	/*销毁 janus_dtls_srtp 实例*/
 	janus_dtls_srtp_destroy(component->dtls);
 	janus_refcount_decrease(&component->ref);
 }
 
+/**
+ * @brief 仅释放由 Janus ICE handle 分配的特定ICE component 的内存
+ * 
+ * @param component_ref 
+ */
 static void janus_ice_component_free(const janus_refcount *component_ref) {
 	janus_ice_component *component = janus_refcount_containerof(component_ref, janus_ice_component, ref);
+	// ((type *)((char *)(refptr) - offsetof(type, member)))
 	if(component->icestate_source != NULL) {
 		g_source_destroy(component->icestate_source);
 		g_source_unref(component->icestate_source);
@@ -1817,37 +2033,42 @@ static void janus_ice_component_free(const janus_refcount *component_ref) {
 		component->dtlsrt_source = NULL;
 	}
 	if(component->dtls != NULL) {
+		/* 销毁 janus_dtls_srtp 实例*/
 		janus_dtls_srtp_destroy(component->dtls);
 		janus_refcount_decrease(&component->dtls->ref);
 		component->dtls = NULL;
 	}
+	/* 如果有先前发送的 janus_rtp_packet RTP 数据包列表，用来我们作为丢包重传使用，我们也把它删除 */
 	if(component->audio_retransmit_buffer != NULL) {
 		janus_rtp_packet *p = NULL;
 		while((p = (janus_rtp_packet *)g_queue_pop_head(component->audio_retransmit_buffer)) != NULL) {
-			/* Remove from hashtable too */
+			/* Remove from hashtable too 同时从seq hashtable也删除 */
 			janus_rtp_header *header = (janus_rtp_header *)p->data;
 			guint16 seq = ntohs(header->seq_number);
 			g_hash_table_remove(component->audio_retransmit_seqs, GUINT_TO_POINTER(seq));
-			/* Free the packet */
+			/* Free the packet 释放RTP包的内存 */
 			janus_ice_free_rtp_packet(p);
 		}
 		g_queue_free(component->audio_retransmit_buffer);
 		g_hash_table_destroy(component->audio_retransmit_seqs);
 	}
+	/* 如果有先前发送的 janus_rtp_packet RTP 数据包列表，用来我们作为丢包重传使用，我们也把它删除 */
 	if(component->video_retransmit_buffer != NULL) {
 		janus_rtp_packet *p = NULL;
 		while((p = (janus_rtp_packet *)g_queue_pop_head(component->video_retransmit_buffer)) != NULL) {
-			/* Remove from hashtable too */
+			/* Remove from hashtable too 同时从seq hashtable也删除 */
 			janus_rtp_header *header = (janus_rtp_header *)p->data;
 			guint16 seq = ntohs(header->seq_number);
 			g_hash_table_remove(component->video_retransmit_seqs, GUINT_TO_POINTER(seq));
-			/* Free the packet */
+			/* Free the packet 释放RTP包的内存 */
 			janus_ice_free_rtp_packet(p);
 		}
 		g_queue_free(component->video_retransmit_buffer);
 		g_hash_table_destroy(component->video_retransmit_seqs);
 	}
+	/*判断此组件的 libnice 远程candidate的列表是否为空*/
 	if(component->candidates != NULL) {
+		/*释放candidate内存*/
 		GSList *i = NULL, *candidates = component->candidates;
 		for(i = candidates; i; i = i->next) {
 			NiceCandidate *c = (NiceCandidate *) i->data;
@@ -1860,7 +2081,9 @@ static void janus_ice_component_free(const janus_refcount *component_ref) {
 		candidates = NULL;
 	}
 	component->candidates = NULL;
+	/*判断此组件的本地candidate的 GLib 列表是否为空*/
 	if(component->local_candidates != NULL) {
+		/*释放candidate内存*/
 		GSList *i = NULL, *candidates = component->local_candidates;
 		for(i = candidates; i; i = i->next) {
 			gchar *c = (gchar *) i->data;
@@ -1870,7 +2093,9 @@ static void janus_ice_component_free(const janus_refcount *component_ref) {
 		candidates = NULL;
 	}
 	component->local_candidates = NULL;
+	/*判断此组件的远端candidate的 GLib 列表是否为空*/
 	if(component->remote_candidates != NULL) {
+		/*释放candidate内存*/
 		GSList *i = NULL, *candidates = component->remote_candidates;
 		for(i = candidates; i; i = i->next) {
 			gchar *c = (gchar *) i->data;
@@ -1894,21 +2119,23 @@ static void janus_ice_component_free(const janus_refcount *component_ref) {
 	//~ janus_mutex_unlock(&handle->mutex);
 }
 
-/* Call plugin slow_link callback if a minimum of lost packets are detected within a second */
+/* Call plugin slow_link callback if a minimum of lost packets are detected within a second 
+如果在一秒钟内检测到最少的丢失数据包，则调用插件 slow_link 回调 */
 static void janus_slow_link_update(janus_ice_component *component, janus_ice_handle *handle,
 		gboolean video, gboolean uplink, guint lost) {
-	/* We keep the counters in different janus_ice_stats objects, depending on the direction */
+	/* We keep the counters in different janus_ice_stats objects, depending on the direction 
+	我们将计数器保存在不同的 janus_ice_stats 对象中，具体取决于方向 */
 	guint sl_lost_last_count = uplink ?
 		(video ? component->in_stats.sl_lost_count_video : component->in_stats.sl_lost_count_audio) :
 		(video ? component->out_stats.sl_lost_count_video : component->out_stats.sl_lost_count_audio);
 	guint sl_lost_recently = (lost >= sl_lost_last_count) ? (lost - sl_lost_last_count) : 0;
 	if(slowlink_threshold > 0 && sl_lost_recently >= slowlink_threshold) {
-		/* Tell the plugin */
+		/* Tell the plugin 通知插件 */
 		janus_plugin *plugin = (janus_plugin *)handle->app;
 		if(plugin && plugin->slow_link && janus_plugin_session_is_alive(handle->app_handle) &&
 				!g_atomic_int_get(&handle->destroyed))
 			plugin->slow_link(handle->app_handle, uplink, video);
-		/* Notify the user/application too */
+		/* Notify the user/application too 也通知用户/应用程序 */
 		janus_session *session = (janus_session *)handle->session;
 		if(session != NULL) {
 			json_t *event = json_object();
@@ -1920,10 +2147,10 @@ static void janus_slow_link_update(janus_ice_component *component, janus_ice_han
 			json_object_set_new(event, "media", json_string(video ? "video" : "audio"));
 			json_object_set_new(event, "uplink", uplink ? json_true() : json_false());
 			json_object_set_new(event, "lost", json_integer(sl_lost_recently));
-			/* Send the event */
+			/* Send the event 发送插件事件通知 */
 			JANUS_LOG(LOG_VERB, "[%"SCNu64"] Sending event to transport...; %p\n", handle->handle_id, handle);
 			janus_session_notify_event(session, event);
-			/* Finally, notify event handlers */
+			/* Finally, notify event handlers 最后发送广播事件 */
 			if(janus_events_is_enabled()) {
 				json_t *info = json_object();
 				json_object_set_new(info, "media", json_string(video ? "video" : "audio"));
@@ -1934,7 +2161,7 @@ static void janus_slow_link_update(janus_ice_component *component, janus_ice_han
 			}
 		}
 	}
-	/* Update the counter */
+	/* Update the counter 更新计数器 */
 	if(uplink) {
 		if(video)
 			component->in_stats.sl_lost_count_video = lost;
@@ -1949,7 +2176,8 @@ static void janus_slow_link_update(janus_ice_component *component, janus_ice_han
 }
 
 
-/* ICE state check timer (needed to check if a failed really is definitive or if things can still improve) */
+/* ICE state check timer (needed to check if a failed really is definitive or if things can still improve) 
+ICE 状态检查计时器（需要检查失败是否真的是确定的，或者情况是否仍然可以改善）*/
 static gboolean janus_ice_check_failed(gpointer data) {
 	janus_ice_component *component = (janus_ice_component *)data;
 	if(component == NULL)
@@ -1964,20 +2192,23 @@ static gboolean janus_ice_check_failed(gpointer data) {
 			janus_flags_is_set(&handle->webrtc_flags, JANUS_ICE_HANDLE_WEBRTC_ALERT))
 		goto stoptimer;
 	if(component->state == NICE_COMPONENT_STATE_CONNECTED || component->state == NICE_COMPONENT_STATE_READY) {
-		/* ICE succeeded in the meanwhile, get rid of this timer */
+		/* ICE succeeded in the meanwhile, get rid of this timer ICE成功了，去掉这个定时器 */
 		JANUS_LOG(LOG_VERB, "[%"SCNu64"] ICE succeeded, disabling ICE state check timer!\n", handle->handle_id);
 		goto stoptimer;
 	}
-	/* Still in the failed state, how much time passed since we first detected it? */
+	/* Still in the failed state, how much time passed since we first detected it? 
+	仍然处于失败状态，距离我们第一次检测到它已经过去了多少时间？*/
 	if(janus_get_monotonic_time() - component->icefailed_detected < 5*G_USEC_PER_SEC) {
-		/* Let's wait a little longer */
+		/* Let's wait a little longer 让我们再等等 */
 		return TRUE;
 	}
-	/* If we got here it means the timer expired, and we should check if this is a failure */
+	/* If we got here it means the timer expired, and we should check if this is a failure 
+	如果我们到达这里，则意味着计时器已过期，我们应该检查这是否失败 */
 	gboolean trickle_recv = (!janus_flags_is_set(&handle->webrtc_flags, JANUS_ICE_HANDLE_WEBRTC_TRICKLE) || janus_flags_is_set(&handle->webrtc_flags, JANUS_ICE_HANDLE_WEBRTC_ALL_TRICKLES));
 	gboolean answer_recv = janus_flags_is_set(&handle->webrtc_flags, JANUS_ICE_HANDLE_WEBRTC_GOT_ANSWER);
 	gboolean alert_set = janus_flags_is_set(&handle->webrtc_flags, JANUS_ICE_HANDLE_WEBRTC_ALERT);
-	/* We may still be waiting for something... but we don't wait forever */
+	/* We may still be waiting for something... but we don't wait forever 
+	我们可能还在等待什么……但我们不会永远等待 */
 	gboolean do_wait = TRUE;
 	if(janus_get_monotonic_time() - component->icefailed_detected >= 15*G_USEC_PER_SEC) {
 		do_wait = FALSE;
@@ -1989,7 +2220,7 @@ static gboolean janus_ice_check_failed(gpointer data) {
 		janus_ice_webrtc_hangup(handle, "ICE failed");
 		goto stoptimer;
 	}
-	/* Let's wait a little longer */
+	/* Let's wait a little longer 让我们再等等 */
 	JANUS_LOG(LOG_WARN, "[%"SCNu64"] ICE failed for component %d in stream %d, but we're still waiting for some info so we don't care... (trickle %s, answer %s, alert %s)\n",
 		handle->handle_id, component->component_id, stream->stream_id,
 		trickle_recv ? "received" : "pending",
@@ -2026,12 +2257,21 @@ static void janus_ice_cb_candidate_gathering_done(NiceAgent *agent, guint stream
 	}
 }
 
+/**
+ * @brief ICE组件状态改变了的回调函数
+ * 
+ * @param agent 
+ * @param stream_id 
+ * @param component_id 
+ * @param state 
+ * @param ice 
+ */
 static void janus_ice_cb_component_state_changed(NiceAgent *agent, guint stream_id, guint component_id, guint state, gpointer ice) {
 	janus_ice_handle *handle = (janus_ice_handle *)ice;
 	if(!handle)
 		return;
 	if(component_id > 1) {
-		/* State changed for a component we don't need anymore (rtcp-mux) */
+		/* State changed for a component we don't need anymore (rtcp-mux) 一些我们不需要的组件被改变了状态 */
 		return;
 	}
 	JANUS_LOG(LOG_VERB, "[%"SCNu64"] Component state changed for component %d in stream %d: %d (%s)\n",
@@ -2047,7 +2287,7 @@ static void janus_ice_cb_component_state_changed(NiceAgent *agent, guint stream_
 		return;
 	}
 	component->state = state;
-	/* Notify event handlers */
+	/* Notify event handlers 通知事件handlers 广播*/
 	if(janus_events_is_enabled()) {
 		janus_session *session = (janus_session *)handle->session;
 		json_t *info = json_object();
@@ -2057,9 +2297,11 @@ static void janus_ice_cb_component_state_changed(NiceAgent *agent, guint stream_
 		janus_events_notify_handlers(JANUS_EVENT_TYPE_WEBRTC, JANUS_EVENT_SUBTYPE_WEBRTC_ICE,
 			session->session_id, handle->handle_id, handle->opaque_id, info);
 	}
-	/* FIXME Even in case the state is 'connected', we wait for the 'new-selected-pair' callback to do anything */
+	/* FIXME Even in case the state is 'connected', we wait for the 'new-selected-pair' callback to do anything 
+	即使状态是“已连接”，我们也会等待“new-selected-pair”回调来做一些事情 */
 	if(state == NICE_COMPONENT_STATE_FAILED) {
-		/* Failed doesn't mean necessarily we need to give up: we may be trickling */
+		/* Failed doesn't mean necessarily we need to give up: we may be trickling 
+		失败并不意味着我们必须放弃, 我们可能正在trickling */
 		gboolean alert_set = janus_flags_is_set(&handle->webrtc_flags, JANUS_ICE_HANDLE_WEBRTC_ALERT);
 		if(alert_set)
 			return;
@@ -2070,7 +2312,9 @@ static void janus_ice_cb_component_state_changed(NiceAgent *agent, guint stream_
 			trickle_recv ? "received" : "pending",
 			answer_recv ? "received" : "pending",
 			alert_set ? "set" : "not set");
-		/* In case we haven't started a timer yet, let's do it now */
+		/* In case we haven't started a timer yet, let's do it now 
+		以防我们没有开始定时器，让我们开始
+		*/
 		if(component->icestate_source == NULL && component->icefailed_detected == 0) {
 			component->icefailed_detected = janus_get_monotonic_time();
 			component->icestate_source = g_timeout_source_new(500);
@@ -2207,7 +2451,7 @@ static void janus_ice_cb_new_selected_pair (NiceAgent *agent, guint stream_id, g
 	g_main_context_wakeup(handle->mainctx);
 }
 
-/* Candidates management */
+/* Candidates management candidates管理的一些方法 */
 static int janus_ice_candidate_to_string(janus_ice_handle *handle, NiceCandidate *c, char *buffer, int buflen, gboolean log_candidate, gboolean force_private, guint public_ip_index);
 #ifndef HAVE_LIBNICE_TCP
 static void janus_ice_cb_new_local_candidate (NiceAgent *agent, guint stream_id, guint component_id, gchar *foundation, gpointer ice) {
@@ -4126,8 +4370,7 @@ int janus_ice_setup_local(janus_ice_handle *handle, int offer, int audio, int vi
 		janus_ice_webrtc_hangup(handle, "Gathering error");
 		return -1;
 	}
-	nice_agent_attach_recv(handle->agent, handle->stream_id, 1, g_main_loop_get_context(handle->mainloop),
-		janus_ice_cb_nice_recv, component);
+	nice_agent_attach_recv(handle->agent, handle->stream_id, 1, g_main_loop_get_context(handle->mainloop), janus_ice_cb_nice_recv, component);
 #ifdef HAVE_TURNRESTAPI
 	if(turnrest_credentials != NULL) {
 		janus_turnrest_response_destroy(turnrest_credentials);
@@ -4746,7 +4989,9 @@ static gboolean janus_ice_outgoing_traffic_handle(janus_ice_handle *handle, janu
 		janus_ice_webrtc_free(handle);
 		return G_SOURCE_CONTINUE;
 	} else if(pkt == &janus_ice_detach_handle) {
-		/* This handle has just been detached, notify the plugin */
+		/* This handle has just been detached, notify the plugin 
+		此handle刚刚分离，通知插件
+		*/
 		janus_plugin *plugin = (janus_plugin *)handle->app;
 		JANUS_LOG(LOG_VERB, "[%"SCNu64"] Telling the plugin about the handle detach (%s)\n",
 			handle->handle_id, plugin ? plugin->get_name() : "??");

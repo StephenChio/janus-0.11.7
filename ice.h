@@ -44,7 +44,7 @@ void janus_ice_init(gboolean ice_lite, gboolean ice_tcp, gboolean full_trickle, 
 	gboolean ipv6, gboolean ipv6_linklocal, uint16_t rtp_min_port, uint16_t rtp_max_port);
 /*! \brief ICE stuff de-initialization */
 void janus_ice_deinit(void);
-/*! \brief Method to check whether a STUN server is reachable
+/*! \brief Method to check whether a STUN server is reachable 检查 STUN 服务器是否可达
  * @param[in] addr Address of the STUN server as a janus_network_address instance
  * @param[in] port Port of the STUN server
  * @param[in] local_port Local port to bind to (0 means random choice)
@@ -293,7 +293,7 @@ typedef struct janus_ice_stats {
 	guint sl_lost_count_video;
 } janus_ice_stats;
 
-/*! \brief Quick helper method to notify a WebRTC hangup through the Janus API
+/*! \brief Quick helper method to notify a WebRTC hangup through the Janus API 通过 Janus API 通知 WebRTC 挂断
  * @param handle The janus_ice_handle instance this event refers to
  * @param reason A description of why this happened */
 void janus_ice_notify_hangup(janus_ice_handle *handle, const char *reason);
@@ -384,7 +384,7 @@ struct janus_ice_handle {
 	GList *pending_trickles;
 	/*! \brief Queue of remote candidates that still need to be processed */
 	GAsyncQueue *queued_candidates;
-	/*! \brief Queue of events in the loop and outgoing packets to send */
+	/*! \brief Queue of events in the loop and outgoing packets to send 循环中的事件要发送的传出数据包的队列 */
 	GAsyncQueue *queued_packets;
 	/*! \brief Count of the recent SRTP replay errors, in order to avoid spamming the logs */
 	guint srtp_errors_count;
@@ -392,7 +392,8 @@ struct janus_ice_handle {
 	gint last_srtp_error, last_srtp_summary;
 	/*! \brief Count of how many seconds passed since the last stats passed to event handlers */
 	gint last_event_stats;
-	/*! \brief Flag to decide whether or not packets need to be dumped to a text2pcap file */
+	/*! \brief Flag to decide whether or not packets need to be dumped to a text2pcap file 
+	决定是否需要将数据包转储到 text2pcap 文件的标志 */
 	volatile gint dump_packets;
 	/*! \brief In case this session must be saved to text2pcap, the instance to dump packets to */
 	janus_text2pcap *text2pcap;
@@ -402,7 +403,7 @@ struct janus_ice_handle {
 	volatile gint closepc;
 	/*! \brief Atomic flag to check if this instance has been destroyed */
 	volatile gint destroyed;
-	/*! \brief Reference counter for this instance */
+	/*! \brief Reference counter for this instance 该实例的引用计数 */
 	janus_refcount ref;
 };
 
@@ -458,9 +459,9 @@ struct janus_ice_stream {
 	uint32_t remb_bitrate;
 	/*! \brief Size of the NACK queue (in ms), dynamically updated per the RTT  # NACK 队列的大小（以毫秒为单位），根据 RTT 动态更新 */
 	uint16_t nack_queue_ms;
-	/*! \brief Map(s) of the NACKed packets (to track retransmissions and avoid duplicates) */
+	/*! \brief Map(s) of the NACKed packets (to track retransmissions and avoid duplicates) NACKed 数据包的Map（用于跟踪重传并避免重复）*/
 	GHashTable *rtx_nacked[3];
-	/*! \brief Map of the pending NACKed cleanup callback */
+	/*! \brief Map of the pending NACKed cleanup callback 代办的 Nacked 包 清理回调函数的Map*/
 	GHashTable *pending_nacked_cleanup;
 	/*! \brief First received audio NTP timestamp */
 	gint64 audio_first_ntp_ts;
@@ -541,19 +542,19 @@ struct janus_ice_component {
 	guint state;
 	/*! \brief Monotonic time of when this component has successfully connected */
 	gint64 component_connected;
-	/*! \brief GLib list of libnice remote candidates for this component */
+	/*! \brief GLib list of libnice remote candidates for this component 此组件的 libnice 远程candidate的列表*/
 	GSList *candidates;
 	/*! \brief GLib list of local candidates for this component (summary) 此组件的本地候选者的 GLib 列表（摘要）*/
 	GSList *local_candidates;
 	/*! \brief GLib list of remote candidates for this component (summary) 此组件的远端候选者的 GLib 列表（摘要） */
 	GSList *remote_candidates;
-	/*! \brief String representation of the selected pair as notified by libnice (foundations) */
+	/*! \brief String representation of the selected pair as notified by libnice (foundations) libnice 通知的选定对 */
 	gchar *selected_pair;
 	/*! \brief Whether the setup of remote candidates for this component has started or not */
 	gboolean process_started;
-	/*! \brief Timer to check when we should consider ICE as failed */
+	/*! \brief Timer to check when we should consider ICE as failed 检查我们何时应将 ICE 视为失败的计时器 */
 	GSource *icestate_source;
-	/*! \brief Time of when we first detected an ICE failed (we'll need this for the timer above) */
+	/*! \brief Time of when we first detected an ICE failed (we'll need this for the timer above) 我们第一次检测到 ICE 失败的时间（上面的计时器需要这个） */
 	gint64 icefailed_detected;
 	/*! \brief Re-transmission timer for DTLS */
 	GSource *dtlsrt_source;

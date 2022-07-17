@@ -966,7 +966,11 @@ void janus_dtls_srtp_send_alert(janus_dtls_srtp *dtls) {
 	}
 	janus_refcount_decrease(&dtls->ref);
 }
-
+/**
+ * @brief 销毁 janus_dtls_srtp 实例
+ * 
+ * @param dtls 
+ */
 void janus_dtls_srtp_destroy(janus_dtls_srtp *dtls) {
 	if(!dtls || !g_atomic_int_compare_and_exchange(&dtls->destroyed, 0, 1))
 		return;
@@ -982,9 +986,9 @@ void janus_dtls_srtp_destroy(janus_dtls_srtp *dtls) {
 	janus_refcount_decrease(&dtls->ref);
 }
 
-/* DTLS alert callback */
+/* DTLS alert callback DTLS警报回调函数 */
 void janus_dtls_callback(const SSL *ssl, int where, int ret) {
-	/* We only care about alerts */
+	/* We only care about alerts我们只关心警报 */
 	if(!(where & SSL_CB_ALERT)) {
 		return;
 	}
@@ -1012,21 +1016,26 @@ void janus_dtls_callback(const SSL *ssl, int where, int ret) {
 	janus_ice_webrtc_hangup(handle, "DTLS alert");
 }
 
-/* DTLS certificate verification callback */
+/* DTLS certificate verification callback  DTLS证书验证回调 */
 int janus_dtls_verify_callback(int preverify_ok, X509_STORE_CTX *ctx) {
-	/* We just use the verify_callback to request a certificate from the client */
+	/* We just use the verify_callback to request a certificate from the client 
+	我们只是使用 verify_callback 从客户端请求证书 */
 	int err = X509_STORE_CTX_get_error(ctx);
 	if(err == X509_V_ERR_DEPTH_ZERO_SELF_SIGNED_CERT || err == X509_V_ERR_SELF_SIGNED_CERT_IN_CHAIN) {
-		/* Self signed certificate: by default we always accept it */
+		/* Self signed certificate: by default we always accept it
+		自签名证书：默认情况下，我们始终接受它 */
 		if(!dtls_selfsigned_certs_ok) {
-			/* ... unless we're enforcing validation */
+			/* ... unless we're enforcing validation
+			除非我们强制执行验证 */
 			return 0;
 		}
 	}
-	/* We always reject expired certificates, even when self-signed */
+	/* We always reject expired certificates, even when self-signed
+	我们总是拒绝过期的证书，即使是自签名的 */
 	if(err == X509_V_ERR_CERT_HAS_EXPIRED)
 		return 0;
-	/* Return a success if we're ok with self-signed, the result of the validation otherwise */
+	/* Return a success if we're ok with self-signed, the result of the validation otherwise 
+	如果我们对自签名没问题，则返回成功，否则返回验证结果*/
 	return dtls_selfsigned_certs_ok ? 1 : (err == X509_V_OK);
 }
 

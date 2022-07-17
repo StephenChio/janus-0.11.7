@@ -1480,17 +1480,17 @@ static janus_videoroom_message exit_message;
 
 
 typedef struct janus_videoroom {
-	guint64 room_id;			/* Unique room ID (when using integers) */
-	gchar *room_id_str;			/* Unique room ID (when using strings) */
-	gchar *room_name;			/* Room description */
-	gchar *room_secret;			/* Secret needed to manipulate (e.g., destroy) this room */
-	gchar *room_pin;			/* Password needed to join this room, if any */
-	gboolean is_private;		/* Whether this room is 'private' (as in hidden) or not */
-	gboolean require_pvtid;		/* Whether subscriptions in this room require a private_id */
-	gboolean signed_tokens;		/* Whether signed tokens are required (assuming they're enabled in the core)  */
-	gboolean require_e2ee;		/* Whether end-to-end encrypted publishers are required */
-	int max_publishers;			/* Maximum number of concurrent publishers */
-	uint32_t bitrate;			/* Global bitrate limit */
+	guint64 room_id;			/* Unique room ID (when using integers) 唯一的房间ID 整型 */
+	gchar *room_id_str;			/* Unique room ID (when using strings) 唯一的房间ID 字符串*/
+	gchar *room_name;			/* Room description 房间描述*/
+	gchar *room_secret;			/* Secret needed to manipulate (e.g., destroy) this room 操作房间所需要的密钥 */
+	gchar *room_pin;			/* Password needed to join this room, if any 加入房间需要的密码，如果有 */
+	gboolean is_private;		/* Whether this room is 'private' (as in hidden) or not 房间是否是‘私有’的, 如果是, 不能被搜索到 */
+	gboolean require_pvtid;		/* Whether subscriptions in this room require a private_id 此房间中的订阅是否需要 private_id*/
+	gboolean signed_tokens;		/* Whether signed tokens are required (assuming they're enabled in the core) 是否需要签名令牌（假设它们在核心中启用） */
+	gboolean require_e2ee;		/* Whether end-to-end encrypted publishers are required 是否需要端到端加密发布者 */
+	int max_publishers;			/* Maximum number of concurrent publishers 发布者的最大数量 */
+	uint32_t bitrate;			/* Global bitrate limit 全局比特率限制 */
 	gboolean bitrate_cap;		/* Whether the above limit is insormountable */
 	uint16_t fir_freq;			/* Regular FIR frequency (0=disabled) */
 	janus_audiocodec acodec[5];	/* Audio codec(s) to force on publishers */
@@ -6067,7 +6067,7 @@ static void janus_videoroom_hangup_media_internal(gpointer session_data) {
 	g_atomic_int_set(&session->hangingup, 0);
 }
 
-/* Thread to handle incoming messages */
+/* Thread to handle incoming messages 这是专门的线程来处理进入到videoRoom插件的消息 */
 static void *janus_videoroom_handler(void *data) {
 	JANUS_LOG(LOG_VERB, "Joining VideoRoom handler thread\n");
 	janus_videoroom_message *msg = NULL;

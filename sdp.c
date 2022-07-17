@@ -978,11 +978,13 @@ int janus_sdp_parse_candidate(void *ice_stream, const char *candidate, int trick
 							janus_flags_set(&handle->webrtc_flags, JANUS_ICE_HANDLE_WEBRTC_START);
 							/* This is a trickle candidate and ICE has started, we should process it right away */
 							if(!component->process_started) {
-								/* Actually, ICE has JUST started for this component, take care of the candidates we've added so far */
+								/* Actually, ICE has JUST started for this component, take care of the candidates we've added so far
+								实际上，这个组件的ICE刚刚开始，请注意我们目前添加的候选者 */
 								JANUS_LOG(LOG_VERB, "[%"SCNu64"] SDP processed but ICE not started yet for this component, setting candidates we have up to now\n", handle->handle_id);
 								janus_ice_setup_remote_candidates(handle, component->stream_id, component->component_id);
 							} else {
-								/* Queue the candidate, we'll process it in the loop */
+								/* Queue the candidate, we'll process it in the loop 
+								将candidate入队，我们将在循环中处理它*/
 								janus_ice_add_remote_candidate(handle, c);
 							}
 						} else {
