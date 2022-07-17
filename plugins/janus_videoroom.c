@@ -1491,33 +1491,33 @@ typedef struct janus_videoroom {
 	gboolean require_e2ee;		/* Whether end-to-end encrypted publishers are required 是否需要端到端加密发布者 */
 	int max_publishers;			/* Maximum number of concurrent publishers 发布者的最大数量 */
 	uint32_t bitrate;			/* Global bitrate limit 全局比特率限制 */
-	gboolean bitrate_cap;		/* Whether the above limit is insormountable */
-	uint16_t fir_freq;			/* Regular FIR frequency (0=disabled) */
-	janus_audiocodec acodec[5];	/* Audio codec(s) to force on publishers */
-	janus_videocodec vcodec[5];	/* Video codec(s) to force on publishers */
-	char *vp9_profile;			/* VP9 codec profile to prefer, if more are negotiated */
-	char *h264_profile;			/* H.264 codec profile to prefer, if more are negotiated */
-	gboolean do_opusfec;		/* Whether inband FEC must be negotiated (note: only available for Opus) */
-	gboolean do_opusdtx;		/* Whether DTX must be negotiated (note: only available for Opus) */
-	gboolean do_svc;			/* Whether SVC must be done for video (note: only available for VP9 right now) */
-	gboolean audiolevel_ext;	/* Whether the ssrc-audio-level extension must be negotiated or not for new publishers */
-	gboolean audiolevel_event;	/* Whether to emit event to other users about audiolevel */
-	int audio_active_packets;	/* Amount of packets with audio level for checkup */
-	int audio_level_average;	/* Average audio level */
-	gboolean videoorient_ext;	/* Whether the video-orientation extension must be negotiated or not for new publishers */
-	gboolean playoutdelay_ext;	/* Whether the playout-delay extension must be negotiated or not for new publishers */
-	gboolean transport_wide_cc_ext;	/* Whether the transport wide cc extension must be negotiated or not for new publishers */
-	gboolean record;			/* Whether the feeds from publishers in this room should be recorded */
-	char *rec_dir;				/* Where to save the recordings of this room, if enabled */
-	gboolean lock_record;		/* Whether recording state can only be changed providing the room secret */
-	GHashTable *participants;	/* Map of potential publishers (we get subscribers from them) */
-	GHashTable *private_ids;	/* Map of existing private IDs */
-	volatile gint destroyed;	/* Whether this room has been destroyed */
-	gboolean check_allowed;		/* Whether to check tokens when participants join (see below) */
-	GHashTable *allowed;		/* Map of participants (as tokens) allowed to join */
-	gboolean notify_joining;	/* Whether an event is sent to notify all participants if a new participant joins the room */
-	janus_mutex mutex;			/* Mutex to lock this room instance */
-	janus_refcount ref;			/* Reference counter for this room */
+	gboolean bitrate_cap;		/* Whether the above limit is insormountable 上述限制（全局比特率限制）是否不可逾越 */
+	uint16_t fir_freq;			/* Regular FIR frequency (0=disabled) 常规 FIR 频率（0=禁用） */
+	janus_audiocodec acodec[5];	/* Audio codec(s) to force on publishers 强制发布者使用的音频编解码器*/
+	janus_videocodec vcodec[5];	/* Video codec(s) to force on publishers 强制发布者使用的视频编解码器*/
+	char *vp9_profile;			/* VP9 codec profile to prefer, if more are negotiated  VP9 编解码器配置文件,如果我们有协商*/
+	char *h264_profile;			/* H.264 codec profile to prefer, if more are negotiated H264 编解码器配置文件,如果我们有协商*/
+	gboolean do_opusfec;		/* Whether inband FEC must be negotiated (note: only available for Opus) 是否必须协商带 inband FEC（注：仅适用于 Opus） */
+	gboolean do_opusdtx;		/* Whether DTX must be negotiated (note: only available for Opus) 是否必须协商 DTX（注：仅适用于 Opus）*/
+	gboolean do_svc;			/* Whether SVC must be done for video (note: only available for VP9 right now) 视频是否必须 SVC（注：目前仅适用于 VP9） */
+	gboolean audiolevel_ext;	/* Whether the ssrc-audio-level extension must be negotiated or not for new publishers 是否必须为新发布者协商 ssrc-audio-level 扩展 */
+	gboolean audiolevel_event;	/* Whether to emit event to other users about audiolevel 是否向其他用户发出有关音频级别的事件*/
+	int audio_active_packets;	/* Amount of packets with audio level for checkup 用于检查的音频级别的数据包数量 */
+	int audio_level_average;	/* Average audio level 平均音频级别 */
+	gboolean videoorient_ext;	/* Whether the video-orientation extension must be negotiated or not for new publishers 是否必须为新发布者协商视频方向扩展*/
+	gboolean playoutdelay_ext;	/* Whether the playout-delay extension must be negotiated or not for new publishers 是否必须为新发布者协商播放延迟扩展*/
+	gboolean transport_wide_cc_ext;	/* Whether the transport wide cc extension must be negotiated or not for new publishers 是否必须为新发布者协商 拥塞控制 扩展*/
+	gboolean record;			/* Whether the feeds from publishers in this room should be recorded 是否应该保存房间里的发布者feeds*/
+	char *rec_dir;				/* Where to save the recordings of this room, if enabled 保存房间记录的地方，如果开启*/
+	gboolean lock_record;		/* Whether recording state can only be changed providing the room secret 是否只有提供房间密码才能更改录制状态*/
+	GHashTable *participants;	/* Map of potential publishers (we get subscribers from them) 潜在发布者Map（我们从他们那里获得订阅者）*/
+	GHashTable *private_ids;	/* Map of existing private IDs 存在的私有id map */
+	volatile gint destroyed;	/* Whether this room has been destroyed 是否房间已被销毁 */
+	gboolean check_allowed;		/* Whether to check tokens when participants join (see below) 当参加者入会时是否要检查tokens */
+	GHashTable *allowed;		/* Map of participants (as tokens) allowed to join 可以允许加入的参与者 */
+	gboolean notify_joining;	/* Whether an event is sent to notify all participants if a new participant joins the room 当有新加入者时是否通知房间里的所有参与者 */
+	janus_mutex mutex;			/* Mutex to lock this room instance 锁 */
+	janus_refcount ref;			/* Reference counter for this room 引用计数 */
 } janus_videoroom;
 static GHashTable *rooms;
 static janus_mutex rooms_mutex = JANUS_MUTEX_INITIALIZER;
@@ -1540,7 +1540,7 @@ typedef struct janus_videoroom_session {
 static GHashTable *sessions;
 static janus_mutex sessions_mutex = JANUS_MUTEX_INITIALIZER;
 
-/* A host whose ports gets streamed RTP packets of the corresponding type */
+/* A host whose ports gets streamed RTP packets of the corresponding type 主机端口获取相应类型的流式 RTP 数据包*/
 typedef struct janus_videoroom_srtp_context janus_videoroom_srtp_context;
 typedef struct janus_videoroom_rtp_forwarder {
 	void *source;
@@ -1551,15 +1551,15 @@ typedef struct janus_videoroom_rtp_forwarder {
 	int substream;
 	struct sockaddr_in serv_addr;
 	struct sockaddr_in6 serv_addr6;
-	/* Only needed for RTCP */
+	/* Only needed for RTCP 只有RTCP需要 */
 	int rtcp_fd;
 	uint16_t local_rtcp_port, remote_rtcp_port;
 	GSource *rtcp_recv;
-	/* Only needed when forwarding simulcasted streams to a single endpoint */
+	/* Only needed when forwarding simulcasted streams to a single endpoint 仅在将联播流转发到单个端点时需要 */
 	gboolean simulcast;
 	janus_rtp_switching_context context;
 	janus_rtp_simulcasting_context sim_context;
-	/* Only needed for SRTP forwarders */
+	/* Only needed for SRTP forwarders 只有SRTP转发需要 */
 	gboolean is_srtp;
 	janus_videoroom_srtp_context *srtp_ctx;
 	/* Reference */
@@ -1568,7 +1568,7 @@ typedef struct janus_videoroom_rtp_forwarder {
 } janus_videoroom_rtp_forwarder;
 static void janus_videoroom_rtp_forwarder_destroy(janus_videoroom_rtp_forwarder *forward);
 static void janus_videoroom_rtp_forwarder_free(const janus_refcount *f_ref);
-/* SRTP encryption may be needed, and potentially shared */
+/* SRTP encryption may be needed, and potentially shared 可能需要 SRTP 加密，并且可能共享*/
 struct janus_videoroom_srtp_context {
 	GHashTable *contexts;
 	char *id;
@@ -1576,11 +1576,11 @@ struct janus_videoroom_srtp_context {
 	srtp_policy_t policy;
 	char sbuf[1500];
 	int slen;
-	/* Keep track of how many forwarders are using this context */
+	/* Keep track of how many forwarders are using this context 跟踪有多少转发器正在使用此上下文 */
 	uint8_t count;
 };
 static void janus_videoroom_srtp_context_free(gpointer data);
-/* RTCP support in RTP forwarders */
+/* RTCP support in RTP forwarders RTP 转发器中的 RTCP 支持 */
 typedef struct janus_videoroom_rtcp_receiver {
 	GSource parent;
 	janus_videoroom_rtp_forwarder *forward;
@@ -1593,7 +1593,7 @@ static gboolean janus_videoroom_rtp_forwarder_rtcp_prepare(GSource *source, gint
 }
 static gboolean janus_videoroom_rtp_forwarder_rtcp_dispatch(GSource *source, GSourceFunc callback, gpointer user_data) {
 	janus_videoroom_rtcp_receiver *r = (janus_videoroom_rtcp_receiver *)source;
-	/* Receive the packet */
+	/* Receive the packet 接收包 */
 	if(r)
 		janus_videoroom_rtp_forwarder_rtcp_receive(r->forward);
 	return G_SOURCE_CONTINUE;
@@ -1601,7 +1601,7 @@ static gboolean janus_videoroom_rtp_forwarder_rtcp_dispatch(GSource *source, GSo
 static void janus_videoroom_publisher_dereference_void(void *p);
 static void janus_videoroom_rtp_forwarder_rtcp_finalize(GSource *source) {
 	janus_videoroom_rtcp_receiver *r = (janus_videoroom_rtcp_receiver *)source;
-	/* Remove the reference to the forwarder */
+	/* Remove the reference to the forwarder 移除forwarder的引用 */
 	if(r && r->forward) {
 		if(r->forward->source) {
 			janus_videoroom_publisher_dereference_void(r->forward->source);
@@ -1625,62 +1625,62 @@ static void *janus_videoroom_rtp_forwarder_rtcp_thread(void *data);
 typedef struct janus_videoroom_publisher {
 	janus_videoroom_session *session;
 	janus_videoroom *room;	/* Room */
-	guint64 room_id;	/* Unique room ID */
-	gchar *room_id_str;	/* Unique room ID (when using strings) */
-	guint64 user_id;	/* Unique ID in the room */
-	gchar *user_id_str;	/* Unique ID in the room (when using strings) */
-	guint32 pvt_id;		/* This is sent to the publisher for mapping purposes, but shouldn't be shared with others */
-	gchar *display;		/* Display name (just for fun) */
-	gchar *sdp;			/* The SDP this publisher negotiated, if any */
-	gboolean audio, video, data;		/* Whether audio, video and/or data is going to be sent by this publisher */
-	janus_audiocodec acodec;	/* Audio codec this publisher is using */
-	janus_videocodec vcodec;	/* Video codec this publisher is using */
-	guint32 audio_pt;		/* Audio payload type (Opus) */
-	guint32 video_pt;		/* Video payload type (depends on room configuration) */
-	char *vfmtp;			/* Video fmtp that ended up being negotiated, if any */
-	guint32 audio_ssrc;		/* Audio SSRC of this publisher */
-	guint32 video_ssrc;		/* Video SSRC of this publisher */
-	gboolean do_opusfec;	/* Whether this publisher is sending inband Opus FEC */
-	gboolean do_opusdtx;	/* Whether this publisher is using Opus DTX (Discontinuous Transmission) */
-	uint32_t ssrc[3];		/* Only needed in case VP8 (or H.264) simulcasting is involved */
-	char *rid[3];			/* Only needed if simulcasting is rid-based */
-	int rid_extmap_id;		/* rid extmap ID */
-	guint8 audio_level_extmap_id;		/* Audio level extmap ID */
-	guint8 video_orient_extmap_id;		/* Video orientation extmap ID */
-	guint8 playout_delay_extmap_id;		/* Playout delay extmap ID */
+	guint64 room_id;	/* Unique room ID 房间id 整型*/
+	gchar *room_id_str;	/* Unique room ID (when using strings) 房间id 字符串*/
+	guint64 user_id;	/* Unique ID in the room 房间内的唯一id 整型*/
+	gchar *user_id_str;	/* Unique ID in the room (when using strings) 房间内的唯一id 字符串*/
+	guint32 pvt_id;		/* This is sent to the publisher for mapping purposes, but shouldn't be shared with others 这将发送给发布者以用于映射目的，但不应与其他人共享*/
+	gchar *display;		/* Display name (just for fun) 展示名称 */
+	gchar *sdp;			/* The SDP this publisher negotiated, if any 这个发布者协商的sdp */
+	gboolean audio, video, data;		/* Whether audio, video and/or data is going to be sent by this publisher 这个发布者发送的是音频，视频还是data */
+	janus_audiocodec acodec;	/* Audio codec this publisher is using 发布者使用的音频编解码器 */
+	janus_videocodec vcodec;	/* Video codec this publisher is using 发布者使用的视频编解码器 */
+	guint32 audio_pt;		/* Audio payload type (Opus) 音频payload类型 */
+	guint32 video_pt;		/* Video payload type (depends on room configuration) 视频payload类型（取决于房间配置） */
+	char *vfmtp;			/* Video fmtp that ended up being negotiated, if any 最终协商的视频 fmtp */
+	guint32 audio_ssrc;		/* Audio SSRC of this publisher 此发布者的音频 SSRC*/
+	guint32 video_ssrc;		/* Video SSRC of this publisher 此发布者的视频 SSRC*/
+	gboolean do_opusfec;	/* Whether this publisher is sending inband Opus FEC 这个发布者是否发送inband Opus FEC */
+	gboolean do_opusdtx;	/* Whether this publisher is using Opus DTX (Discontinuous Transmission) 此发布者是否使用 Opus DTX（不连续传输）*/
+	uint32_t ssrc[3];		/* Only needed in case VP8 (or H.264) simulcasting is involved 仅在涉及 VP8（或 H.264）联播的情况下才需要 */
+	char *rid[3];			/* Only needed if simulcasting is rid-based 仅当联播是基于 rid 时才需要 */
+	int rid_extmap_id;		/* rid extmap ID #rid extmap ID */
+	guint8 audio_level_extmap_id;		/* Audio level extmap ID 音频级别 extmap ID */
+	guint8 video_orient_extmap_id;		/* Video orientation extmap ID 视频方向extmap ID */
+	guint8 playout_delay_extmap_id;		/* Playout delay extmap ID 播出延迟extmap ID */
 	gboolean audio_active, audio_muted;
 	gboolean video_active, video_muted;
-	int audio_dBov_level;		/* Value in dBov of the audio level (last value from extension) */
-	int audio_active_packets;	/* Participant's number of audio packets to accumulate */
-	int audio_dBov_sum;			/* Participant's accumulated dBov value for audio level*/
-	int user_audio_active_packets;	/* Participant's audio_active_packets overwriting global room setting */
-	int user_audio_level_average;	/* Participant's audio_level_average overwriting global room setting */
-	gboolean talking; /* Whether this participant is currently talking (uses audio levels extension) */
+	int audio_dBov_level;		/* Value in dBov of the audio level (last value from extension) 音频级别的 dBov 值（扩展的最后一个值） */
+	int audio_active_packets;	/* Participant's number of audio packets to accumulate 参与者要累积的音频包数 */
+	int audio_dBov_sum;			/* Participant's accumulated dBov value for audio level 参与者的音频级别累积 dBov 值*/
+	int user_audio_active_packets;	/* Participant's audio_active_packets overwriting global room setting 参与者的 audio_active_packets 覆盖全局房间设置 */
+	int user_audio_level_average;	/* Participant's audio_level_average overwriting global room setting 参与者的 audio_level_average 覆盖全局房间设置 */
+	gboolean talking; /* Whether this participant is currently talking (uses audio levels extension) 此参与者当前是否正在讲话（使用音频级别扩展） */
 	gboolean data_active, data_muted;
-	gboolean firefox;	/* We send Firefox users a different kind of FIR */
+	gboolean firefox;	/* We send Firefox users a different kind of FIR 我们向 Firefox 用户发送不同类型的 FIR */
 	uint32_t bitrate;
 	gint64 remb_startup;/* Incremental changes on REMB to reach the target at startup */
-	gint64 remb_latest;	/* Time of latest sent REMB (to avoid flooding) */
-	gint64 fir_latest;	/* Time of latest sent FIR (to avoid flooding) */
-	gint fir_seq;		/* FIR sequence number */
-	gboolean recording_active;	/* Whether this publisher has to be recorded or not */
-	gchar *recording_base;	/* Base name for the recording (e.g., /path/to/filename, will generate /path/to/filename-audio.mjr and/or /path/to/filename-video.mjr */
-	janus_recorder *arc;	/* The Janus recorder instance for this publisher's audio, if enabled */
-	janus_recorder *vrc;	/* The Janus recorder instance for this user's video, if enabled */
-	janus_recorder *drc;	/* The Janus recorder instance for this publisher's data, if enabled */
+	gint64 remb_latest;	/* Time of latest sent REMB (to avoid flooding) 最近发送REMB的时间（避免泛滥） */
+	gint64 fir_latest;	/* Time of latest sent FIR (to avoid flooding) 最近发送FIR的时间（避免泛滥）*/
+	gint fir_seq;		/* FIR sequence number #FIR序列号*/
+	gboolean recording_active;	/* Whether this publisher has to be recorded or not 此发布者是否需要被记录 */
+	gchar *recording_base;	/* Base name for the recording (e.g., /path/to/filename, will generate /path/to/filename-audio.mjr and/or /path/to/filename-video.mjr 记录的文件名称 */
+	janus_recorder *arc;	/* The Janus recorder instance for this publisher's audio, if enabled 此发布者音频的 Janus 记录器实例（如果已启用） */
+	janus_recorder *vrc;	/* The Janus recorder instance for this user's video, if enabled 此用户视频的 Janus 记录器实例（如果已启用）*/
+	janus_recorder *drc;	/* The Janus recorder instance for this publisher's data, if enabled 此发布者数据的 Janus 记录器实例（如果启用） */
 	janus_rtp_switching_context rec_ctx;
 	janus_rtp_simulcasting_context rec_simctx;
-	janus_mutex rec_mutex;	/* Mutex to protect the recorders from race conditions */
-	GSList *subscribers;	/* Subscriptions to this publisher (who's watching this publisher)  */
-	GSList *subscriptions;	/* Subscriptions this publisher has created (who this publisher is watching) */
+	janus_mutex rec_mutex;	/* Mutex to protect the recorders from race conditions 互斥锁以保护记录器免受竞争条件的影响 */
+	GSList *subscribers;	/* Subscriptions to this publisher (who's watching this publisher)  订阅此发布者的人（谁在关注此发布者）谁在看我 */
+	GSList *subscriptions;	/* Subscriptions this publisher has created (who this publisher is watching) 此发布者创建的订阅（此发布者正在观看的对象）我在看谁 */
 	janus_mutex subscribers_mutex;
 	janus_mutex own_subscriptions_mutex;
 	GHashTable *rtp_forwarders;
 	GHashTable *srtp_contexts;
 	janus_mutex rtp_forwarders_mutex;
-	int udp_sock; /* The udp socket on which to forward rtp packets */
-	gboolean kicked;	/* Whether this participant has been kicked */
-	gboolean e2ee;		/* If media from this publisher is end-to-end encrypted */
+	int udp_sock; /* The udp socket on which to forward rtp packets 用于转发 rtp 数据包的 udp 套接字 */
+	gboolean kicked;	/* Whether this participant has been kicked 该参与者是否被踢 */
+	gboolean e2ee;		/* If media from this publisher is end-to-end encrypted 如果来自此发布者的媒体是端到端加密的 */
 	volatile gint destroyed;
 	janus_refcount ref;
 } janus_videoroom_publisher;
@@ -1692,26 +1692,29 @@ static guint32 janus_videoroom_rtp_forwarder_add_helper(janus_videoroom_publishe
 typedef struct janus_videoroom_subscriber {
 	janus_videoroom_session *session;
 	janus_videoroom *room;	/* Room */
-	guint64 room_id;		/* Unique room ID */
-	gchar *room_id_str;		/* Unique room ID (when using strings) */
-	janus_videoroom_publisher *feed;	/* Participant this subscriber is subscribed to */
-	gboolean close_pc;		/* Whether we should automatically close the PeerConnection when the publisher goes away */
-	guint32 pvt_id;			/* Private ID of the participant that is subscribing (if available/provided) */
-	janus_sdp *sdp;			/* Offer we sent this listener (may be updated within renegotiations) */
-	janus_rtp_switching_context context;	/* Needed in case there are publisher switches on this subscriber */
+	guint64 room_id;		/* Unique room ID 房间id 整型*/
+	gchar *room_id_str;		/* Unique room ID (when using strings) 房间id 字符串 */
+	janus_videoroom_publisher *feed;	/* Participant this subscriber is subscribed to 此订阅者订阅的参与者（我在看谁）*/
+	gboolean close_pc;		/* Whether we should automatically close the PeerConnection when the publisher goes away 当发布者离开时我们是否应该自动关闭 PeerConnection */
+	guint32 pvt_id;			/* Private ID of the participant that is subscribing (if available/provided) 订阅的参与者的私人 ID（如果可用/被提供） */
+	janus_sdp *sdp;			/* Offer we sent this listener (may be updated within renegotiations) 我们发送给订阅人的sdp（当重新协商之后可能会更新） */
+	janus_rtp_switching_context context;	/* Needed in case there are publisher switches on this subscriber 如果此订阅者上有发布者开关，则需要 */
 	janus_rtp_simulcasting_context sim_context;
 	janus_vp8_simulcast_context vp8_context;
-	gboolean audio, video, data;		/* Whether audio, video and/or data must be sent to this subscriber */
-	/* As above, but can't change dynamically (says whether something was negotiated at all in SDP) */
+	gboolean audio, video, data;		/* Whether audio, video and/or data must be sent to this subscriber 是否必须向该订阅者发送音频、视频和/或数据 */
+	/* As above, but can't change dynamically (says whether something was negotiated at all in SDP) 
+	如上所述，但不能动态更改（表示是否在 SDP 中协商了某些内容）*/
 	gboolean audio_offered, video_offered, data_offered;
 	gboolean paused;
-	gboolean kicked;	/* Whether this subscription belongs to a participant that has been kicked */
+	gboolean kicked;	/* Whether this subscription belongs to a participant that has been kicked 这个订阅是否属于被踢掉的参与者 */
 	/* The following are only relevant if we're doing VP9 SVC, and are not to be confused with plain
-	 * simulcast, which has similar info (substream/templayer) but in a completely different context */
+	 * simulcast, which has similar info (substream/templayer) but in a completely different context 
+	 下面的字段只会出现在我们使用VP9 SVC的情况下，不需要和simulcast的一些信息（substream/templayer）混淆，他们完全不同
+	 */
 	int spatial_layer, target_spatial_layer;
 	gint64 last_spatial_layer[3];
 	int temporal_layer, target_temporal_layer;
-	gboolean e2ee;		/* If media for this subscriber is end-to-end encrypted */
+	gboolean e2ee;		/* If media for this subscriber is end-to-end encrypted 如果此订阅者的媒体是端到端加密的 */
 	volatile gint destroyed;
 	janus_refcount ref;
 } janus_videoroom_subscriber;
@@ -1719,25 +1722,25 @@ typedef struct janus_videoroom_subscriber {
 typedef struct janus_videoroom_rtp_relay_packet {
 	janus_rtp_header *data;
 	gint length;
-	gboolean is_rtp;	/* This may be a data packet and not RTP */
+	gboolean is_rtp;	/* This may be a data packet and not RTP 是否是RTP包 */
 	gboolean is_video;
 	uint32_t ssrc[3];
 	uint32_t timestamp;
 	uint16_t seq_number;
-	/* Extensions to add, if any */
+	/* Extensions to add, if any RTP拓展头，如果有 */
 	janus_plugin_rtp_extensions extensions;
-	/* The following are only relevant if we're doing VP9 SVC*/
+	/* The following are only relevant if we're doing VP9 SVC 以下内容仅在我们进行 VP9 SVC 时相关*/
 	gboolean svc;
 	janus_vp9_svc_info svc_info;
-	/* The following is only relevant for datachannels */
+	/* The following is only relevant for datachannels 以下内容仅在我们进行datachannels时相关*/
 	gboolean textdata;
 } janus_videoroom_rtp_relay_packet;
 
-/* Start / stop recording */
+/* Start / stop recording 开始/暂停录制 */
 static void janus_videoroom_recorder_create(janus_videoroom_publisher *participant, gboolean audio, gboolean video, gboolean data);
 static void janus_videoroom_recorder_close(janus_videoroom_publisher *participant);
 
-/* Freeing stuff */
+/* Freeing stuff 释放一些内容 */
 static void janus_videoroom_subscriber_destroy(janus_videoroom_subscriber *s) {
 	if(s && g_atomic_int_compare_and_exchange(&s->destroyed, 0, 1))
 		janus_refcount_decrease(&s->ref);
@@ -1745,7 +1748,7 @@ static void janus_videoroom_subscriber_destroy(janus_videoroom_subscriber *s) {
 
 static void janus_videoroom_subscriber_free(const janus_refcount *s_ref) {
 	janus_videoroom_subscriber *s = janus_refcount_containerof(s_ref, janus_videoroom_subscriber, ref);
-	/* This subscriber can be destroyed, free all the resources */
+	/* This subscriber can be destroyed, free all the resources 此订阅者可以被销毁，释放所有资源 */
 	g_free(s->room_id_str);
 	janus_sdp_destroy(s->sdp);
 	g_free(s);
@@ -1771,7 +1774,7 @@ static void janus_videoroom_publisher_dereference_nodebug(janus_videoroom_publis
 
 static void janus_videoroom_publisher_destroy(janus_videoroom_publisher *p) {
 	if(p && g_atomic_int_compare_and_exchange(&p->destroyed, 0, 1)) {
-		/* Forwarders with RTCP support may have an extra reference, stop their source */
+		/* Forwarders with RTCP support may have an extra reference, stop their source 支持 RTCP 的转发器可能有额外的引用，停止它们的源 */
 		janus_mutex_lock(&p->rtp_forwarders_mutex);
 		if(g_hash_table_size(p->rtp_forwarders) > 0) {
 			GHashTableIter iter_f;
@@ -1824,7 +1827,7 @@ static void janus_videoroom_session_destroy(janus_videoroom_session *session) {
 
 static void janus_videoroom_session_free(const janus_refcount *session_ref) {
 	janus_videoroom_session *session = janus_refcount_containerof(session_ref, janus_videoroom_session, ref);
-	/* Remove the reference to the core plugin session */
+	/* Remove the reference to the core plugin session 删除对核心插件会话的引用 */
 	janus_refcount_decrease(&session->handle->ref);
 	/* This session can be destroyed, free all the resources */
 	janus_mutex_destroy(&session->mutex);
