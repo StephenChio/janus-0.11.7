@@ -431,7 +431,7 @@ int janus_rtp_header_extension_replace_id(char *buf, int len, int id, int new_id
 	return -3;
 }
 
-/* RTP context related methods */
+/* RTP context related methods 将上下文字段设置（或重置）为其默认值*/
 void janus_rtp_switching_context_reset(janus_rtp_switching_context *context) {
 	if(context == NULL)
 		return;
@@ -990,6 +990,11 @@ int janus_videocodec_pt(janus_videocodec vcodec) {
 	}
 }
 
+/**
+ * @brief 将上下文字段设置（或重置）为其默认值
+ * 
+ * @param context 
+ */
 void janus_rtp_simulcasting_context_reset(janus_rtp_simulcasting_context *context) {
 	if(context == NULL)
 		return;
@@ -1031,6 +1036,18 @@ void janus_rtp_simulcasting_prepare(json_t *simulcast, int *rid_ext_id, uint32_t
 	}
 }
 
+/**
+ * @brief 处理一个 RTP 数据包，并决定是否应该转发它，相应地更新上下文
+ * 
+ * @param context 
+ * @param buf 
+ * @param len 
+ * @param ssrcs 
+ * @param rids 
+ * @param vcodec 
+ * @param sc 
+ * @return gboolean 
+ */
 gboolean janus_rtp_simulcasting_context_process_rtp(janus_rtp_simulcasting_context *context,
 		char *buf, int len, uint32_t *ssrcs, char **rids,
 		janus_videocodec vcodec, janus_rtp_switching_context *sc) {

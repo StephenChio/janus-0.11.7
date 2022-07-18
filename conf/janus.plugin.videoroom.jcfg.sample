@@ -49,13 +49,17 @@
 general: {
 	#admin_key = "supersecret"		# If set, rooms can be created via API only
 									# if this key is provided in the request
+									# 如果设置，则只有在请求中提供此密钥时才能通过 API 创建房间
 	#lock_rtp_forward = true		# Whether the admin_key above should be
 									# enforced for RTP forwarding requests too
+									# 是否也应该对 RTP 转发请求强制执行上面的 admin_key
 	#events = false					# Whether events should be sent to event
 									# handlers (default=true)
+									# 是否应将事件发送到事件处理程序（默认值=true）
 
 	# By default, integers are used as a unique ID for both rooms and participants.
 	# In case you want to use strings instead (e.g., a UUID), set string_ids to true.
+	# 默认情况下，整数用作房间和参与者的唯一 ID。如果您想改用字符串（例如，UUID），请将 string_ids 设置为 true。
 	#string_ids = true
 }
 

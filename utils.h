@@ -318,7 +318,7 @@ gboolean janus_json_is_valid(json_t *val, json_type jtype, unsigned int flags);
  * @returns TRUE if it's a keyframe, FALSE otherwise */
 gboolean janus_vp8_is_keyframe(const char *buffer, int len);
 
-/*! \brief Helper method to check if a VP9 frame is a keyframe or not
+/*! \brief Helper method to check if a VP9 frame is a keyframe or not 判断这是否是一个VP9关键帧
  * @param[in] buffer The RTP payload to process
  * @param[in] len The length of the RTP payload
  * @returns TRUE if it's a keyframe, FALSE otherwise */
@@ -379,7 +379,7 @@ typedef struct janus_vp9_svc_info {
 	uint8_t fbit, pbit, dbit, ubit, bbit, ebit;
 } janus_vp9_svc_info;
 
-/*! \brief Helper method to parse a VP9 payload descriptor for SVC-related info (e.g., when SVC is enabled)
+/*! \brief Helper method to parse a VP9 payload descriptor for SVC-related info (e.g., when SVC is enabled) 解析 SVC 相关信息的 VP9 有效负载描述符
  * @param[in] buffer The RTP payload to process
  * @param[in] len The length of the RTP payload
  * @param[out] found Whether any SVC related info has been found or not

@@ -763,6 +763,13 @@ gboolean janus_vp8_is_keyframe(const char *buffer, int len) {
 	return FALSE;
 }
 
+/**
+ * @brief 判断这是否一个VP9关键帧
+ * 
+ * @param buffer 
+ * @param len 
+ * @return gboolean 
+ */
 gboolean janus_vp9_is_keyframe(const char *buffer, int len) {
 	if(!buffer || len < 16)
 		return FALSE;
@@ -1043,7 +1050,8 @@ void janus_vp8_simulcast_descriptor_update(char *buffer, int len, janus_vp8_simu
 }
 
 /* Helper method to parse a VP9 RTP video frame and get some SVC-related info:
- * notice that this only works with VP9, right now, on an experimental basis */
+ * notice that this only works with VP9, right now, on an experimental basis 
+解析一个 VP9 RTP 视频帧并获取一些与 SVC 相关的信息：请注意，这仅适用于 VP9，目前，是实验*/
 int janus_vp9_parse_svc(char *buffer, int len, gboolean *found, janus_vp9_svc_info *info) {
 	if(!buffer || len < 8)
 		return -1;

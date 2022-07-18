@@ -5,7 +5,7 @@
  * \details  Implementation of the RTP header. Since the server does not
  * much more than relaying frames around, the only thing we're interested
  * in is the RTP header and how to get its payload, and parsing extensions.
- *
+ * RTP头的实现。 由于服务器只是在转发帧，因此我们唯一感兴趣的是 RTP 标头以及如何获取其有效负载以及解析扩展。
  * \ingroup protocols
  * \ref protocols
  */
@@ -118,32 +118,32 @@ janus_videocodec janus_videocodec_from_name(const char *name);
 int janus_videocodec_pt(janus_videocodec vcodec);
 
 
-/*! \brief Helper method to demultiplex RTP from other protocols
+/*! \brief Helper method to demultiplex RTP from other protocols 判断是否是RTP数据
  * @param[in] buf Buffer to inspect
  * @param[in] len Length of the buffer to inspect */
 gboolean janus_is_rtp(char *buf, guint len);
 
-/*! \brief Helper to quickly access the RTP payload, skipping header and extensions
+/*! \brief Helper to quickly access the RTP payload, skipping header and extensions 快速访问RTP payload 跳过包头和拓展
  * @param[in] buf The packet data
  * @param[in] len The packet data length in bytes
  * @param[out] plen The payload data length in bytes
  * @returns A pointer to where the payload data starts, or NULL otherwise; plen is also set accordingly */
 char *janus_rtp_payload(char *buf, int len, int *plen);
 
-/*! \brief Ugly and dirty helper to quickly get the id associated with an RTP extension (extmap) in an SDP
+/*! \brief Ugly and dirty helper to quickly get the id associated with an RTP extension (extmap) in an SDP 快速获取 SDP 中 RTP 扩展（extmap）关联的 id
  * @param sdp The SDP to parse
  * @param extension The extension namespace to look for
  * @returns The extension id, if found, -1 otherwise */
 int janus_rtp_header_extension_get_id(const char *sdp, const char *extension);
 
-/*! \brief Ugly and dirty helper to quickly get the RTP extension namespace associated with an id (extmap) in an SDP
+/*! \brief Ugly and dirty helper to quickly get the RTP extension namespace associated with an id (extmap) in an SDP 快速获取 SDP 中 id (extmap) 关联的 RTP 扩展命名空间
  * @note This only looks for the extensions we know about, those defined in rtp.h
  * @param sdp The SDP to parse
  * @param id The extension id to look for
  * @returns The extension namespace, if found, NULL otherwise */
 const char *janus_rtp_header_extension_get_from_id(const char *sdp, int id);
 
-/*! \brief Helper to parse a ssrc-audio-level RTP extension (https://tools.ietf.org/html/rfc6464)
+/*! \brief Helper to parse a ssrc-audio-level RTP extension 解析 ssrc 音频级 RTP 扩展 (https://tools.ietf.org/html/rfc6464)
  * @note Browsers apparently always set the VAD to 1, so it's unreliable and should be ignored:
  * only use this method if you're interested in the audio-level value itself.
  * @param[in] buf The packet data
@@ -154,7 +154,7 @@ const char *janus_rtp_header_extension_get_from_id(const char *sdp, int id);
  * @returns 0 if found, -1 otherwise */
 int janus_rtp_header_extension_parse_audio_level(char *buf, int len, int id, gboolean *vad, int *level);
 
-/*! \brief Helper to parse a video-orientation RTP extension (http://www.3gpp.org/ftp/Specs/html-info/26114.htm)
+/*! \brief Helper to parse a video-orientation RTP extension 解析 RTP 视频方向 扩展 (http://www.3gpp.org/ftp/Specs/html-info/26114.htm)
  * @param[in] buf The packet data
  * @param[in] len The packet data length in bytes
  * @param[in] id The extension ID to look for
@@ -166,7 +166,7 @@ int janus_rtp_header_extension_parse_audio_level(char *buf, int len, int id, gbo
 int janus_rtp_header_extension_parse_video_orientation(char *buf, int len, int id,
 	gboolean *c, gboolean *f, gboolean *r1, gboolean *r0);
 
-/*! \brief Helper to parse a playout-delay RTP extension (https://webrtc.org/experiments/rtp-hdrext/playout-delay)
+/*! \brief Helper to parse a playout-delay RTP extension 解析播放延迟 RTP 扩展 (https://webrtc.org/experiments/rtp-hdrext/playout-delay)
  * @param[in] buf The packet data
  * @param[in] len The packet data length in bytes
  * @param[in] id The extension ID to look for
@@ -176,7 +176,7 @@ int janus_rtp_header_extension_parse_video_orientation(char *buf, int len, int i
 int janus_rtp_header_extension_parse_playout_delay(char *buf, int len, int id,
 	uint16_t *min_delay, uint16_t *max_delay);
 
-/*! \brief Helper to parse a sdes-mid RTP extension (https://tools.ietf.org/html/draft-ietf-mmusic-sdp-bundle-negotiation-54)
+/*! \brief Helper to parse a sdes-mid RTP extension 解析 sdes-mid RTP 扩展 (https://tools.ietf.org/html/draft-ietf-mmusic-sdp-bundle-negotiation-54)
  * @param[in] buf The packet data
  * @param[in] len The packet data length in bytes
  * @param[in] id The extension ID to look for
@@ -186,7 +186,7 @@ int janus_rtp_header_extension_parse_playout_delay(char *buf, int len, int id,
 int janus_rtp_header_extension_parse_mid(char *buf, int len, int id,
 	char *sdes_item, int sdes_len);
 
-/*! \brief Helper to parse a rtp-stream-id RTP extension (https://tools.ietf.org/html/draft-ietf-avtext-rid-09)
+/*! \brief Helper to parse a rtp-stream-id RTP extension 解析一个 rtp-stream-id RTP 扩展 (https://tools.ietf.org/html/draft-ietf-avtext-rid-09)
  * @param[in] buf The packet data
  * @param[in] len The packet data length in bytes
  * @param[in] id The extension ID to look for
@@ -196,7 +196,7 @@ int janus_rtp_header_extension_parse_mid(char *buf, int len, int id,
 int janus_rtp_header_extension_parse_rid(char *buf, int len, int id,
 	char *sdes_item, int sdes_len);
 
-/*! \brief Helper to parse an abs-send-time RTP extension (http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time)
+/*! \brief Helper to parse an abs-send-time RTP extension 解析 abs-send-time RTP 扩展 (http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time)
  * @param[in] buf The packet data
  * @param[in] len The packet data length in bytes
  * @param[in] id The extension ID to look for
@@ -204,7 +204,7 @@ int janus_rtp_header_extension_parse_rid(char *buf, int len, int id,
  * @returns 0 if found, -1 otherwise */
 int janus_rtp_header_extension_parse_abs_sent_time(char *buf, int len, int id, uint32_t *abs_ts);
 
-/*! \brief Helper to set an abs-send-time RTP extension (http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time)
+/*! \brief Helper to set an abs-send-time RTP extension 设置 abs-send-time RTP 扩展 (http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time)
  * @param[in] buf The packet data
  * @param[in] len The packet data length in bytes
  * @param[in] id The extension ID to look for
@@ -212,7 +212,7 @@ int janus_rtp_header_extension_parse_abs_sent_time(char *buf, int len, int id, u
  * @returns 0 if found, -1 otherwise */
 int janus_rtp_header_extension_set_abs_send_time(char *buf, int len, int id, uint32_t abs_ts);
 
-/*! \brief Helper to parse a transport wide sequence number (https://tools.ietf.org/html/draft-holmer-rmcat-transport-wide-cc-extensions-01)
+/*! \brief Helper to parse a transport wide sequence number 解析传输范围的序列号 (https://tools.ietf.org/html/draft-holmer-rmcat-transport-wide-cc-extensions-01)
  * @param[in] buf The packet data
  * @param[in] len The packet data length in bytes
  * @param[in] id The extension ID to look for
@@ -220,7 +220,7 @@ int janus_rtp_header_extension_set_abs_send_time(char *buf, int len, int id, uin
  * @returns 0 if found, -1 otherwise */
 int janus_rtp_header_extension_parse_transport_wide_cc(char *buf, int len, int id, uint16_t *transSeqNum);
 
-/*! \brief Helper to set a transport wide sequence number (https://tools.ietf.org/html/draft-holmer-rmcat-transport-wide-cc-extensions-01)
+/*! \brief Helper to set a transport wide sequence number 设置传输范围的序列号 (https://tools.ietf.org/html/draft-holmer-rmcat-transport-wide-cc-extensions-01)
  * @param[in] buf The packet data
  * @param[in] len The packet data length in bytes
  * @param[in] id The extension ID to look for
@@ -229,7 +229,8 @@ int janus_rtp_header_extension_parse_transport_wide_cc(char *buf, int len, int i
 int janus_rtp_header_extension_set_transport_wide_cc(char *buf, int len, int id, uint16_t transSeqNum);
 
 /*! \brief Helper to replace the ID of an RTP extension with a different one (e.g.,
- * to turn a repaired-rtp-stream-id into a rtp-stream-id after a successful rtx)
+ * to turn a repaired-rtp-stream-id into a rtp-stream-id after a successful rtx) 
+ 将 RTP 扩展的 ID 替换为不同的 ID（例如，在成功 rtx 后将 repaired-rtp-stream-id 转换为 rtp-stream-id）
  * @param[in] buf The packet data
  * @param[in] len The packet data length in bytes
  * @param[in] id The extension ID to look for and replace
@@ -237,7 +238,8 @@ int janus_rtp_header_extension_set_transport_wide_cc(char *buf, int len, int id,
  * @returns 0 if found, a negative integer otherwise */
 int janus_rtp_header_extension_replace_id(char *buf, int len, int id, int new_id);
 
-/*! \brief RTP context, in order to make sure SSRC changes result in coherent seq/ts increases */
+/*! \brief RTP context, in order to make sure SSRC changes result in coherent seq/ts increases 
+RTP 上下文，以确保 SSRC 更改导致连贯的 seq/ts 增加*/
 typedef struct janus_rtp_switching_context {
 	uint32_t a_last_ssrc, a_last_ts, a_base_ts, a_base_ts_prev, a_prev_ts, a_target_ts, a_start_ts,
 			v_last_ssrc, v_last_ts, v_base_ts, v_base_ts_prev, v_prev_ts, v_target_ts, v_start_ts;
@@ -253,11 +255,11 @@ typedef struct janus_rtp_switching_context {
 			v_last_time, v_reference_time, v_start_time, v_evaluating_start_time;
 } janus_rtp_switching_context;
 
-/*! \brief Set (or reset) the context fields to their default values
+/*! \brief Set (or reset) the context fields to their default values 将上下文字段设置（或重置）为其默认值
  * @param[in] context The context to (re)set */
 void janus_rtp_switching_context_reset(janus_rtp_switching_context *context);
 
-/*! \brief Use the context info to update the RTP header of a packet, if needed
+/*! \brief Use the context info to update the RTP header of a packet, if needed 如果需要，使用上下文信息更新数据包的 RTP 标头
  * @param[in] header The RTP header to update
  * @param[in] context The context to use as a reference
  * @param[in] video Whether this is an audio or a video packet
@@ -268,13 +270,13 @@ void janus_rtp_header_update(janus_rtp_header *header, janus_rtp_switching_conte
 #define RTP_VIDEO_SKEW_TH_MS 120
 #define SKEW_DETECTION_WAIT_TIME_SECS 10
 
-/*! \brief Use the context info to compensate for audio source skew, if needed
+/*! \brief Use the context info to compensate for audio source skew, if needed 如果需要，使用上下文信息来补偿音频源偏斜
  * @param[in] header The RTP header to update
  * @param[in] context The context to use as a reference
  * @param[in] now \b The packet arrival monotonic time
  * @returns 0 if no compensation is needed, -N if a N packets drop must be performed, N if a N sequence numbers jump has been performed */
 int janus_rtp_skew_compensate_audio(janus_rtp_header *header, janus_rtp_switching_context *context, gint64 now);
-/*! \brief Use the context info to compensate for video source skew, if needed
+/*! \brief Use the context info to compensate for video source skew, if needed 如果需要，使用上下文信息来补偿视频源偏斜
  * @param[in] header The RTP header to update
  * @param[in] context The context to use as a reference
  * @param[in] now \b The packet arrival monotonic time
@@ -282,35 +284,35 @@ int janus_rtp_skew_compensate_audio(janus_rtp_header *header, janus_rtp_switchin
 int janus_rtp_skew_compensate_video(janus_rtp_header *header, janus_rtp_switching_context *context, gint64 now);
 
 
-/*! \brief Helper struct for processing and tracking simulcast streams */
+/*! \brief Helper struct for processing and tracking simulcast streams 用于处理和跟踪联播流的结构 */
 typedef struct janus_rtp_simulcasting_context {
 	/*! \brief RTP Stream extension ID, if any */
 	gint rid_ext_id;
-	/*! \brief Which simulcast substream we should forward back */
+	/*! \brief Which simulcast substream we should forward back 我们应该转发回哪个联播substream */
 	int substream;
-	/*! \brief As above, but to handle transitions (e.g., wait for keyframe, or get this if available) */
+	/*! \brief As above, but to handle transitions (e.g., wait for keyframe, or get this if available) 如上所述，但要处理转换（例如，等待关键帧，或者如果可用则获取）*/
 	int substream_target, substream_target_temp;
-	/*! \brief Which simulcast temporal layer we should forward back */
+	/*! \brief Which simulcast temporal layer we should forward back 我们应该转发回哪个联播templayer */
 	int templayer;
-	/*! \brief As above, but to handle transitions (e.g., wait for keyframe) */
+	/*! \brief As above, but to handle transitions (e.g., wait for keyframe) 如上所述，但要处理转换（例如，等待关键帧） */
 	int templayer_target;
-	/*! \brief How much time (in us, default 250000) without receiving packets will make us drop to the substream below */
+	/*! \brief How much time (in us, default 250000) without receiving packets will make us drop to the substream below 多少时间没有收到数据包会让我们降低substream（在我们，默认250ms） */
 	guint32 drop_trigger;
-	/*! \brief When we relayed the last packet (used to detect when substreams become unavailable) */
+	/*! \brief When we relayed the last packet (used to detect when substreams become unavailable) 我们转发最后一个数据包的时间（用于检测substream何时不可用）*/
 	gint64 last_relayed;
-	/*! \brief Whether the substream has changed after processing a packet */
+	/*! \brief Whether the substream has changed after processing a packet 处理数据包后substream是否发生变化 */
 	gboolean changed_substream;
-	/*! \brief Whether the temporal layer has changed after processing a packet */
+	/*! \brief Whether the temporal layer has changed after processing a packet 处理数据包后temporal layer是否发生变化*/
 	gboolean changed_temporal;
-	/*! \brief Whether we need to send the user a keyframe request (PLI) */
+	/*! \brief Whether we need to send the user a keyframe request (PLI) 我们是否需要向用户发送关键帧请求（通过PLI）*/
 	gboolean need_pli;
 } janus_rtp_simulcasting_context;
 
-/*! \brief Set (or reset) the context fields to their default values
+/*! \brief Set (or reset) the context fields to their default values 将上下文字段设置（或重置）为其默认值
  * @param[in] context The context to (re)set */
 void janus_rtp_simulcasting_context_reset(janus_rtp_simulcasting_context *context);
 
-/*! \brief Helper method to prepare the simulcasting info (rids and/or SSRCs) from
+/*! \brief Helper method to prepare the simulcasting info (rids and/or SSRCs) from 准备联播信息（rids 和/或 SSRC）
  * the simulcast object the core passes to plugins for new PeerConnections
  * @param[in] simulcast JSON object containing SSRCs and rids
  * @param[in] rid_ext_id The rid RTP extension ID to set, if any
@@ -318,7 +320,7 @@ void janus_rtp_simulcasting_context_reset(janus_rtp_simulcasting_context *contex
  * @param[in] rids The list of rids to update, if any (items will be allocated) */
 void janus_rtp_simulcasting_prepare(json_t *simulcast, int *rid_ext_id, uint32_t *ssrcs, char **rids);
 
-/*! \brief Process an RTP packet, and decide whether this should be relayed or not, updating the context accordingly
+/*! \brief Process an RTP packet, and decide whether this should be relayed or not, updating the context accordingly 处理一个 RTP 数据包，并决定是否应该转发它，相应地更新上下文
  * \note Calling this method resets the \c changed_substream , \c changed_temporal and \c need_pli
  * properties, and updates them according to the decisions made after processinf the packet
  * @param[in] context The simulcasting context to use

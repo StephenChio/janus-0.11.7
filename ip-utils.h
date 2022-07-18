@@ -21,7 +21,7 @@
 #include <netinet/in.h>
 
 
-/** @name Janus helper methods to match names and addresses with network interfaces/devices.
+/** @name Janus helper methods to match names and addresses with network interfaces/devices. 将名称和地址与网络接口/设备匹配的方法。
  */
 ///@{
 typedef enum janus_network_query_options {
@@ -34,7 +34,7 @@ typedef enum janus_network_query_options {
 } janus_network_query_options;
 
 /*!
- * \brief Internal object representation of a network device query (configuration).
+ * \brief Internal object representation of a network device query (configuration).网络设备查询（配置）的内部对象表示。
  */
 typedef struct janus_network_query_config {
 	const char *device_name;
@@ -44,7 +44,7 @@ typedef struct janus_network_query_config {
 } janus_network_query_config;
 
 /*!
- * \brief Structure to hold network addresses in a tagged union which should be IPv4 and IPv6 compatible.
+ * \brief Structure to hold network addresses in a tagged union which should be IPv4 and IPv6 compatible. 将网络地址保存在标记联合中的结构，该联合应与 IPv4 和 IPv6 兼容。
  * Use the \c family member (either \c AF_INET or \c AF_INET6) to determine which type of address is contained.
  * \see man 7 ip
  * \see man 7 ipv6
@@ -62,7 +62,7 @@ typedef struct janus_network_address {
 } janus_network_address;
 
 /*!
- * \brief Structure to hold human readable forms of network addresses in a tagged union which should be IPv4 and IPv6 compatible.
+ * \brief Structure to hold human readable forms of network addresses in a tagged union which should be IPv4 and IPv6 compatible. 在标记的联合中保存人类可读形式的网络地址，该联合应与 IPv4 和 IPv6 兼容。
  * Use the \c family member (either \c AF_INET or \c AF_INET6) to determine which type of representation is contained.
  * \see man 7 ip
  * \see man 7 ipv6
@@ -80,7 +80,7 @@ typedef struct janus_network_address_string_buffer {
 } janus_network_address_string_buffer;
 
 /*!
- * \brief Initialise a network device query.
+ * \brief Initialise a network device query. 初始化网络设备查询。
  * \param user_value The user-supplied string which is supposed to describe either the device name or its IP address.
  * \param query_mode (A mask of) Options describing the supported types of matches which should be accepted when performing a look up with this query.
  * This can be used to restrict the query to 'by device name' or 'IPv4 only' type searches.
@@ -92,7 +92,7 @@ typedef struct janus_network_address_string_buffer {
 int janus_network_prepare_device_query(const char *user_value, const janus_network_query_options query_mode, janus_network_query_config *query);
 
 /*!
- * \brief Initialise a network device query with default query options.
+ * \brief Initialise a network device query with default query options. 使用默认查询选项初始化网络设备查询。
  * \p This function will Initialise the query to accept any supported match type.
  * \param user_value The user-supplied string which is supposed to describe either the device name or its IP address.
  * \param query The query object to configure.
@@ -102,7 +102,7 @@ int janus_network_prepare_device_query(const char *user_value, const janus_netwo
 int janus_network_prepare_device_query_default(const char *user_value, janus_network_query_config *query);
 
 /*!
- * \brief Look up network devices matching the given query.
+ * \brief Look up network devices matching the given query. 查找与给定查询匹配的网络设备。
  * The first matching device is returned, so to find all matching devices
  * simply pass the `ifa_next` of the returned device in a subsequent call to this function to find more matches.
  * \param ifas The first node of the list of network interfaces to search through. This should be obtained (indirectly) from
@@ -114,7 +114,7 @@ int janus_network_prepare_device_query_default(const char *user_value, janus_net
 const struct ifaddrs *janus_network_query_devices(const struct ifaddrs *ifas, const janus_network_query_config *query);
 
 /*!
- * \brief Copies the IPv4 address from a network inteface description to the given result structure.
+ * \brief Copies the IPv4 address from a network inteface description to the given result structure.将 IPv4 地址从网络接口描述复制到给定的结果结构
  * \param ifa The network interface description to grab the IPv4 address from. It should be obtained with `janus_network_query_devices()`.
  * \param query A description of the criteria to look for when determining whether or not a network interface is a match
  * \param result Pointer to a structure to populate with the IPv4 address of the given network interface
@@ -125,7 +125,7 @@ const struct ifaddrs *janus_network_query_devices(const struct ifaddrs *ifas, co
 int janus_network_get_devices_ipv4(const struct ifaddrs *ifa, const janus_network_query_config *query, struct in_addr *result);
 
 /*!
- * \brief Copies the IPv6 address from a network inteface description to the given result structure.
+ * \brief Copies the IPv6 address from a network inteface description to the given result structure.将 IPv6 地址从网络接口描述复制到给定的结果结构
  * \param ifa The network interface description to grab the IPv6 address from. It should be obtained with `janus_network_query_devices()`.
  * \param query A description of the criteria to look for when determining whether or not a network interface is a match
  * \param result Pointer to a structure to populate with the IPv6 address of the given network interface
@@ -136,21 +136,21 @@ int janus_network_get_devices_ipv4(const struct ifaddrs *ifa, const janus_networ
 int janus_network_get_devices_ipv6(const struct ifaddrs *ifa, const janus_network_query_config *query, struct in6_addr *result);
 
 /*!
- * \brief Copies the IP address from a network interface description to the given result structure.
+ * \brief Copies the IP address from a network interface description to the given result structure.将 IP 地址从网络接口描述复制到给定的结果结构
  * \return 0 on success, or -EINVAL if any argument is NULL or the given network interface does not correspond to an IP address.
  * \see \c janus_network_address
  */
 int janus_network_get_device_address(const struct ifaddrs *ifa, janus_network_address *result);
 
 /*!
- * \brief Set the given network address to a null/nil value.
+ * \brief Set the given network address to a null/nil value.将给定的网络地址设置为 null/nil 值。
  * \param a The address to nullify. Nothing is done if the pointer is NULL itself.
  * \see \c janus_network_address_is_null
  */
 void janus_network_address_nullify(janus_network_address *a);
 
 /*!
- * \brief Test if a given network address is null-valued
+ * \brief Test if a given network address is null-valued 测试给定的网络地址是否为空值
  * \param a The address to check
  * \return A positive integer if the given address is null-valued, 0 otherwise.
  * \see \c janus_network_address_nullify
@@ -158,7 +158,7 @@ void janus_network_address_nullify(janus_network_address *a);
 int janus_network_address_is_null(const janus_network_address *a);
 
 /*!
- * \brief Convert a struct sockaddr to a janus_network_address
+ * \brief Convert a struct sockaddr to a janus_network_address 将 struct sockaddr 转换为 janus_network_address
  * \param s The struct sockaddr to convert
  * \param a The address to write to
  * \return 0 on success, or -EINVAL otherwise.
@@ -166,7 +166,7 @@ int janus_network_address_is_null(const janus_network_address *a);
 int janus_network_address_from_sockaddr(struct sockaddr *s, janus_network_address *a);
 
 /*!
- * \brief Convert the given network address to a form which can be used to extract a human readable network address from.
+ * \brief Convert the given network address to a form which can be used to extract a human readable network address from. 将给定的网络地址转换为 人类可读网络地址
  * \param a The address to convert
  * \param buf A buffer to contain the human readable form.
  * \return 0 on success, or -EINVAL if any argument is NULL.
@@ -178,14 +178,14 @@ int janus_network_address_from_sockaddr(struct sockaddr *s, janus_network_addres
 int janus_network_address_to_string_buffer(const janus_network_address *a, janus_network_address_string_buffer *buf);
 
 /*!
- * \brief Set the given network address string buffer to a null/nil value.
+ * \brief Set the given network address string buffer to a null/nil value. 将给定的网络地址字符串缓冲区设置为 null/nil 值。
  * \param b The address to nullify. Nothing is done if the pointer is NULL itself.
  * \see \c janus_network_address_string_buffer_is_null
  */
 void janus_network_address_string_buffer_nullify(janus_network_address_string_buffer *b);
 
 /*!
- * \brief Test if a given network address string buffer is null-valued
+ * \brief Test if a given network address string buffer is null-valued 测试给定的网络地址字符串缓冲区是否为空值
  * \param b The buffer to check
  * \return A positive integer if the given buffer is null-valued, 0 otherwise.
  * \see \c janus_network_address_string_buffer_nullify
@@ -193,7 +193,7 @@ void janus_network_address_string_buffer_nullify(janus_network_address_string_bu
 int janus_network_address_string_buffer_is_null(const janus_network_address_string_buffer *b);
 
 /*!
- * \brief Extract the human readable representation of a network address from a given buffer.
+ * \brief Extract the human readable representation of a network address from a given buffer. 从给定的缓冲区中提取网络地址
  * \param b The buffer containing the given network
  * \return A pointer to the human readable representation of the network address inside the given buffer, or NULL if the buffer is invalid or NULL.
  * \see \c janus_network_address_to_string_buffer
@@ -201,7 +201,7 @@ int janus_network_address_string_buffer_is_null(const janus_network_address_stri
 const char *janus_network_address_string_from_buffer(const janus_network_address_string_buffer *b);
 
 /*!
- * \brief Test if a given IP address string is a valid address of the specified type
+ * \brief Test if a given IP address string is a valid address of the specified type 测试给定的 IP 地址字符串是否是指定类型的有效地址
  * \param addr_type The type of address you're interested in (janus_network_query_options_ipv4,
  * janus_network_query_options_ipv6 or janus_network_query_options_any_ip)
  * \param user_value The IP address string to check
@@ -210,7 +210,7 @@ const char *janus_network_address_string_from_buffer(const janus_network_address
 int janus_network_string_is_valid_address(janus_network_query_options addr_type, const char *user_value);
 
 /*!
- * \brief Convert an IP address string to a janus_network_address instance
+ * \brief Convert an IP address string to a janus_network_address instance 将 IP 地址字符串转换为 janus_network_address 实例
  * \param addr_type The type of address you're interested in (janus_network_query_options_ipv4,
  * janus_network_query_options_ipv6 or janus_network_query_options_any_ip)
  * \param user_value The IP address string to check
@@ -220,7 +220,7 @@ int janus_network_string_is_valid_address(janus_network_query_options addr_type,
 int janus_network_string_to_address(janus_network_query_options addr_type, const char *user_value, janus_network_address *result);
 
 /*!
- * \brief Convert an interface name or IP address to a janus_network_address instance
+ * \brief Convert an interface name or IP address to a janus_network_address instance 将接口名称或 IP 地址转换为 janus_network_address 实例
  * \param ifas The list of interfaces to look into (e.g., as returned from getifaddrs)
  * \param iface The interface name or IP address to look for
  * \param result Pointer to a valid janus_network_address instance that will contain the result
@@ -229,7 +229,7 @@ int janus_network_string_to_address(janus_network_query_options addr_type, const
 int janus_network_lookup_interface(const struct ifaddrs *ifas, const char *iface, janus_network_address *result);
 
 /*!
- * \brief Helper method to find a valid local IP address, that is an address that can be used to communicate
+ * \brief Helper method to find a valid local IP address, that is an address that can be used to communicate 找到一个有效的本地 IP 地址，即可以用来通信的地址
  * \param addr_type The type of address you're interested in (janus_network_query_options_ipv4,
  * janus_network_query_options_ipv6 or janus_network_query_options_any_ip)
  * \param result Pointer to a valid janus_network_address instance that will contain the result
@@ -238,7 +238,7 @@ int janus_network_lookup_interface(const struct ifaddrs *ifas, const char *iface
 int janus_network_detect_local_ip(janus_network_query_options addr_type, janus_network_address *result);
 
 /*!
- * \brief Wrapper to janus_network_detect_local_ip that returns a string instead
+ * \brief Wrapper to janus_network_detect_local_ip that returns a string instead janus_network_detect_local_ip 的包装器，它返回一个字符串
  * \note The string is allocated with g_strdup and so needs to be freed by the caller
  * \param addr_type The type of address you're interested in (janus_network_query_options_ipv4,
  * janus_network_query_options_ipv6 or janus_network_query_options_any_ip)

@@ -5853,6 +5853,7 @@ void janus_ice_dtls_handshake_done(janus_ice_handle *handle, janus_ice_component
 	janus_plugin *plugin = (janus_plugin *)handle->app;
 	if(plugin != NULL) {
 		JANUS_LOG(LOG_VERB, "[%"SCNu64"] Telling the plugin about it (%s)\n", handle->handle_id, plugin->get_name());
+		/*dtls握手完成说明媒体可以开始发布了*/
 		if(plugin && plugin->setup_media && janus_plugin_session_is_alive(handle->app_handle))
 			plugin->setup_media(handle->app_handle);
 	}
