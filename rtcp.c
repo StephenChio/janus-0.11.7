@@ -1308,7 +1308,7 @@ int janus_rtcp_remove_nacks(char *packet, int len) {
 	return len;
 }
 
-/* Query an existing REMB message */
+/* Query an existing REMB message 查询已有的REMB消息*/
 uint32_t janus_rtcp_get_remb(char *packet, int len) {
 	if(packet == NULL || len == 0)
 		return 0;

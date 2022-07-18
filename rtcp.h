@@ -474,7 +474,7 @@ GSList *janus_rtcp_get_nacks(char *packet, int len);
  * have been handled. */
 int janus_rtcp_remove_nacks(char *packet, int len);
 
-/*! \brief Inspect an existing RTCP REMB message to retrieve the reported bitrate
+/*! \brief Inspect an existing RTCP REMB message to retrieve the reported bitrate 检查现有的 RTCP REMB 消息以恢复报告的比特率
  * @param[in] packet The message data
  * @param[in] len The message data length in bytes
  * @returns The reported bitrate if successful, 0 if no REMB packet was available */

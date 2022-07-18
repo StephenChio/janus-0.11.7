@@ -366,7 +366,7 @@ void janus_vp8_simulcast_context_reset(janus_vp8_simulcast_context *context);
 int janus_vp8_parse_descriptor(char *buffer, int len,
 		uint16_t *picid, uint8_t *tl0picidx, uint8_t *tid, uint8_t *y, uint8_t *keyidx);
 
-/*! \brief Use the context info to update the RTP header of a packet, if needed
+/*! \brief Use the context info to update the RTP header of a packet, if needed 如果需要，使用上下文信息更新数据包的 RTP 标头
  * @param[in] buffer The RTP payload to process
  * @param[in] len The length of the RTP payload
  * @param[in] context The context to use as a reference

@@ -1026,6 +1026,14 @@ void janus_vp8_simulcast_context_reset(janus_vp8_simulcast_context *context) {
 	context->base_tlzi_prev = 0;
 }
 
+/**
+ * @brief 如果需要，使用上下文信息更新数据包的 RTP 标头
+ * 
+ * @param buffer 
+ * @param len 
+ * @param context 
+ * @param switched 
+ */
 void janus_vp8_simulcast_descriptor_update(char *buffer, int len, janus_vp8_simulcast_context *context, gboolean switched) {
 	if(!buffer || len < 0)
 		return;

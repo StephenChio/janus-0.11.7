@@ -1659,7 +1659,7 @@ typedef struct janus_videoroom_publisher {
 	gboolean data_active, data_muted;
 	gboolean firefox;	/* We send Firefox users a different kind of FIR 我们向 Firefox 用户发送不同类型的 FIR */
 	uint32_t bitrate;
-	gint64 remb_startup;/* Incremental changes on REMB to reach the target at startup */
+	gint64 remb_startup;/* Incremental changes on REMB to reach the target at startup 在几次增加之后到达最大比特率*/
 	gint64 remb_latest;	/* Time of latest sent REMB (to avoid flooding) 最近发送REMB的时间（避免泛滥） */
 	gint64 fir_latest;	/* Time of latest sent FIR (to avoid flooding) 最近发送FIR的时间（避免泛滥）*/
 	gint fir_seq;		/* FIR sequence number #FIR序列号*/
@@ -5789,7 +5789,7 @@ void janus_videoroom_incoming_rtp(janus_plugin_session *handle, janus_plugin_rtp
 				}
 			} else {
 				/* SRTP: check if we already encrypted the packet before 
-				SRTP：检查我们之前是否已经加密过数据包*/
+				SRTP：检查我们之前是否已经加密过数据包 */
 				if(rtp_forward->srtp_ctx->slen == 0) {
 					/*如果没有解密秘钥*/
 					memcpy(&rtp_forward->srtp_ctx->sbuf, buf, len);
@@ -5893,6 +5893,7 @@ void janus_videoroom_incoming_rtp(janus_plugin_session *handle, janus_plugin_rtp
 			我们已经发送了 REMB，还是该发送一个？ */
 			gboolean send_remb = FALSE;
 			if(participant->remb_latest == 0 && participant->remb_startup > 0) {
+				//从来没有发送过REMB消息，而且每一秒增量大于0，用于在启动阶段逐渐提升可用比特率
 				/* Still in the starting phase, send the ramp-up REMB feedback
 				仍处于启动阶段，发送ramp-up REMB 反馈 */
 				send_remb = TRUE;
@@ -5903,22 +5904,26 @@ void janus_videoroom_incoming_rtp(janus_plugin_session *handle, janus_plugin_rtp
 			}
 
 			if(send_remb && participant->bitrate) {
+				//如果目前需要我们发送REMB控制带宽，而且全局比特率限制不为0，那么我们可以发送REMB请求
 				/* We send a few incremental REMB messages at startup 我们在启动时发送一些 REMB 消息 */
 				uint32_t bitrate = participant->bitrate;
 				if(participant->remb_startup > 0) {
+					//在participant->remb_startup为1时bitrate达到最大限度，一开始remb_startup越大，到达最大比特率的时间越久
 					bitrate = bitrate/participant->remb_startup;
 					participant->remb_startup--;
 				}
 				JANUS_LOG(LOG_VERB, "Sending REMB (%s, %"SCNu32")\n", participant->display, bitrate);
 				gateway->send_remb(handle, bitrate);
 				if(participant->remb_startup == 0)
+				    //如果已经调节到最大比特率，记录最后一次调节的时间
 					participant->remb_latest = janus_get_monotonic_time();
 			}
-			/* Generate FIR/PLI too, if needed */
+			/* Generate FIR/PLI too, if needed 生产FIR/PLI 请求关键帧，如果需要*/
 			if(video && participant->video_active && !participant->video_muted && (videoroom->fir_freq > 0)) {
-				/* We generate RTCP every tot seconds/frames */
+				/* We generate RTCP every tot seconds/frames 我们每 t 秒/帧生成 RTCP */
 				gint64 now = janus_get_monotonic_time();
-				/* First check if this is a keyframe, though: if so, we reset the timer */
+				/* First check if this is a keyframe, though: if so, we reset the timer
+				首先检查这是否是关键帧：如果是，我们重置计时器 */
 				int plen = 0;
 				char *payload = janus_rtp_payload(buf, len, &plen);
 				if(payload == NULL) {
@@ -5941,8 +5946,10 @@ void janus_videoroom_incoming_rtp(janus_plugin_session *handle, janus_plugin_rtp
 					if(janus_h265_is_keyframe(payload, plen))
 						participant->fir_latest = now;
 				}
+				//fir_freq 常规通过 FIR 请求关键帧的频率（0=禁用）单位秒
 				if((now-participant->fir_latest) >= ((gint64)videoroom->fir_freq*G_USEC_PER_SEC)) {
-					/* FIXME We send a FIR every tot seconds */
+					/* FIXME We send a FIR every tot seconds FIXME 我们每 t 秒发送一次 FIR */
+					//通过pli 请求关键帧
 					janus_videoroom_reqpli(participant, "Regular keyframe request");
 				}
 			}
@@ -5951,6 +5958,12 @@ void janus_videoroom_incoming_rtp(janus_plugin_session *handle, janus_plugin_rtp
 	janus_videoroom_publisher_dereference_nodebug(participant);
 }
 
+/**
+ * @brief 处理对方的传入RTCP包
+ * 
+ * @param handle 
+ * @param packet 
+ */
 void janus_videoroom_incoming_rtcp(janus_plugin_session *handle, janus_plugin_rtcp *packet) {
 	if(g_atomic_int_get(&stopping) || !g_atomic_int_get(&initialized))
 		return;
@@ -5964,31 +5977,42 @@ void janus_videoroom_incoming_rtcp(janus_plugin_session *handle, janus_plugin_rt
 	char *buf = packet->buffer;
 	uint16_t len = packet->length;
 	if(session->participant_type == janus_videoroom_p_type_subscriber) {
-		/* A subscriber sent some RTCP, check what it is and if we need to forward it to the publisher */
+		/* A subscriber sent some RTCP, check what it is and if we need to forward it to the publisher 
+		订阅者发送了一些 RTCP，检查它是什么以及我们是否需要将其转发给发布者 */
 		janus_videoroom_subscriber *s = janus_videoroom_session_get_subscriber_nodebug(session);
 		if(s == NULL)
 			return;
 		if(g_atomic_int_get(&s->destroyed) || !s->video) {
 			janus_refcount_decrease_nodebug(&s->ref);
-			return;	/* The only feedback we handle is video related anyway... */
+			return;	/* The only feedback we handle is video related anyway... 无论如何，我们处理的唯一反馈是与视频相关的 */
 		}
 		if(janus_rtcp_has_fir(buf, len) || janus_rtcp_has_pli(buf, len)) {
-			/* We got a FIR or PLI, forward a PLI it to the publisher */
+			/* We got a FIR or PLI, forward a PLI it to the publisher 
+			我们得到了 FIR 或 PLI，将 PLI 转发给发布者*/
 			if(s->feed) {
 				janus_videoroom_publisher *p = s->feed;
 				if(p && p->session) {
+					//报告pli 请求关键帧
 					janus_videoroom_reqpli(p, "PLI from subscriber");
 				}
 			}
 		}
+		//检查现有的 RTCP REMB 消息以恢复报告的比特率
 		uint32_t bitrate = janus_rtcp_get_remb(buf, len);
 		if(bitrate > 0) {
-			/* FIXME We got a REMB from this subscriber, should we do something about it? */
+			/* FIXME We got a REMB from this subscriber, should we do something about it?
+			我们从这个订阅者那里得到了一个 REMB，我们应该做些什么吗？ */
 		}
 		janus_refcount_decrease_nodebug(&s->ref);
 	}
 }
 
+/**
+ * @brief 处理对方的传入data包
+ * 
+ * @param handle 
+ * @param packet 
+ */
 void janus_videoroom_incoming_data(janus_plugin_session *handle, janus_plugin_data *packet) {
 	if(handle == NULL || g_atomic_int_get(&handle->stopped) || g_atomic_int_get(&stopping) || !g_atomic_int_get(&initialized))
 		return;
@@ -6006,9 +6030,10 @@ void janus_videoroom_incoming_data(janus_plugin_session *handle, janus_plugin_da
 	}
 	char *buf = packet->buffer;
 	uint16_t len = packet->length;
-	/* Any forwarder involved? */
+	/* Any forwarder involved? 是否涉及到forwarder转发器*/
 	janus_mutex_lock(&participant->rtp_forwarders_mutex);
-	/* Forward RTP to the appropriate port for the rtp_forwarders associated with this publisher, if there are any */
+	/* Forward RTP to the appropriate port for the rtp_forwarders associated with this publisher, if there are any
+	将 RTP 转发到与此发布者关联的 rtp_forwarders 的适当端口（如果有） */
 	GHashTableIter iter;
 	gpointer value;
 	g_hash_table_iter_init(&iter, participant->rtp_forwarders);
@@ -6027,9 +6052,9 @@ void janus_videoroom_incoming_data(janus_plugin_session *handle, janus_plugin_da
 	janus_mutex_unlock(&participant->rtp_forwarders_mutex);
 	JANUS_LOG(LOG_VERB, "Got a %s DataChannel message (%d bytes) to forward\n",
 		packet->binary ? "binary" : "text", len);
-	/* Save the message if we're recording */
+	/* Save the message if we're recording 保存消息，如果我们在录制*/
 	janus_recorder_save_frame(participant->drc, buf, len);
-	/* Relay to all subscribers */
+	/* Relay to all subscribers 转发给所有订阅者*/
 	janus_videoroom_rtp_relay_packet pkt;
 	pkt.data = (struct rtp_header *)buf;
 	pkt.length = len;
@@ -8390,6 +8415,7 @@ static void janus_videoroom_relay_rtp_packet(gpointer data, gpointer user_data) 
 		/* Check if there's any SVC info to take into account
 		检查是否有任何 SVC 信息需要考虑 */
 		if(packet->svc) {
+			//处理svc
 			/* There is: check if this is a layer that can be dropped for this viewer 检查这是不是可以丢弃的一个layer
 			 * Note: Following core inspired by the excellent job done by Sergio Garcia Murillo here:
 			 * https://github.com/medooze/media-server/blob/master/src/vp9/VP9LayerSelector.cpp */
@@ -8447,21 +8473,20 @@ static void janus_videoroom_relay_rtp_packet(gpointer data, gpointer user_data) 
 				}
 			} else if(subscriber->target_spatial_layer < subscriber->spatial_layer) {
 				/* We need to downscale 我们需要缩小规模 */
-				JANUS_LOG(LOG_HUGE, "We need to downscale spatially: (%d > %d)\n",
-					subscriber->spatial_layer, subscriber->target_spatial_layer);
+				JANUS_LOG(LOG_HUGE, "We need to downscale spatially: (%d > %d)\n", subscriber->spatial_layer, subscriber->target_spatial_layer);
 				gboolean downscaled = FALSE;
 				if(!packet->svc_info.fbit && keyframe) {
-					/* Non-flexible mode: wait for a keyframe */
+					/* Non-flexible mode: wait for a keyframe 等待关键帧*/
 					downscaled = TRUE;
 				} else if(packet->svc_info.fbit && packet->svc_info.ebit) {
-					/* Flexible mode: check the E bit */
+					/* Flexible mode: check the E bit 检查 E bit?*/
 					downscaled = TRUE;
 				}
 				if(downscaled) {
 					JANUS_LOG(LOG_HUGE, "  -- Downscaling spatial layer: %d --> %d\n",
 						subscriber->spatial_layer, subscriber->target_spatial_layer);
 					subscriber->spatial_layer = subscriber->target_spatial_layer;
-					/* Notify the viewer */
+					/* Notify the viewer 通知观众layer层下降 */
 					json_t *event = json_object();
 					json_object_set_new(event, "videoroom", json_string("event"));
 					json_object_set_new(event, "room", string_ids ? json_string(subscriber->room_id_str) : json_integer(subscriber->room_id));
@@ -8471,27 +8496,30 @@ static void janus_videoroom_relay_rtp_packet(gpointer data, gpointer user_data) 
 				}
 			}
 			if(spatial_layer < packet->svc_info.spatial_layer) {
-				/* Drop the packet: update the context to make sure sequence number is increased normally later */
+				/* Drop the packet: update the context to make sure sequence number is increased normally later 
+				丢弃数据包：更新上下文以确保序列号稍后正常增加 */
 				JANUS_LOG(LOG_HUGE, "Dropping packet (spatial layer %d < %d)\n", spatial_layer, packet->svc_info.spatial_layer);
 				subscriber->context.v_base_seq++;
 				return;
 			} else if(packet->svc_info.ebit && spatial_layer == packet->svc_info.spatial_layer) {
-				/* If we stop at layer 0, we need a marker bit now, as the one from layer 1 will not be received */
+				/* If we stop at layer 0, we need a marker bit now, as the one from layer 1 will not be received 
+				如果我们停在第 0 层，我们现在需要一个标记位，因为来自第 1 层的 将不会被接收 */
 				override_mark_bit = TRUE;
 			}
 			int temporal_layer = subscriber->temporal_layer;
+			//如果我们使用simulcast
 			if(subscriber->target_temporal_layer > subscriber->temporal_layer) {
-				/* We need to upscale */
-				JANUS_LOG(LOG_HUGE, "We need to upscale temporally: (%d < %d)\n",
-					subscriber->temporal_layer, subscriber->target_temporal_layer);
+				/* We need to upscale 当目标层大于当前层时,提升层数 */
+				JANUS_LOG(LOG_HUGE, "We need to upscale temporally: (%d < %d)\n", subscriber->temporal_layer, subscriber->target_temporal_layer);
 				if(packet->svc_info.ubit && packet->svc_info.bbit &&
 						packet->svc_info.temporal_layer > subscriber->temporal_layer &&
 						packet->svc_info.temporal_layer <= subscriber->target_temporal_layer) {
-					JANUS_LOG(LOG_HUGE, "  -- Upscaling temporal layer: %d --> %d (want %d)\n",
-						subscriber->temporal_layer, packet->svc_info.temporal_layer, subscriber->target_temporal_layer);
+							//如果包里的layer大于原层级小于等于目标层
+					JANUS_LOG(LOG_HUGE, "  -- Upscaling temporal layer: %d --> %d (want %d)\n", subscriber->temporal_layer, packet->svc_info.temporal_layer, subscriber->target_temporal_layer);
 					subscriber->temporal_layer = packet->svc_info.temporal_layer;
+					//更新当前订阅层
 					temporal_layer = subscriber->temporal_layer;
-					/* Notify the viewer */
+					/* Notify the viewer 通知观众 */
 					json_t *event = json_object();
 					json_object_set_new(event, "videoroom", json_string("event"));
 					json_object_set_new(event, "room", string_ids ? json_string(subscriber->room_id_str) : json_integer(subscriber->room_id));
@@ -8500,14 +8528,14 @@ static void janus_videoroom_relay_rtp_packet(gpointer data, gpointer user_data) 
 					json_decref(event);
 				}
 			} else if(subscriber->target_temporal_layer < subscriber->temporal_layer) {
-				/* We need to downscale */
+				/* We need to downscale 如果目标层级少于当前层级，我们把层级下降 */
 				JANUS_LOG(LOG_HUGE, "We need to downscale temporally: (%d > %d)\n",
 					subscriber->temporal_layer, subscriber->target_temporal_layer);
 				if(packet->svc_info.ebit && packet->svc_info.temporal_layer == subscriber->target_temporal_layer) {
 					JANUS_LOG(LOG_HUGE, "  -- Downscaling temporal layer: %d --> %d\n",
 						subscriber->temporal_layer, subscriber->target_temporal_layer);
 					subscriber->temporal_layer = subscriber->target_temporal_layer;
-					/* Notify the viewer */
+					/* Notify the viewer 通知听众 */
 					json_t *event = json_object();
 					json_object_set_new(event, "videoroom", json_string("event"));
 					json_object_set_new(event, "room", string_ids ? json_string(subscriber->room_id_str) : json_integer(subscriber->room_id));
@@ -8518,15 +8546,17 @@ static void janus_videoroom_relay_rtp_packet(gpointer data, gpointer user_data) 
 			}
 			if(temporal_layer < packet->svc_info.temporal_layer) {
 				/* Drop the packet: update the context to make sure sequence number is increased normally later */
+				/* 丢弃数据包：更新上下文以确保序列号稍后正常增加 */
 				JANUS_LOG(LOG_HUGE, "Dropping packet (temporal layer %d < %d)\n", temporal_layer, packet->svc_info.temporal_layer);
 				subscriber->context.v_base_seq++;
 				return;
 			}
 			/* If we got here, we can send the frame: this doesn't necessarily mean it's
-			 * one of the layers the user wants, as there may be dependencies involved */
-			JANUS_LOG(LOG_HUGE, "Sending packet (spatial=%d, temporal=%d)\n",
-				packet->svc_info.spatial_layer, packet->svc_info.temporal_layer);
-			/* Fix sequence number and timestamp (publisher switching may be involved) */
+			 * one of the layers the user wants, as there may be dependencies involved 
+			 如果我们到达这里，我们可以发送帧：这并不一定意味着它是用户想要的层之一，因为可能涉及依赖关系 */
+			JANUS_LOG(LOG_HUGE, "Sending packet (spatial=%d, temporal=%d)\n", packet->svc_info.spatial_layer, packet->svc_info.temporal_layer);
+			/* Fix sequence number and timestamp (publisher switching may be involved) 
+			修复序列号和时间戳（可能涉及发布者切换） */
 			janus_rtp_header_update(packet->data, &subscriber->context, TRUE, 0);
 			if(override_mark_bit && !has_marker_bit) {
 				packet->data->markerbit = 1;
@@ -8539,20 +8569,25 @@ static void janus_videoroom_relay_rtp_packet(gpointer data, gpointer user_data) 
 			if(override_mark_bit && !has_marker_bit) {
 				packet->data->markerbit = 0;
 			}
-			/* Restore the timestamp and sequence number to what the publisher set them to */
+			/* Restore the timestamp and sequence number to what the publisher set them to 
+			将时间戳和序列号恢复为发布者设置的值 */
 			packet->data->timestamp = htonl(packet->timestamp);
 			packet->data->seq_number = htons(packet->seq_number);
 		} else if(packet->ssrc[0] != 0) {
-			/* Handle simulcast: make sure we have a payload to work with */
+			/* Handle simulcast: make sure we have a payload to work with 
+			处理simulcast：确保我们有一个有效载荷可以使用 */
 			int plen = 0;
 			char *payload = janus_rtp_payload((char *)packet->data, packet->length, &plen);
 			if(payload == NULL)
 				return;
-			/* Process this packet: don't relay if it's not the SSRC/layer we wanted to handle */
+			/* Process this packet: don't relay if it's not the SSRC/layer we wanted to handle 
+			处理这个数据包：如果它不是我们想要处理的 SSRC/层，不要转发 */
+			//处理一个 RTP 数据包，并决定是否应该转发它，相应地更新上下文
 			gboolean relay = janus_rtp_simulcasting_context_process_rtp(&subscriber->sim_context,
 				(char *)packet->data, packet->length, packet->ssrc, NULL, subscriber->feed->vcodec, &subscriber->context);
 			if(!relay) {
-				/* Did a lot of time pass before we could relay a packet? */
+				/* Did a lot of time pass before we could relay a packet? 
+				在我们转发数据包之前是否经过了很多时间？如果是，请求一次关键帧*/
 				gint64 now = janus_get_monotonic_time();
 				if((now - subscriber->sim_context.last_relayed) >= G_USEC_PER_SEC) {
 					g_atomic_int_set(&subscriber->sim_context.need_pli, 1);
@@ -8560,16 +8595,17 @@ static void janus_videoroom_relay_rtp_packet(gpointer data, gpointer user_data) 
 			}
 			if(subscriber->sim_context.need_pli && subscriber->feed && subscriber->feed->session &&
 					subscriber->feed->session->handle) {
-				/* Send a PLI */
+				/* Send a PLI 重新请求关键帧 */
 				JANUS_LOG(LOG_VERB, "We need a PLI for the simulcast context\n");
 				gateway->send_pli(subscriber->feed->session->handle);
 			}
-			/* Do we need to drop this? */
+			/* Do we need to drop this? 我们丢弃不转发的包 */
 			if(!relay)
 				return;
-			/* Any event we should notify? */
+			/* Any event we should notify? 是否有需要我们通知的内容 */
+			//处理数据包后substream是否发生变化
 			if(subscriber->sim_context.changed_substream) {
-				/* Notify the user about the substream change */
+				/* Notify the user about the substream change 通知用户substream发生改变 */
 				json_t *event = json_object();
 				json_object_set_new(event, "videoroom", json_string("event"));
 				json_object_set_new(event, "room", string_ids ? json_string(subscriber->room_id_str) : json_integer(subscriber->room_id));
@@ -8577,8 +8613,9 @@ static void janus_videoroom_relay_rtp_packet(gpointer data, gpointer user_data) 
 				gateway->push_event(subscriber->session->handle, &janus_videoroom_plugin, NULL, event, NULL);
 				json_decref(event);
 			}
+			//处理数据包后temporal layer是否发生变化
 			if(subscriber->sim_context.changed_temporal) {
-				/* Notify the user about the temporal layer change */
+				/* Notify the user about the temporal layer change 通知用户temporal layer发生改变 */
 				json_t *event = json_object();
 				json_object_set_new(event, "videoroom", json_string("event"));
 				json_object_set_new(event, "room", string_ids ? json_string(subscriber->room_id_str) : json_integer(subscriber->room_id));
@@ -8586,56 +8623,60 @@ static void janus_videoroom_relay_rtp_packet(gpointer data, gpointer user_data) 
 				gateway->push_event(subscriber->session->handle, &janus_videoroom_plugin, NULL, event, NULL);
 				json_decref(event);
 			}
-			/* If we got here, update the RTP header and send the packet */
+			/* If we got here, update the RTP header and send the packet 如果运行到这，更新RTP包头和发送包*/
 			janus_rtp_header_update(packet->data, &subscriber->context, TRUE, 0);
 			char vp8pd[6];
 			if(subscriber->feed && subscriber->feed->vcodec == JANUS_VIDEOCODEC_VP8) {
-				/* For VP8, we save the original payload descriptor, to restore it after */
+				/* For VP8, we save the original payload descriptor, to restore it after
+				对于 VP8，我们保存原始的有效载荷描述符，以便在之后恢复它 */
 				memcpy(vp8pd, payload, sizeof(vp8pd));
+				/*如果需要，使用上下文信息更新数据包的 RTP 标头*/
 				janus_vp8_simulcast_descriptor_update(payload, plen, &subscriber->vp8_context,
 					subscriber->sim_context.changed_substream);
 			}
-			/* Send the packet */
+			/* Send the packet 发送包*/
 			if(gateway != NULL) {
 				janus_plugin_rtp rtp = { .video = packet->is_video, .buffer = (char *)packet->data, .length = packet->length,
 					.extensions = packet->extensions };
 				gateway->relay_rtp(session->handle, &rtp);
 			}
-			/* Restore the timestamp and sequence number to what the publisher set them to */
+			/* Restore the timestamp and sequence number to what the publisher set them to 将时间戳和序列号恢复为发布者设置的值*/
 			packet->data->timestamp = htonl(packet->timestamp);
 			packet->data->seq_number = htons(packet->seq_number);
 			if(subscriber->feed && subscriber->feed->vcodec == JANUS_VIDEOCODEC_VP8) {
-				/* Restore the original payload descriptor as well, as it will be needed by the next viewer */
+				/* Restore the original payload descriptor as well, as it will be needed by the next viewer 
+				恢复原始有效负载描述符，因为下一个viewer将需要它 */
 				memcpy(payload, vp8pd, sizeof(vp8pd));
 			}
 		} else {
-			/* Fix sequence number and timestamp (publisher switching may be involved) */
+			//处理普通视频
+			/* Fix sequence number and timestamp (publisher switching may be involved) 修复序列号和时间戳（可能涉及发布者切换） */
 			janus_rtp_header_update(packet->data, &subscriber->context, TRUE, 0);
-			/* Send the packet */
+			/* Send the packet 发送包*/
 			if(gateway != NULL) {
 				janus_plugin_rtp rtp = { .video = packet->is_video, .buffer = (char *)packet->data, .length = packet->length,
 					.extensions = packet->extensions };
 				gateway->relay_rtp(session->handle, &rtp);
 			}
-			/* Restore the timestamp and sequence number to what the publisher set them to */
+			/* Restore the timestamp and sequence number to what the publisher set them to 将时间戳和序列号恢复为发布者设置的值 */
 			packet->data->timestamp = htonl(packet->timestamp);
 			packet->data->seq_number = htons(packet->seq_number);
 		}
 	} else {
-		/* Check if this subscriber is subscribed to this medium */
+		/* Check if this subscriber is subscribed to this medium 检查此订阅者是否订阅了此媒体*/
 		if(!subscriber->audio) {
 			/* Nope, don't relay */
 			return;
 		}
-		/* Fix sequence number and timestamp (publisher switching may be involved) */
+		/* Fix sequence number and timestamp (publisher switching may be involved) 修复序列号和时间戳（可能涉及发布者切换）*/
 		janus_rtp_header_update(packet->data, &subscriber->context, FALSE, 0);
-		/* Send the packet */
+		/* Send the packet 发送包*/
 		if(gateway != NULL) {
 			janus_plugin_rtp rtp = { .video = packet->is_video, .buffer = (char *)packet->data, .length = packet->length,
 				.extensions = packet->extensions };
 			gateway->relay_rtp(session->handle, &rtp);
 		}
-		/* Restore the timestamp and sequence number to what the publisher set them to */
+		/* Restore the timestamp and sequence number to what the publisher set them to 将时间戳和序列号恢复为发布者设置的值 */
 		packet->data->timestamp = htonl(packet->timestamp);
 		packet->data->seq_number = htons(packet->seq_number);
 	}
@@ -8643,6 +8684,12 @@ static void janus_videoroom_relay_rtp_packet(gpointer data, gpointer user_data) 
 	return;
 }
 
+/**
+ * @brief 转发data数据包
+ * 
+ * @param data 
+ * @param user_data 
+ */
 static void janus_videoroom_relay_data_packet(gpointer data, gpointer user_data) {
 	janus_videoroom_rtp_relay_packet *packet = (janus_videoroom_rtp_relay_packet *)user_data;
 	if(!packet || packet->is_rtp || !packet->data || packet->length < 1) {
@@ -8675,7 +8722,7 @@ static void janus_videoroom_relay_data_packet(gpointer data, gpointer user_data)
 	return;
 }
 
-/* The following methods are only relevant if RTCP is used for RTP forwarders 仅当 RTCP 用于 RTP 转发器时，以下方法才相关 */
+/* The following methods are only relevant if RTCP is used for RTP forwarders 仅当 RTCP 用于 RTP 转发器时，以下方法才有用 */
 static void janus_videoroom_rtp_forwarder_rtcp_receive(janus_videoroom_rtp_forwarder *forward) {
 	char buffer[1500];
 	struct sockaddr_storage remote_addr;
@@ -8683,13 +8730,19 @@ static void janus_videoroom_rtp_forwarder_rtcp_receive(janus_videoroom_rtp_forwa
 	int len = recvfrom(forward->rtcp_fd, buffer, sizeof(buffer), 0, (struct sockaddr *)&remote_addr, &addrlen);
 	if(len > 0 && janus_is_rtcp(buffer, len)) {
 		JANUS_LOG(LOG_HUGE, "Got %s RTCP packet: %d bytes\n", forward->is_video ? "video" : "audio", len);
-		/* We only handle incoming video PLIs or FIR at the moment 我们目前只处理传入的视频 PLI 或 FIR */
+		/* We only handle incoming video PLIs or FIR at the moment 我们目前只处理传入的视频 PLI 或 FIR 请求*/
 		if(!janus_rtcp_has_fir(buffer, len) && !janus_rtcp_has_pli(buffer, len))
 			return;
 		janus_videoroom_reqpli((janus_videoroom_publisher *)forward->source, "RTCP from forwarder");
 	}
 }
 
+/**
+ * @brief 处理RTP forwarder 线程
+ * 
+ * @param data 
+ * @return void* 
+ */
 static void *janus_videoroom_rtp_forwarder_rtcp_thread(void *data) {
 	JANUS_LOG(LOG_VERB, "Joining RTCP thread for RTP forwarders...\n");
 	/* Run the main loop */
