@@ -1465,8 +1465,8 @@ static void janus_videoroom_hangup_media_internal(gpointer session_data);
 
 typedef enum janus_videoroom_p_type {
 	janus_videoroom_p_type_none = 0,
-	janus_videoroom_p_type_subscriber,			/* Generic subscriber */
-	janus_videoroom_p_type_publisher,			/* Participant (for receiving events) and optionally publisher */
+	janus_videoroom_p_type_subscriber,			/* Generic subscriber 订阅者*/
+	janus_videoroom_p_type_publisher,			/* Participant (for receiving events) and optionally publisher 参与者（用于接收事件）和可选的发布者 */
 } janus_videoroom_p_type;
 
 typedef struct janus_videoroom_message {
@@ -8738,7 +8738,7 @@ static void janus_videoroom_rtp_forwarder_rtcp_receive(janus_videoroom_rtp_forwa
 }
 
 /**
- * @brief 处理RTP forwarder 线程
+ * @brief 处理RTP forwarder RTCP线程
  * 
  * @param data 
  * @return void* 

@@ -507,9 +507,9 @@ struct janus_ice_stream {
 	GSList *transport_wide_received_seq_nums;
 	/*! \brief DTLS role of the server for this stream */
 	janus_dtls_role dtls_role;
-	/*! \brief Hashing algorhitm used by the peer for the DTLS certificate (e.g., "SHA-256") */
+	/*! \brief Hashing algorhitm used by the peer for the DTLS certificate (e.g., "SHA-256") 对等方用于 DTLS 证书的散列算法（例如，“SHA-256”） */
 	gchar *remote_hashing;
-	/*! \brief Hashed fingerprint of the peer's certificate, as parsed in SDP */
+	/*! \brief Hashed fingerprint of the peer's certificate, as parsed in SDP 对等方证书的哈希指纹，在 SDP 中解析 */
 	gchar *remote_fingerprint;
 	/*! \brief The ICE username for this stream */
 	gchar *ruser;

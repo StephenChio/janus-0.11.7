@@ -30,7 +30,7 @@ void janus_events_deinit(void);
  * @returns TRUE if they're enabled, FALSE if not */
 gboolean janus_events_is_enabled(void);
 
-/*! \brief Notify an event to all interested handlers
+/*! \brief Notify an event to all interested handlers 向所有感兴趣的处理程序通知事件
  * @note According to the type of event to notify, different arguments may
  * be required and used in order to prepare the actual object to pass to handlers.
  * @param[in] type Type of the event to notify

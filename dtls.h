@@ -122,7 +122,7 @@ void janus_dtls_srtp_handshake(janus_dtls_srtp *dtls);
  * @param[in] dtls The janus_dtls_srtp instance to setup SCTP on
  * @returns 0 in case of success, a negative integer otherwise */
 int janus_dtls_srtp_create_sctp(janus_dtls_srtp *dtls);
-/*! \brief Handle an incoming DTLS message
+/*! \brief Handle an incoming DTLS message 处理进来的dtls srtp数据
  * @param[in] dtls The janus_dtls_srtp instance to start the handshake on
  * @param[in] buf The DTLS message data
  * @param[in] len The DTLS message data length */

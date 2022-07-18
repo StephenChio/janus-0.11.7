@@ -84,6 +84,14 @@ gboolean janus_events_is_enabled(void) {
 	return eventsenabled;
 }
 
+/**
+ * @brief 向所有感兴趣的处理程序通知事件
+ * 
+ * @param type 
+ * @param subtype 
+ * @param session_id 
+ * @param ... 
+ */
 void janus_events_notify_handlers(int type, int subtype, guint64 session_id, ...) {
 	/* This method has a variable list of arguments, depending on the event type */
 	va_list args;

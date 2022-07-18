@@ -7,7 +7,10 @@
  * the server, and sets the proper SRTP and SRTCP context up accordingly.
  * A DTLS alert from a peer is notified to the plugin handling him/her
  * by means of the hangup_media callback.
- *
+ * DTLS/SRTP 传输的实现（基于 OpenSSL 和 libsrtp）。 
+ * 该代码负责对等点和服务器之间的 DTLS 握手，
+ * 并相应地设置正确的 SRTP 和 SRTCP 上下文。
+ * 来自对等点的 DTLS 警报通过 hangup_media 回调通知处理插件。
  * \ingroup protocols
  * \ref protocols
  */
@@ -25,6 +28,12 @@
 #include <openssl/asn1.h>
 
 
+/**
+ * @brief 获取dtls状态
+ * 
+ * @param state 
+ * @return const gchar* 
+ */
 const gchar *janus_get_dtls_srtp_state(janus_dtls_state state) {
 	switch(state) {
 		case JANUS_DTLS_STATE_CREATED:
@@ -41,6 +50,12 @@ const gchar *janus_get_dtls_srtp_state(janus_dtls_state state) {
 	return NULL;
 }
 
+/**
+ * @brief 获取dtls角色
+ * 
+ * @param role 
+ * @return const gchar* 
+ */
 const gchar *janus_get_dtls_srtp_role(janus_dtls_role role) {
 	switch(role) {
 		case JANUS_DTLS_ROLE_ACTPASS:
@@ -55,6 +70,12 @@ const gchar *janus_get_dtls_srtp_role(janus_dtls_role role) {
 	return NULL;
 }
 
+/**
+ * @brief 获取dtls描述
+ * 
+ * @param profile 
+ * @return const gchar* 
+ */
 const gchar *janus_get_dtls_srtp_profile(int profile) {
 	switch(profile) {
 		case SRTP_AES128_CM_SHA1_80:
@@ -73,7 +94,8 @@ const gchar *janus_get_dtls_srtp_profile(int profile) {
 	return NULL;
 }
 
-/* Helper to notify DTLS state changes to the event handlers */
+/* Helper to notify DTLS state changes to the event handlers 
+当DTLS状态改变时，通知事件处理 */
 static void janus_dtls_notify_state_change(janus_dtls_srtp *dtls) {
 	if(!janus_events_is_enabled())
 		return;
@@ -96,25 +118,35 @@ static void janus_dtls_notify_state_change(janus_dtls_srtp *dtls) {
 	json_object_set_new(info, "stream_id", json_integer(stream->stream_id));
 	json_object_set_new(info, "component_id", json_integer(component->component_id));
 	json_object_set_new(info, "retransmissions", json_integer(dtls->retransmissions));
+	//向所有感兴趣的处理程序通知事件
 	janus_events_notify_handlers(JANUS_EVENT_TYPE_WEBRTC, JANUS_EVENT_SUBTYPE_WEBRTC_DTLS,
 		session->session_id, handle->handle_id, handle->opaque_id, info);
 }
 
+/**
+ * @brief 释放是一个dtls数据
+ * 
+ * @param buf 
+ * @return gboolean 
+ */
 gboolean janus_is_dtls(char *buf) {
 	return ((*buf >= 20) && (*buf <= 64));
 }
 
 /* DTLS stuff */
+//DTLS默认密码
 #define DTLS_DEFAULT_CIPHERS	"DEFAULT:!NULL:!aNULL:!SHA256:!SHA384:!aECDH:!AESGCM+AES256:!aPSK"
 static const char *dtls_ciphers = DTLS_DEFAULT_CIPHERS;
-/* Duration for the self-generated certs: 1 year */
+/* Duration for the self-generated certs: 1 year 证书有效期 1年 */
 #define DTLS_AUTOCERT_DURATION	60*60*24*365
-/* NIST P-256 elliptic curve used for private key generation */
+/* NIST P-256 elliptic curve used for private key generation NIST P-256 椭圆曲线用于私钥生成 */
 #define DTLS_ELLIPTIC_CURVE NID_X9_62_prime256v1
 
 /* By default we always accept self-signed certificates (that's what almost
  * all of the existing WebRTC implementations do today), but if told so we
- * can be configured to reject them, and validate them instead */
+ * can be configured to reject them, and validate them instead 
+ * 默认情况下，我们总是接受自签名证书（这是当今几乎所有现有 WebRTC 实现所做的），
+ * 但如果被告知我们可以配置为拒绝它们，并改为验证它们*/
 static gboolean dtls_selfsigned_certs_ok = TRUE;
 gboolean janus_dtls_are_selfsigned_certs_ok(void) {
 	return dtls_selfsigned_certs_ok;
@@ -122,7 +154,10 @@ gboolean janus_dtls_are_selfsigned_certs_ok(void) {
 
 /* DTLS timeout base to enforce: notice that this can currently only be
  * modified if you're using BoringSSL, as OpenSSL uses 1s (1000ms) and
- * that value cannot be modified (it will in OpenSSL v1.1.1) */
+ * that value cannot be modified (it will in OpenSSL v1.1.1) 
+ * 要强制执行的 DTLS 超时基准：
+ * 请注意，目前只有在使用 BoringSSL 时才能修改，
+ * 因为 OpenSSL 使用 1s (1000ms) 并且无法修改该值（它将在 OpenSSL v1.1.1 中）*/
 static guint16 dtls_timeout_base = 1000;
 
 static SSL_CTX *ssl_ctx = NULL;
@@ -130,6 +165,11 @@ static X509 *ssl_cert = NULL;
 static EVP_PKEY *ssl_key = NULL;
 
 static gchar local_fingerprint[160];
+/**
+ * @brief 获取本地dtls指纹
+ * 
+ * @return gchar* 
+ */
 gchar *janus_dtls_get_local_fingerprint(void) {
 	return (gchar *)local_fingerprint;
 }
@@ -185,6 +225,14 @@ static void janus_dtls_cb_openssl_lock(int mode, int type, const char *file, int
 #endif
 
 
+/**
+ * @brief dtls生成keys
+ * 
+ * @param certificate 
+ * @param private_key 
+ * @param rsa_private_key 
+ * @return int 
+ */
 static int janus_dtls_generate_keys(X509 **certificate, EVP_PKEY **private_key, gboolean rsa_private_key) {
 	static const int num_bits = 2048;
 	BIGNUM *bne = NULL;
@@ -194,7 +242,7 @@ static int janus_dtls_generate_keys(X509 **certificate, EVP_PKEY **private_key, 
 
 	JANUS_LOG(LOG_VERB, "Generating DTLS key / cert\n");
 
-	/* Create a private key object (needed to hold the RSA key). */
+	/* Create a private key object (needed to hold the RSA key). 创建私钥对象（需要保存 RSA 密钥） */
 	*private_key = EVP_PKEY_new();
 	if(!*private_key) {
 		JANUS_LOG(LOG_FATAL, "EVP_PKEY_new() failed\n");
@@ -203,7 +251,7 @@ static int janus_dtls_generate_keys(X509 **certificate, EVP_PKEY **private_key, 
 
 
 	if(rsa_private_key) {
-		/* Create a big number object. */
+		/* Create a big number object. 创建一个大数对象*/
 		bne = BN_new();
 		if(!bne) {
 			JANUS_LOG(LOG_FATAL, "BN_new() failed\n");
@@ -215,14 +263,14 @@ static int janus_dtls_generate_keys(X509 **certificate, EVP_PKEY **private_key, 
 			goto error;
 		}
 
-		/* Generate a RSA key. */
+		/* Generate a RSA key. 生成RSA key*/
 		rsa_key = RSA_new();
 		if(!rsa_key) {
 			JANUS_LOG(LOG_FATAL, "RSA_new() failed\n");
 			goto error;
 		}
 
-		/* This takes some time. */
+		/* This takes some time. 这会花费一点时间 */
 		if(!RSA_generate_key_ex(rsa_key, num_bits, bne, NULL)) {
 			JANUS_LOG(LOG_FATAL, "RSA_generate_key_ex() failed\n");
 			goto error;
@@ -233,10 +281,11 @@ static int janus_dtls_generate_keys(X509 **certificate, EVP_PKEY **private_key, 
 			goto error;
 		}
 
-		/* The RSA key now belongs to the private key, so don't clean it up separately. */
+		/* The RSA key now belongs to the private key, so don't clean it up separately.
+		这个RSA key现在已经属于私有key 所以不要单独清理它*/
 		rsa_key = NULL;
 	} else {
-		/* Create key with curve dictated by DTLS_ELLIPTIC_CURVE */
+		/* Create key with curve dictated by DTLS_ELLIPTIC_CURVE 使用 DTLS_ELLIPTIC_CURVE 指定的曲线创建密钥 */
 		if((ecc_key = EC_KEY_new_by_curve_name(DTLS_ELLIPTIC_CURVE)) == NULL) {
 			JANUS_LOG(LOG_FATAL, "EC_KEY_new_by_curve_name() failed\n");
 			goto error;
@@ -244,7 +293,7 @@ static int janus_dtls_generate_keys(X509 **certificate, EVP_PKEY **private_key, 
 
 		EC_KEY_set_asn1_flag(ecc_key, OPENSSL_EC_NAMED_CURVE);
 
-		/* This takes some time. */
+		/* This takes some time. 这会花费一点时间*/
 		if(EC_KEY_generate_key(ecc_key) == 0) {
 			JANUS_LOG(LOG_FATAL, "EC_KEY_generate_key() failed\n");
 			goto error;
@@ -255,34 +304,34 @@ static int janus_dtls_generate_keys(X509 **certificate, EVP_PKEY **private_key, 
 			goto error;
 		}
 
-		/* The EC key now belongs to the private key, so don't clean it up separately. */
+		/* The EC key now belongs to the private key, so don't clean it up separately. EC 密钥现在属于私钥，所以不要单独清理它。 */
 		ecc_key = NULL;
 	}
 
-	/* Create the X509 certificate. */
+	/* Create the X509 certificate. 创建 X509 证书。 */
 	*certificate = X509_new();
 	if(!*certificate) {
 		JANUS_LOG(LOG_FATAL, "X509_new() failed\n");
 		goto error;
 	}
 
-	/* Set version 3 (note that 0 means version 1). */
+	/* Set version 3 (note that 0 means version 1). 设置版本3 注意版本1是0 */
 	X509_set_version(*certificate, 2);
 
-	/* Set serial number. */
+	/* Set serial number. 设置串行号码 */
 	ASN1_INTEGER_set(X509_get_serialNumber(*certificate), (long)g_random_int());
 
-	/* Set valid period. */
+	/* Set valid period. 设置有效期 */
 	X509_gmtime_adj(X509_get_notBefore(*certificate), -1 * DTLS_AUTOCERT_DURATION);  /* -1 year */
 	X509_gmtime_adj(X509_get_notAfter(*certificate), DTLS_AUTOCERT_DURATION);  /* 1 year */
 
-	/* Set the public key for the certificate using the key. */
+	/* Set the public key for the certificate using the key. 为证书所使用的密钥生成公钥*/
 	if(!X509_set_pubkey(*certificate, *private_key)) {
 		JANUS_LOG(LOG_FATAL, "X509_set_pubkey() failed\n");
 		goto error;
 	}
 
-	/* Set certificate fields. */
+	/* Set certificate fields. 设置证书字段 */
 	cert_name = X509_get_subject_name(*certificate);
 	if(!cert_name) {
 		JANUS_LOG(LOG_FATAL, "X509_get_subject_name() failed\n");
@@ -291,19 +340,20 @@ static int janus_dtls_generate_keys(X509 **certificate, EVP_PKEY **private_key, 
 	X509_NAME_add_entry_by_txt(cert_name, "O", MBSTRING_ASC, (const unsigned char*)"Janus", -1, -1, 0);
 	X509_NAME_add_entry_by_txt(cert_name, "CN", MBSTRING_ASC, (const unsigned char*)"Janus", -1, -1, 0);
 
-	/* It is self-signed so set the issuer name to be the same as the subject. */
+	/* It is self-signed so set the issuer name to be the same as the subject.
+	它是自签名的，因此将发行者名称设置为与主题相同。 */
 	if(!X509_set_issuer_name(*certificate, cert_name)) {
 		JANUS_LOG(LOG_FATAL, "X509_set_issuer_name() failed\n");
 		goto error;
 	}
 
-	/* Sign the certificate with the private key. */
+	/* Sign the certificate with the private key. 用私钥签名证书 */
 	if(!X509_sign(*certificate, *private_key, EVP_sha1())) {
 		JANUS_LOG(LOG_FATAL, "X509_sign() failed\n");
 		goto error;
 	}
 
-	/* Free stuff and resurn. */
+	/* Free stuff and return. 释放内存*/
 	BN_free(bne);
 	return 0;
 
@@ -315,13 +365,23 @@ error:
 	if(ecc_key && !*private_key)
 		EC_KEY_free(ecc_key);
 	if(*private_key)
-		EVP_PKEY_free(*private_key);  /* This also frees the RSA key. */
+		EVP_PKEY_free(*private_key);  /* This also frees the RSA key. 释放RSA key */
 	if(*certificate)
 		X509_free(*certificate);
 	return -1;
 }
 
 
+/**
+ * @brief dtls加载keys
+ * 
+ * @param server_pem 
+ * @param server_key 
+ * @param password 
+ * @param certificate 
+ * @param private_key 
+ * @return int 
+ */
 static int janus_dtls_load_keys(const char *server_pem, const char *server_key, const char *password,
 		X509 **certificate, EVP_PKEY **private_key) {
 	FILE *f = NULL;
@@ -364,12 +424,12 @@ error:
 	return -1;
 }
 
-/* Versioning info ( */
+/* Versioning info 版本信息 */
 const char *janus_get_ssl_version(void) {
 	return OPENSSL_VERSION_TEXT;
 }
 
-/* DTLS-SRTP initialization */
+/* DTLS-SRTP initialization 初始化dtls-srtp*/
 gint janus_dtls_srtp_init(const char *server_pem, const char *server_key, const char *password,
 		const char *ciphers, guint16 timeout, gboolean rsa_private_key, gboolean accept_selfsigned) {
 	const char *crypto_lib = NULL;
@@ -398,7 +458,7 @@ gint janus_dtls_srtp_init(const char *server_pem, const char *server_key, const 
 	JANUS_LOG(LOG_WARN, "The libsrtp installation does not support AES-GCM profiles\n");
 #endif
 
-	/* Go on and create the DTLS context */
+	/* Go on and create the DTLS context 继续创建dtls上下文*/
 #if JANUS_USE_OPENSSL_PRE_1_1_API && !defined(HAVE_BORINGSSL)
 #if defined(LIBRESSL_VERSION_NUMBER)
 	ssl_ctx = SSL_CTX_new(DTLSv1_method());
@@ -480,13 +540,14 @@ gint janus_dtls_srtp_init(const char *server_pem, const char *server_key, const 
 	}
 #endif
 
-	/* Initialize libsrtp */
+	/* Initialize libsrtp 初始化libsrtp */
 	if(srtp_init() != srtp_err_status_ok) {
 		JANUS_LOG(LOG_FATAL, "Ops, error setting up libsrtp?\n");
 		return -10;
 	}
 
-	/* Finally, let's set our policy with respect to DTLS self signed certificates */
+	/* Finally, let's set our policy with respect to DTLS self signed certificates 
+	最后，让我们设置关于 DTLS 自签名证书的策略 */
 	dtls_selfsigned_certs_ok = accept_selfsigned;
 	if(!dtls_selfsigned_certs_ok) {
 		JANUS_LOG(LOG_WARN, "WebRTC PeerConnections with self-signed certificates will NOT be accepted\n");
@@ -665,6 +726,13 @@ int janus_dtls_srtp_create_sctp(janus_dtls_srtp *dtls) {
 #endif
 }
 
+/**
+ * @brief 处理进来的dtls srtp数据
+ * 
+ * @param dtls 
+ * @param buf 
+ * @param len 
+ */
 void janus_dtls_srtp_incoming_msg(janus_dtls_srtp *dtls, char *buf, uint16_t len) {
 	if(dtls == NULL) {
 		JANUS_LOG(LOG_ERR, "No DTLS-SRTP stack, no incoming message...\n");
@@ -694,7 +762,8 @@ void janus_dtls_srtp_incoming_msg(janus_dtls_srtp *dtls, char *buf, uint16_t len
 		return;
 	}
 	if(dtls->dtls_started == 0) {
-		/* Handshake not started yet: maybe we're still waiting for the answer and the DTLS role? */
+		/* Handshake not started yet: maybe we're still waiting for the answer and the DTLS role? 
+		握手尚未开始：也许我们仍在等待answer 和 DTLS 角色*/
 		return;
 	}
 	int written = BIO_write(dtls->read_bio, buf, len);
@@ -703,7 +772,7 @@ void janus_dtls_srtp_incoming_msg(janus_dtls_srtp *dtls, char *buf, uint16_t len
 	} else {
 		JANUS_LOG(LOG_HUGE, "[%"SCNu64"]     Written %d bytes on the read BIO...\n", handle->handle_id, written);
 	}
-	/* Try to read data */
+	/* Try to read data 尝试去读取数据 */
 	char data[1500];	/* FIXME */
 	memset(&data, 0, 1500);
 	int read = SSL_read(dtls->ssl, &data, 1500);
@@ -711,7 +780,7 @@ void janus_dtls_srtp_incoming_msg(janus_dtls_srtp *dtls, char *buf, uint16_t len
 	if(read < 0) {
 		unsigned long err = SSL_get_error(dtls->ssl, read);
 		if(err == SSL_ERROR_SSL) {
-			/* Ops, something went wrong with the DTLS handshake */
+			/* Ops, something went wrong with the DTLS handshake DTLS握手出错 */
 			char error[200];
 			ERR_error_string_n(ERR_get_error(), error, 200);
 			JANUS_LOG(LOG_ERR, "[%"SCNu64"] Handshake error: %s\n", handle->handle_id, error);
@@ -719,17 +788,17 @@ void janus_dtls_srtp_incoming_msg(janus_dtls_srtp *dtls, char *buf, uint16_t len
 		}
 	}
 	if(janus_flags_is_set(&handle->webrtc_flags, JANUS_ICE_HANDLE_WEBRTC_STOP) || janus_is_stopping()) {
-		/* DTLS alert triggered, we should end it here */
+		/* DTLS alert triggered, we should end it here DTLS警报被触发，我们应该在这里结束 */
 		JANUS_LOG(LOG_VERB, "[%"SCNu64"] Forced to stop it here...\n", handle->handle_id);
 		return;
 	}
 	if(!SSL_is_init_finished(dtls->ssl)) {
-		/* Nothing else to do for now */
+		/* Nothing else to do for now 暂时没有什么可以做的 */
 		JANUS_LOG(LOG_HUGE, "[%"SCNu64"] Initialization not finished yet...\n", handle->handle_id);
 		return;
 	}
 	if(dtls->ready) {
-		/* There's data to be read? */
+		/* There's data to be read? 数据已经准备好了 */
 		JANUS_LOG(LOG_HUGE, "[%"SCNu64"] Any data available?\n", handle->handle_id);
 #ifdef HAVE_SCTP
 		if(dtls->sctp != NULL && read > 0) {
@@ -743,9 +812,10 @@ void janus_dtls_srtp_incoming_msg(janus_dtls_srtp *dtls, char *buf, uint16_t len
 #endif
 	} else {
 		JANUS_LOG(LOG_VERB, "[%"SCNu64"] DTLS established, yay!\n", handle->handle_id);
-		/* Check the remote fingerprint */
+		/* Check the remote fingerprint 检查远程指纹ssl */
 		X509 *rcert = SSL_get_peer_certificate(dtls->ssl);
 		if(!rcert) {
+			/*没有ssl配置*/
 			JANUS_LOG(LOG_ERR, "[%"SCNu64"] No remote certificate?? (%s)\n",
 				handle->handle_id, ERR_reason_error_string(ERR_get_error()));
 		} else {
