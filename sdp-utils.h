@@ -199,22 +199,22 @@ typedef struct janus_sdp_attribute {
 	/*! \brief Reference counter for this instance */
 	janus_refcount ref;
 } janus_sdp_attribute;
-/*! \brief Helper method to quickly create a janus_sdp_attribute instance
+/*! \brief Helper method to quickly create a janus_sdp_attribute instance 快速创建 janus_sdp_attribute 实例
  * @param[in] name Name of the attribute
  * @param[in] value Value of the attribute, as a printf compliant string (variable arguments)
  * @returns A pointer to a valid janus_sdp_attribute instance, if successfull, NULL otherwise */
 janus_sdp_attribute *janus_sdp_attribute_create(const char *name, const char *value, ...) G_GNUC_PRINTF(2, 3);
-/*! \brief Helper method to free a janus_sdp_attribute instance
+/*! \brief Helper method to free a janus_sdp_attribute instance 释放 janus_sdp_attribute 实例
  * @note This method does not remove the attribute from the global or m-line attributes, that's up to the caller
  * @param[in] attr The janus_sdp_attribute instance to free */
 void janus_sdp_attribute_destroy(janus_sdp_attribute *attr);
-/*! \brief Helper method to add an attribute to a media line
+/*! \brief Helper method to add an attribute to a media line 向媒体行添加属性
  * @param[in] mline The m-line to add the attribute to
  * @param[in] attr The attribute to add
  * @returns 0 in case of success, -1 otherwise */
 int janus_sdp_attribute_add_to_mline(janus_sdp_mline *mline, janus_sdp_attribute *attr);
 
-/*! \brief Method to parse an SDP string to a janus_sdp object
+/*! \brief Method to parse an SDP string to a janus_sdp object 将 SDP 字符串解析为 janus_sdp 对象
  * @param[in] sdp The SDP string to parse
  * @param[in,out] error Buffer to receive a reason for an error, if any
  * @param[in] errlen The length of the error buffer
@@ -222,18 +222,18 @@ int janus_sdp_attribute_add_to_mline(janus_sdp_mline *mline, janus_sdp_attribute
  * of errors, if provided the error string is filled with a reason  */
 janus_sdp *janus_sdp_parse(const char *sdp, char *error, size_t errlen);
 
-/*! \brief Helper method to quickly remove all traces (m-line, rtpmap, fmtp, etc.) of a payload type
+/*! \brief Helper method to quickly remove all traces (m-line, rtpmap, fmtp, etc.) of a payload type 快速移除有效载荷类型的所有痕迹（m-line、rtpmap、fmtp 等）
  * @param[in] sdp The janus_sdp object to remove the payload type from
  * @param[in] pt The payload type to remove
  * @returns 0 in case of success, a negative integer otherwise */
 int janus_sdp_remove_payload_type(janus_sdp *sdp, int pt);
 
-/*! \brief Method to serialize a janus_sdp object to an SDP string
+/*! \brief Method to serialize a janus_sdp object to an SDP string 将 janus_sdp 对象序列化为 SDP 字符串
  * @param[in] sdp The janus_sdp object to serialize
  * @returns A pointer to a string with the serialized SDP, if successful, NULL otherwise */
 char *janus_sdp_write(janus_sdp *sdp);
 
-/*! \brief Method to quickly generate a janus_sdp instance from a few selected fields
+/*! \brief Method to quickly generate a janus_sdp instance from a few selected fields 从几个选定的字段中快速生成 janus_sdp 实例
  * @note This allocates the \c o_addr, \c s_name and \c c_addr properties: if you
  * want to replace them, don't forget to \c g_free the original pointers first.
  * @param[in] name The session name (if NULL, a default value will be set)
@@ -314,6 +314,10 @@ janus_sdp *janus_sdp_generate_offer(const char *name, const char *address, ...);
 /*! \brief Method to generate a janus_sdp answer to a provided janus_sdp offer, using variable arguments
  * to dictate how to respond (e.g., in terms of media to accept, reject, directions, etc.). Variable
  * arguments are in the form of a sequence of name-value terminated by a JANUS_SDP_OA_DONE, e.g.:
+ * 为提供的 janus_sdp offer生成 janus_sdp answer，
+ * 使用可变参数来指示如何响应（例如，在接受、拒绝、指示等媒体方面）。 
+ * 变量参数采用由 JANUS_SDP_OA_DONE 终止的名称-值序列的形式，
+ * 例如：
  \verbatim
 	janus_sdp *answer = janus_sdp_generate_answer(offer,
 		JANUS_SDP_OA_AUDIO, TRUE,
@@ -331,7 +335,7 @@ janus_sdp *janus_sdp_generate_offer(const char *name, const char *address, ...);
  * @returns A pointer to a janus_sdp object, if successful, NULL otherwise */
 janus_sdp *janus_sdp_generate_answer(janus_sdp *offer, ...);
 
-/*! \brief Helper to get the payload type associated to a specific codec
+/*! \brief Helper to get the payload type associated to a specific codec 获取与特定编解码器关联的有效负载类型
  * @note This version doesn't involve profiles, which means that in case
  * of multiple payload types associated to the same codec because of
  * different profiles (e.g., VP9 and H.264), this will simply return the
@@ -342,7 +346,7 @@ janus_sdp *janus_sdp_generate_answer(janus_sdp *offer, ...);
 int janus_sdp_get_codec_pt(janus_sdp *sdp, const char *codec);
 
 /*! \brief Helper to get the payload type associated to a specific codec,
- * taking into account a codec profile as a hint as well
+ * taking into account a codec profile as a hint as well 获取与特定编解码器关联的有效负载类型，同时考虑编解码器配置文件作为提示
  * @note The profile will only be used if the codec supports it, and the
  * core is aware of it: right now, this is only VP9 and H.264. If the codec
  * is there but the profile is not found, then no payload type is returned.

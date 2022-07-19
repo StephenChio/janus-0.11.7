@@ -648,10 +648,25 @@ int janus_sdp_remove_payload_type(janus_sdp *sdp, int pt) {
 	return 0;
 }
 
+/**
+ * @brief 获取与特定编解码器关联的有效负载类型
+ * 
+ * @param sdp 
+ * @param codec 
+ * @return int 
+ */
 int janus_sdp_get_codec_pt(janus_sdp *sdp, const char *codec) {
 	return janus_sdp_get_codec_pt_full(sdp, codec, NULL);
 }
 
+/**
+ * @brief 获取与特定编解码器关联的有效负载类型，同时考虑编解码器配置文件作为提示
+ * 
+ * @param sdp 
+ * @param codec 
+ * @param profile 
+ * @return int 
+ */
 int janus_sdp_get_codec_pt_full(janus_sdp *sdp, const char *codec, const char *profile) {
 	if(sdp == NULL || codec == NULL)
 		return -1;

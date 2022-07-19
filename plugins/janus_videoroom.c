@@ -1181,14 +1181,13 @@ room-<unique room ID>: {
 #include <sys/types.h>
 #include <sys/socket.h>
 
-
 /* Plugin information */
-#define JANUS_VIDEOROOM_VERSION			9
-#define JANUS_VIDEOROOM_VERSION_STRING	"0.0.9"
-#define JANUS_VIDEOROOM_DESCRIPTION		"This is a plugin implementing a videoconferencing SFU (Selective Forwarding Unit) for Janus, that is an audio/video router."
-#define JANUS_VIDEOROOM_NAME			"JANUS VideoRoom plugin"
-#define JANUS_VIDEOROOM_AUTHOR			"Meetecho s.r.l."
-#define JANUS_VIDEOROOM_PACKAGE			"janus.plugin.videoroom"
+#define JANUS_VIDEOROOM_VERSION 9
+#define JANUS_VIDEOROOM_VERSION_STRING "0.0.9"
+#define JANUS_VIDEOROOM_DESCRIPTION "This is a plugin implementing a videoconferencing SFU (Selective Forwarding Unit) for Janus, that is an audio/video router."
+#define JANUS_VIDEOROOM_NAME "JANUS VideoRoom plugin"
+#define JANUS_VIDEOROOM_AUTHOR "Meetecho s.r.l."
+#define JANUS_VIDEOROOM_PACKAGE "janus.plugin.videoroom"
 
 /* Plugin methods */
 janus_plugin *create(void);
@@ -1216,45 +1215,43 @@ json_t *janus_videoroom_query_session(janus_plugin_session *handle);
 
 /* Plugin setup */
 static janus_plugin janus_videoroom_plugin =
-	JANUS_PLUGIN_INIT (
-		.init = janus_videoroom_init,
-		.destroy = janus_videoroom_destroy,
+	JANUS_PLUGIN_INIT(
+			.init = janus_videoroom_init,
+			.destroy = janus_videoroom_destroy,
 
-		.get_api_compatibility = janus_videoroom_get_api_compatibility,
-		.get_version = janus_videoroom_get_version,
-		.get_version_string = janus_videoroom_get_version_string,
-		.get_description = janus_videoroom_get_description,
-		.get_name = janus_videoroom_get_name,
-		.get_author = janus_videoroom_get_author,
-		.get_package = janus_videoroom_get_package,
+			.get_api_compatibility = janus_videoroom_get_api_compatibility,
+			.get_version = janus_videoroom_get_version,
+			.get_version_string = janus_videoroom_get_version_string,
+			.get_description = janus_videoroom_get_description,
+			.get_name = janus_videoroom_get_name,
+			.get_author = janus_videoroom_get_author,
+			.get_package = janus_videoroom_get_package,
 
-		.create_session = janus_videoroom_create_session,
-		.handle_message = janus_videoroom_handle_message,
-		.handle_admin_message = janus_videoroom_handle_admin_message,
-		.setup_media = janus_videoroom_setup_media,
-		.incoming_rtp = janus_videoroom_incoming_rtp,
-		.incoming_rtcp = janus_videoroom_incoming_rtcp,
-		.incoming_data = janus_videoroom_incoming_data,
-		.data_ready = janus_videoroom_data_ready,
-		.slow_link = janus_videoroom_slow_link,
-		.hangup_media = janus_videoroom_hangup_media,
-		.destroy_session = janus_videoroom_destroy_session,
-		.query_session = janus_videoroom_query_session,
-	);
+			.create_session = janus_videoroom_create_session,
+			.handle_message = janus_videoroom_handle_message,
+			.handle_admin_message = janus_videoroom_handle_admin_message,
+			.setup_media = janus_videoroom_setup_media,
+			.incoming_rtp = janus_videoroom_incoming_rtp,
+			.incoming_rtcp = janus_videoroom_incoming_rtcp,
+			.incoming_data = janus_videoroom_incoming_data,
+			.data_ready = janus_videoroom_data_ready,
+			.slow_link = janus_videoroom_slow_link,
+			.hangup_media = janus_videoroom_hangup_media,
+			.destroy_session = janus_videoroom_destroy_session,
+			.query_session = janus_videoroom_query_session, );
 
 /* Plugin creator */
-janus_plugin *create(void) {
+janus_plugin *create(void)
+{
 	JANUS_LOG(LOG_VERB, "%s created!\n", JANUS_VIDEOROOM_NAME);
 	return &janus_videoroom_plugin;
 }
 
 /* Parameter validation */
 static struct janus_json_parameter request_parameters[] = {
-	{"request", JSON_STRING, JANUS_JSON_PARAM_REQUIRED}
-};
+	{"request", JSON_STRING, JANUS_JSON_PARAM_REQUIRED}};
 static struct janus_json_parameter adminkey_parameters[] = {
-	{"admin_key", JSON_STRING, JANUS_JSON_PARAM_REQUIRED}
-};
+	{"admin_key", JSON_STRING, JANUS_JSON_PARAM_REQUIRED}};
 static struct janus_json_parameter create_parameters[] = {
 	{"description", JSON_STRING, 0},
 	{"is_private", JANUS_JSON_BOOL, 0},
@@ -1286,8 +1283,7 @@ static struct janus_json_parameter create_parameters[] = {
 	{"lock_record", JANUS_JSON_BOOL, 0},
 	{"permanent", JANUS_JSON_BOOL, 0},
 	{"notify_joining", JANUS_JSON_BOOL, 0},
-	{"require_e2ee", JANUS_JSON_BOOL, 0}
-};
+	{"require_e2ee", JANUS_JSON_BOOL, 0}};
 static struct janus_json_parameter edit_parameters[] = {
 	{"secret", JSON_STRING, 0},
 	{"new_description", JSON_STRING, 0},
@@ -1298,61 +1294,44 @@ static struct janus_json_parameter edit_parameters[] = {
 	{"new_bitrate", JSON_INTEGER, JANUS_JSON_PARAM_POSITIVE},
 	{"new_fir_freq", JSON_INTEGER, JANUS_JSON_PARAM_POSITIVE},
 	{"new_publishers", JSON_INTEGER, JANUS_JSON_PARAM_POSITIVE},
-	{"permanent", JANUS_JSON_BOOL, 0}
-};
+	{"permanent", JANUS_JSON_BOOL, 0}};
 static struct janus_json_parameter room_parameters[] = {
-	{"room", JSON_INTEGER, JANUS_JSON_PARAM_REQUIRED | JANUS_JSON_PARAM_POSITIVE}
-};
+	{"room", JSON_INTEGER, JANUS_JSON_PARAM_REQUIRED | JANUS_JSON_PARAM_POSITIVE}};
 static struct janus_json_parameter roomopt_parameters[] = {
-	{"room", JSON_INTEGER, JANUS_JSON_PARAM_POSITIVE}
-};
+	{"room", JSON_INTEGER, JANUS_JSON_PARAM_POSITIVE}};
 static struct janus_json_parameter roomstr_parameters[] = {
-	{"room", JSON_STRING, JANUS_JSON_PARAM_REQUIRED}
-};
+	{"room", JSON_STRING, JANUS_JSON_PARAM_REQUIRED}};
 static struct janus_json_parameter roomstropt_parameters[] = {
-	{"room", JSON_STRING, 0}
-};
+	{"room", JSON_STRING, 0}};
 static struct janus_json_parameter id_parameters[] = {
-	{"id", JSON_INTEGER, JANUS_JSON_PARAM_REQUIRED | JANUS_JSON_PARAM_POSITIVE}
-};
+	{"id", JSON_INTEGER, JANUS_JSON_PARAM_REQUIRED | JANUS_JSON_PARAM_POSITIVE}};
 static struct janus_json_parameter idopt_parameters[] = {
-	{"id", JSON_INTEGER, JANUS_JSON_PARAM_POSITIVE}
-};
+	{"id", JSON_INTEGER, JANUS_JSON_PARAM_POSITIVE}};
 static struct janus_json_parameter idstr_parameters[] = {
-	{"id", JSON_STRING, JANUS_JSON_PARAM_REQUIRED}
-};
+	{"id", JSON_STRING, JANUS_JSON_PARAM_REQUIRED}};
 static struct janus_json_parameter idstropt_parameters[] = {
-	{"id", JSON_STRING, 0}
-};
+	{"id", JSON_STRING, 0}};
 static struct janus_json_parameter pid_parameters[] = {
-	{"publisher_id", JSON_INTEGER, JANUS_JSON_PARAM_REQUIRED | JANUS_JSON_PARAM_POSITIVE}
-};
+	{"publisher_id", JSON_INTEGER, JANUS_JSON_PARAM_REQUIRED | JANUS_JSON_PARAM_POSITIVE}};
 static struct janus_json_parameter pidstr_parameters[] = {
-	{"publisher_id", JSON_STRING, JANUS_JSON_PARAM_REQUIRED}
-};
+	{"publisher_id", JSON_STRING, JANUS_JSON_PARAM_REQUIRED}};
 static struct janus_json_parameter feed_parameters[] = {
-	{"feed", JSON_INTEGER, JANUS_JSON_PARAM_REQUIRED | JANUS_JSON_PARAM_POSITIVE}
-};
+	{"feed", JSON_INTEGER, JANUS_JSON_PARAM_REQUIRED | JANUS_JSON_PARAM_POSITIVE}};
 static struct janus_json_parameter feedstr_parameters[] = {
-	{"feed", JSON_STRING, JANUS_JSON_PARAM_REQUIRED}
-};
+	{"feed", JSON_STRING, JANUS_JSON_PARAM_REQUIRED}};
 static struct janus_json_parameter destroy_parameters[] = {
-	{"permanent", JANUS_JSON_BOOL, 0}
-};
+	{"permanent", JANUS_JSON_BOOL, 0}};
 static struct janus_json_parameter allowed_parameters[] = {
 	{"secret", JSON_STRING, 0},
 	{"action", JSON_STRING, JANUS_JSON_PARAM_REQUIRED},
-	{"allowed", JSON_ARRAY, 0}
-};
+	{"allowed", JSON_ARRAY, 0}};
 static struct janus_json_parameter kick_parameters[] = {
-	{"secret", JSON_STRING, 0}
-};
+	{"secret", JSON_STRING, 0}};
 static struct janus_json_parameter moderate_parameters[] = {
 	{"secret", JSON_STRING, 0},
 	{"mute_audio", JANUS_JSON_BOOL, 0},
 	{"mute_video", JANUS_JSON_BOOL, 0},
-	{"mute_data", JANUS_JSON_BOOL, 0}
-};
+	{"mute_data", JANUS_JSON_BOOL, 0}};
 static struct janus_json_parameter join_parameters[] = {
 	{"ptype", JSON_STRING, JANUS_JSON_PARAM_REQUIRED},
 	{"audio", JANUS_JSON_BOOL, 0},
@@ -1361,8 +1340,7 @@ static struct janus_json_parameter join_parameters[] = {
 	{"bitrate", JSON_INTEGER, JANUS_JSON_PARAM_POSITIVE},
 	{"record", JANUS_JSON_BOOL, 0},
 	{"filename", JSON_STRING, 0},
-	{"token", JSON_STRING, 0}
-};
+	{"token", JSON_STRING, 0}};
 static struct janus_json_parameter publish_parameters[] = {
 	{"audio", JANUS_JSON_BOOL, 0},
 	{"audiocodec", JSON_STRING, 0},
@@ -1379,11 +1357,9 @@ static struct janus_json_parameter publish_parameters[] = {
 	{"audio_active_packets", JSON_INTEGER, JANUS_JSON_PARAM_POSITIVE},
 	/* The following are just to force a renegotiation and/or an ICE restart */
 	{"update", JANUS_JSON_BOOL, 0},
-	{"restart", JANUS_JSON_BOOL, 0}
-};
+	{"restart", JANUS_JSON_BOOL, 0}};
 static struct janus_json_parameter record_parameters[] = {
-	{"record", JANUS_JSON_BOOL, JANUS_JSON_PARAM_REQUIRED}
-};
+	{"record", JANUS_JSON_BOOL, JANUS_JSON_PARAM_REQUIRED}};
 static struct janus_json_parameter rtp_forward_parameters[] = {
 	{"video_port", JSON_INTEGER, JANUS_JSON_PARAM_POSITIVE},
 	{"video_rtcp_port", JSON_INTEGER, JANUS_JSON_PARAM_POSITIVE},
@@ -1404,14 +1380,11 @@ static struct janus_json_parameter rtp_forward_parameters[] = {
 	{"host_family", JSON_STRING, 0},
 	{"simulcast", JANUS_JSON_BOOL, 0},
 	{"srtp_suite", JSON_INTEGER, JANUS_JSON_PARAM_POSITIVE},
-	{"srtp_crypto", JSON_STRING, 0}
-};
+	{"srtp_crypto", JSON_STRING, 0}};
 static struct janus_json_parameter stop_rtp_forward_parameters[] = {
-	{"stream_id", JSON_INTEGER, JANUS_JSON_PARAM_REQUIRED | JANUS_JSON_PARAM_POSITIVE}
-};
+	{"stream_id", JSON_INTEGER, JANUS_JSON_PARAM_REQUIRED | JANUS_JSON_PARAM_POSITIVE}};
 static struct janus_json_parameter publisher_parameters[] = {
-	{"display", JSON_STRING, 0}
-};
+	{"display", JSON_STRING, 0}};
 static struct janus_json_parameter configure_parameters[] = {
 	{"audio", JANUS_JSON_BOOL, 0},
 	{"video", JANUS_JSON_BOOL, 0},
@@ -1427,8 +1400,7 @@ static struct janus_json_parameter configure_parameters[] = {
 	{"spatial_layer", JSON_INTEGER, JANUS_JSON_PARAM_POSITIVE},
 	{"temporal_layer", JSON_INTEGER, JANUS_JSON_PARAM_POSITIVE},
 	/* The following is to handle a renegotiation */
-	{"update", JANUS_JSON_BOOL, 0}
-};
+	{"update", JANUS_JSON_BOOL, 0}};
 static struct janus_json_parameter subscriber_parameters[] = {
 	{"private_id", JSON_INTEGER, JANUS_JSON_PARAM_POSITIVE},
 	{"close_pc", JANUS_JSON_BOOL, 0},
@@ -1458,18 +1430,21 @@ static gboolean notify_events = TRUE;
 static gboolean string_ids = FALSE;
 static janus_callbacks *gateway = NULL;
 static GThread *handler_thread;
+//这是专门的线程来处理进入到videoRoom插件的异步消息
 static void *janus_videoroom_handler(void *data);
 static void janus_videoroom_relay_rtp_packet(gpointer data, gpointer user_data);
 static void janus_videoroom_relay_data_packet(gpointer data, gpointer user_data);
 static void janus_videoroom_hangup_media_internal(gpointer session_data);
 
-typedef enum janus_videoroom_p_type {
+typedef enum janus_videoroom_p_type
+{
 	janus_videoroom_p_type_none = 0,
-	janus_videoroom_p_type_subscriber,			/* Generic subscriber 订阅者*/
-	janus_videoroom_p_type_publisher,			/* Participant (for receiving events) and optionally publisher 参与者（用于接收事件）和可选的发布者 */
+	janus_videoroom_p_type_subscriber, /* Generic subscriber 订阅者*/
+	janus_videoroom_p_type_publisher,  /* Participant (for receiving events) and optionally publisher 参与者（用于接收事件）和可选的发布者 */
 } janus_videoroom_p_type;
 
-typedef struct janus_videoroom_message {
+typedef struct janus_videoroom_message
+{
 	janus_plugin_session *handle;
 	char *transaction;
 	json_t *message;
@@ -1478,53 +1453,54 @@ typedef struct janus_videoroom_message {
 static GAsyncQueue *messages = NULL;
 static janus_videoroom_message exit_message;
 
-
-typedef struct janus_videoroom {
-	guint64 room_id;			/* Unique room ID (when using integers) 唯一的房间ID 整型 */
-	gchar *room_id_str;			/* Unique room ID (when using strings) 唯一的房间ID 字符串*/
-	gchar *room_name;			/* Room description 房间描述*/
-	gchar *room_secret;			/* Secret needed to manipulate (e.g., destroy) this room 操作房间所需要的密钥 */
-	gchar *room_pin;			/* Password needed to join this room, if any 加入房间需要的密码，如果有 */
-	gboolean is_private;		/* Whether this room is 'private' (as in hidden) or not 房间是否是‘私有’的, 如果是, 不能被搜索到 */
-	gboolean require_pvtid;		/* Whether subscriptions in this room require a private_id 此房间中的订阅是否需要 private_id*/
-	gboolean signed_tokens;		/* Whether signed tokens are required (assuming they're enabled in the core) 是否需要签名令牌（假设它们在核心中启用） */
-	gboolean require_e2ee;		/* Whether end-to-end encrypted publishers are required 是否需要端到端加密发布者 */
-	int max_publishers;			/* Maximum number of concurrent publishers 发布者的最大数量 */
-	uint32_t bitrate;			/* Global bitrate limit 全局比特率限制 */
-	gboolean bitrate_cap;		/* Whether the above limit is insormountable 上述限制（全局比特率限制）是否不可逾越 */
-	uint16_t fir_freq;			/* Regular FIR frequency (0=disabled) 常规通过 FIR 请求关键帧 频率（0=禁用） */
-	janus_audiocodec acodec[5];	/* Audio codec(s) to force on publishers 强制发布者使用的音频编解码器*/
-	janus_videocodec vcodec[5];	/* Video codec(s) to force on publishers 强制发布者使用的视频编解码器*/
-	char *vp9_profile;			/* VP9 codec profile to prefer, if more are negotiated  VP9 编解码器配置文件,如果我们有协商*/
-	char *h264_profile;			/* H.264 codec profile to prefer, if more are negotiated H264 编解码器配置文件,如果我们有协商*/
-	gboolean do_opusfec;		/* Whether inband FEC must be negotiated (note: only available for Opus) 是否必须协商带 inband FEC（注：仅适用于 Opus） */
-	gboolean do_opusdtx;		/* Whether DTX must be negotiated (note: only available for Opus) 是否必须协商 DTX（注：仅适用于 Opus）*/
-	gboolean do_svc;			/* Whether SVC must be done for video (note: only available for VP9 right now) 视频是否必须 SVC（注：目前仅适用于 VP9） */
-	gboolean audiolevel_ext;	/* Whether the ssrc-audio-level extension must be negotiated or not for new publishers 是否必须为新发布者协商 ssrc-audio-level 扩展 */
-	gboolean audiolevel_event;	/* Whether to emit event to other users about audiolevel 是否向其他用户发出有关音频级别的事件*/
-	int audio_active_packets;	/* Amount of packets with audio level for checkup 用于检查的音频级别的数据包数量 */
-	int audio_level_average;	/* Average audio level 平均音频级别 */
-	gboolean videoorient_ext;	/* Whether the video-orientation extension must be negotiated or not for new publishers 是否必须为新发布者协商视频方向扩展*/
-	gboolean playoutdelay_ext;	/* Whether the playout-delay extension must be negotiated or not for new publishers 是否必须为新发布者协商播放延迟扩展*/
-	gboolean transport_wide_cc_ext;	/* Whether the transport wide cc extension must be negotiated or not for new publishers 是否必须为新发布者协商 拥塞控制 扩展*/
-	gboolean record;			/* Whether the feeds from publishers in this room should be recorded 是否应该录制*/
-	char *rec_dir;				/* Where to save the recordings of this room, if enabled 保存录制记录的地方，如果开启*/
-	gboolean lock_record;		/* Whether recording state can only be changed providing the room secret 是否只有提供房间密码才能更改录制状态*/
-	GHashTable *participants;	/* Map of potential publishers (we get subscribers from them) 潜在发布者Map（我们从他们那里获得订阅者）*/
-	GHashTable *private_ids;	/* Map of existing private IDs 存在的私有id map */
-	volatile gint destroyed;	/* Whether this room has been destroyed 是否房间已被销毁 */
-	gboolean check_allowed;		/* Whether to check tokens when participants join (see below) 当参加者入会时是否要检查tokens */
-	GHashTable *allowed;		/* Map of participants (as tokens) allowed to join 可以允许加入的参与者 */
-	gboolean notify_joining;	/* Whether an event is sent to notify all participants if a new participant joins the room 当有新加入者时是否通知房间里的所有参与者 */
-	janus_mutex mutex;			/* Mutex to lock this room instance 锁 */
-	janus_refcount ref;			/* Reference counter for this room 引用计数 */
+typedef struct janus_videoroom
+{
+	guint64 room_id;				/* Unique room ID (when using integers) 唯一的房间ID 整型 */
+	gchar *room_id_str;				/* Unique room ID (when using strings) 唯一的房间ID 字符串*/
+	gchar *room_name;				/* Room description 房间描述*/
+	gchar *room_secret;				/* Secret needed to manipulate (e.g., destroy) this room 操作房间所需要的密钥 */
+	gchar *room_pin;				/* Password needed to join this room, if any 加入房间需要的密码，如果有 */
+	gboolean is_private;			/* Whether this room is 'private' (as in hidden) or not 房间是否是‘私有’的, 如果是, 不能被搜索到 */
+	gboolean require_pvtid;			/* Whether subscriptions in this room require a private_id 此房间中的订阅是否需要 private_id*/
+	gboolean signed_tokens;			/* Whether signed tokens are required (assuming they're enabled in the core) 是否需要签名令牌（假设它们在核心中启用） */
+	gboolean require_e2ee;			/* Whether end-to-end encrypted publishers are required 是否需要端到端加密发布者 */
+	int max_publishers;				/* Maximum number of concurrent publishers 发布者的最大数量 */
+	uint32_t bitrate;				/* Global bitrate limit 全局比特率限制 */
+	gboolean bitrate_cap;			/* Whether the above limit is insormountable 上述限制（全局比特率限制）是否不可逾越 */
+	uint16_t fir_freq;				/* Regular FIR frequency (0=disabled) 常规通过 FIR 请求关键帧 频率（0=禁用） */
+	janus_audiocodec acodec[5];		/* Audio codec(s) to force on publishers 强制发布者使用的音频编解码器*/
+	janus_videocodec vcodec[5];		/* Video codec(s) to force on publishers 强制发布者使用的视频编解码器*/
+	char *vp9_profile;				/* VP9 codec profile to prefer, if more are negotiated  VP9 编解码器配置文件,如果我们有协商*/
+	char *h264_profile;				/* H.264 codec profile to prefer, if more are negotiated H264 编解码器配置文件,如果我们有协商*/
+	gboolean do_opusfec;			/* Whether inband FEC must be negotiated (note: only available for Opus) 是否必须协商带 inband FEC（注：仅适用于 Opus） */
+	gboolean do_opusdtx;			/* Whether DTX must be negotiated (note: only available for Opus) 是否必须协商 DTX（注：仅适用于 Opus）*/
+	gboolean do_svc;				/* Whether SVC must be done for video (note: only available for VP9 right now) 视频是否必须 SVC（注：目前仅适用于 VP9） */
+	gboolean audiolevel_ext;		/* Whether the ssrc-audio-level extension must be negotiated or not for new publishers 是否必须为新发布者协商 ssrc-audio-level 扩展 */
+	gboolean audiolevel_event;		/* Whether to emit event to other users about audiolevel 是否向其他用户发出有关音频级别的事件*/
+	int audio_active_packets;		/* Amount of packets with audio level for checkup 用于检查的音频级别的数据包数量 */
+	int audio_level_average;		/* Average audio level 平均音频级别 */
+	gboolean videoorient_ext;		/* Whether the video-orientation extension must be negotiated or not for new publishers 是否必须为新发布者协商视频方向扩展*/
+	gboolean playoutdelay_ext;		/* Whether the playout-delay extension must be negotiated or not for new publishers 是否必须为新发布者协商播放延迟扩展*/
+	gboolean transport_wide_cc_ext; /* Whether the transport wide cc extension must be negotiated or not for new publishers 是否必须为新发布者协商 拥塞控制 扩展*/
+	gboolean record;				/* Whether the feeds from publishers in this room should be recorded 是否应该录制*/
+	char *rec_dir;					/* Where to save the recordings of this room, if enabled 保存录制记录的地方，如果开启*/
+	gboolean lock_record;			/* Whether recording state can only be changed providing the room secret 是否只有提供房间密码才能更改录制状态*/
+	GHashTable *participants;		/* Map of potential publishers (we get subscribers from them) 潜在发布者Map（我们从他们那里获得订阅者）*/
+	GHashTable *private_ids;		/* Map of existing private IDs 存在的私有id map */
+	volatile gint destroyed;		/* Whether this room has been destroyed 是否房间已被销毁 */
+	gboolean check_allowed;			/* Whether to check tokens when participants join (see below) 当参加者入会时是否要检查tokens */
+	GHashTable *allowed;			/* Map of participants (as tokens) allowed to join 可以允许加入的参与者 */
+	gboolean notify_joining;		/* Whether an event is sent to notify all participants if a new participant joins the room 当有新加入者时是否通知房间里的所有参与者 */
+	janus_mutex mutex;				/* Mutex to lock this room instance 锁 */
+	janus_refcount ref;				/* Reference counter for this room 引用计数 */
 } janus_videoroom;
 static GHashTable *rooms;
 static janus_mutex rooms_mutex = JANUS_MUTEX_INITIALIZER;
 static char *admin_key = NULL;
 static gboolean lock_rtpfwd = FALSE;
 
-typedef struct janus_videoroom_session {
+typedef struct janus_videoroom_session
+{
 	janus_plugin_session *handle;
 	gint64 sdp_sessid;
 	gint64 sdp_version;
@@ -1542,7 +1518,8 @@ static janus_mutex sessions_mutex = JANUS_MUTEX_INITIALIZER;
 
 /* A host whose ports gets streamed RTP packets of the corresponding type 主机端口获取相应类型的流式 RTP 数据包*/
 typedef struct janus_videoroom_srtp_context janus_videoroom_srtp_context;
-typedef struct janus_videoroom_rtp_forwarder {
+typedef struct janus_videoroom_rtp_forwarder
+{
 	void *source;
 	gboolean is_video;
 	gboolean is_data;
@@ -1569,7 +1546,8 @@ typedef struct janus_videoroom_rtp_forwarder {
 static void janus_videoroom_rtp_forwarder_destroy(janus_videoroom_rtp_forwarder *forward);
 static void janus_videoroom_rtp_forwarder_free(const janus_refcount *f_ref);
 /* SRTP encryption may be needed, and potentially shared 可能需要 SRTP 加密，并且可能共享*/
-struct janus_videoroom_srtp_context {
+struct janus_videoroom_srtp_context
+{
 	GHashTable *contexts;
 	char *id;
 	srtp_t ctx;
@@ -1581,29 +1559,35 @@ struct janus_videoroom_srtp_context {
 };
 static void janus_videoroom_srtp_context_free(gpointer data);
 /* RTCP support in RTP forwarders RTP 转发器中的 RTCP 支持 */
-typedef struct janus_videoroom_rtcp_receiver {
+typedef struct janus_videoroom_rtcp_receiver
+{
 	GSource parent;
 	janus_videoroom_rtp_forwarder *forward;
 	GDestroyNotify destroy;
 } janus_videoroom_rtcp_receiver;
 static void janus_videoroom_rtp_forwarder_rtcp_receive(janus_videoroom_rtp_forwarder *forward);
-static gboolean janus_videoroom_rtp_forwarder_rtcp_prepare(GSource *source, gint *timeout) {
+static gboolean janus_videoroom_rtp_forwarder_rtcp_prepare(GSource *source, gint *timeout)
+{
 	*timeout = -1;
 	return FALSE;
 }
-static gboolean janus_videoroom_rtp_forwarder_rtcp_dispatch(GSource *source, GSourceFunc callback, gpointer user_data) {
+static gboolean janus_videoroom_rtp_forwarder_rtcp_dispatch(GSource *source, GSourceFunc callback, gpointer user_data)
+{
 	janus_videoroom_rtcp_receiver *r = (janus_videoroom_rtcp_receiver *)source;
 	/* Receive the packet 接收包 */
-	if(r)
+	if (r)
 		janus_videoroom_rtp_forwarder_rtcp_receive(r->forward);
 	return G_SOURCE_CONTINUE;
 }
 static void janus_videoroom_publisher_dereference_void(void *p);
-static void janus_videoroom_rtp_forwarder_rtcp_finalize(GSource *source) {
+static void janus_videoroom_rtp_forwarder_rtcp_finalize(GSource *source)
+{
 	janus_videoroom_rtcp_receiver *r = (janus_videoroom_rtcp_receiver *)source;
 	/* Remove the reference to the forwarder 移除forwarder的引用 */
-	if(r && r->forward) {
-		if(r->forward->source) {
+	if (r && r->forward)
+	{
+		if (r->forward->source)
+		{
 			janus_videoroom_publisher_dereference_void(r->forward->source);
 			r->forward->source = NULL;
 		}
@@ -1615,114 +1599,116 @@ static GSourceFuncs janus_videoroom_rtp_forwarder_rtcp_funcs = {
 	NULL,
 	janus_videoroom_rtp_forwarder_rtcp_dispatch,
 	janus_videoroom_rtp_forwarder_rtcp_finalize,
-	NULL, NULL
-};
+	NULL, NULL};
 static GMainContext *rtcpfwd_ctx = NULL;
 static GMainLoop *rtcpfwd_loop = NULL;
 static GThread *rtcpfwd_thread = NULL;
 static void *janus_videoroom_rtp_forwarder_rtcp_thread(void *data);
 
-typedef struct janus_videoroom_publisher {
+typedef struct janus_videoroom_publisher
+{
 	janus_videoroom_session *session;
-	janus_videoroom *room;	/* Room */
-	guint64 room_id;	/* Unique room ID 房间id 整型*/
-	gchar *room_id_str;	/* Unique room ID (when using strings) 房间id 字符串*/
-	guint64 user_id;	/* Unique ID in the room 房间内的唯一id 整型*/
-	gchar *user_id_str;	/* Unique ID in the room (when using strings) 房间内的唯一id 字符串*/
-	guint32 pvt_id;		/* This is sent to the publisher for mapping purposes, but shouldn't be shared with others 这将发送给发布者以用于映射目的，但不应与其他人共享*/
-	gchar *display;		/* Display name (just for fun) 展示名称 */
-	gchar *sdp;			/* The SDP this publisher negotiated, if any 这个发布者协商的sdp */
-	gboolean audio, video, data;		/* Whether audio, video and/or data is going to be sent by this publisher 这个发布者发送的是音频，视频还是data */
-	janus_audiocodec acodec;	/* Audio codec this publisher is using 发布者使用的音频编解码器 */
-	janus_videocodec vcodec;	/* Video codec this publisher is using 发布者使用的视频编解码器 */
-	guint32 audio_pt;		/* Audio payload type (Opus) 音频payload类型 */
-	guint32 video_pt;		/* Video payload type (depends on room configuration) 视频payload类型（取决于房间配置） */
-	char *vfmtp;			/* Video fmtp that ended up being negotiated, if any 最终协商的视频 fmtp */
-	guint32 audio_ssrc;		/* Audio SSRC of this publisher 此发布者的音频 SSRC*/
-	guint32 video_ssrc;		/* Video SSRC of this publisher 此发布者的视频 SSRC*/
-	gboolean do_opusfec;	/* Whether this publisher is sending inband Opus FEC 这个发布者是否发送inband Opus FEC */
-	gboolean do_opusdtx;	/* Whether this publisher is using Opus DTX (Discontinuous Transmission) 此发布者是否使用 Opus DTX（不连续传输）*/
-	uint32_t ssrc[3];		/* Only needed in case VP8 (or H.264) simulcasting is involved 仅在涉及 VP8（或 H.264）联播的情况下才需要 */
-	char *rid[3];			/* Only needed if simulcasting is rid-based 仅当联播是基于 rid 时才需要 */
-	int rid_extmap_id;		/* rid extmap ID #rid extmap ID */
-	guint8 audio_level_extmap_id;		/* Audio level extmap ID 音频级别 extmap ID */
-	guint8 video_orient_extmap_id;		/* Video orientation extmap ID 视频方向extmap ID */
-	guint8 playout_delay_extmap_id;		/* Playout delay extmap ID 播出延迟extmap ID */
+	janus_videoroom *room;			/* Room */
+	guint64 room_id;				/* Unique room ID 房间id 整型*/
+	gchar *room_id_str;				/* Unique room ID (when using strings) 房间id 字符串*/
+	guint64 user_id;				/* Unique ID in the room 房间内的唯一id 整型*/
+	gchar *user_id_str;				/* Unique ID in the room (when using strings) 房间内的唯一id 字符串*/
+	guint32 pvt_id;					/* This is sent to the publisher for mapping purposes, but shouldn't be shared with others 这将发送给发布者以用于映射目的，但不应与其他人共享*/
+	gchar *display;					/* Display name (just for fun) 展示名称 */
+	gchar *sdp;						/* The SDP this publisher negotiated, if any 这个发布者协商的sdp */
+	gboolean audio, video, data;	/* Whether audio, video and/or data is going to be sent by this publisher 这个发布者发送的是音频，视频还是data */
+	janus_audiocodec acodec;		/* Audio codec this publisher is using 发布者使用的音频编解码器 */
+	janus_videocodec vcodec;		/* Video codec this publisher is using 发布者使用的视频编解码器 */
+	guint32 audio_pt;				/* Audio payload type (Opus) 音频payload类型 */
+	guint32 video_pt;				/* Video payload type (depends on room configuration) 视频payload类型（取决于房间配置） */
+	char *vfmtp;					/* Video fmtp that ended up being negotiated, if any 最终协商的视频 fmtp */
+	guint32 audio_ssrc;				/* Audio SSRC of this publisher 此发布者的音频 SSRC*/
+	guint32 video_ssrc;				/* Video SSRC of this publisher 此发布者的视频 SSRC*/
+	gboolean do_opusfec;			/* Whether this publisher is sending inband Opus FEC 这个发布者是否发送inband Opus FEC */
+	gboolean do_opusdtx;			/* Whether this publisher is using Opus DTX (Discontinuous Transmission) 此发布者是否使用 Opus DTX（不连续传输）*/
+	uint32_t ssrc[3];				/* Only needed in case VP8 (or H.264) simulcasting is involved 仅在涉及 VP8（或 H.264）联播的情况下才需要 */
+	char *rid[3];					/* Only needed if simulcasting is rid-based 仅当联播是基于 rid 时才需要 */
+	int rid_extmap_id;				/* rid extmap ID #rid extmap ID */
+	guint8 audio_level_extmap_id;	/* Audio level extmap ID 音频级别 extmap ID */
+	guint8 video_orient_extmap_id;	/* Video orientation extmap ID 视频方向extmap ID */
+	guint8 playout_delay_extmap_id; /* Playout delay extmap ID 播出延迟extmap ID */
 	gboolean audio_active, audio_muted;
 	gboolean video_active, video_muted;
-	int audio_dBov_level;		/* Value in dBov of the audio level (last value from extension) 音频级别的 dBov 值（扩展的最后一个值） */
-	int audio_active_packets;	/* Participant's number of audio packets to accumulate 参与者要累积的音频包数 */
-	int audio_dBov_sum;			/* Participant's accumulated dBov value for audio level 参与者的音频级别累积 dBov 值*/
-	int user_audio_active_packets;	/* Participant's audio_active_packets overwriting global room setting 参与者的 audio_active_packets 覆盖全局房间设置 */
-	int user_audio_level_average;	/* Participant's audio_level_average overwriting global room setting 参与者的 audio_level_average 覆盖全局房间设置 */
-	gboolean talking; /* Whether this participant is currently talking (uses audio levels extension) 此参与者当前是否正在讲话（使用音频级别扩展） */
+	int audio_dBov_level;		   /* Value in dBov of the audio level (last value from extension) 音频级别的 dBov 值（扩展的最后一个值） */
+	int audio_active_packets;	   /* Participant's number of audio packets to accumulate 参与者要累积的音频包数 */
+	int audio_dBov_sum;			   /* Participant's accumulated dBov value for audio level 参与者的音频级别累积 dBov 值*/
+	int user_audio_active_packets; /* Participant's audio_active_packets overwriting global room setting 参与者的 audio_active_packets 覆盖全局房间设置 */
+	int user_audio_level_average;  /* Participant's audio_level_average overwriting global room setting 参与者的 audio_level_average 覆盖全局房间设置 */
+	gboolean talking;			   /* Whether this participant is currently talking (uses audio levels extension) 此参与者当前是否正在讲话（使用音频级别扩展） */
 	gboolean data_active, data_muted;
-	gboolean firefox;	/* We send Firefox users a different kind of FIR 我们向 Firefox 用户发送不同类型的 FIR */
+	gboolean firefox; /* We send Firefox users a different kind of FIR 我们向 Firefox 用户发送不同类型的 FIR */
 	uint32_t bitrate;
-	gint64 remb_startup;/* Incremental changes on REMB to reach the target at startup 在几次增加之后到达最大比特率*/
-	gint64 remb_latest;	/* Time of latest sent REMB (to avoid flooding) 最近发送REMB的时间（避免泛滥） */
-	gint64 fir_latest;	/* Time of latest sent FIR (to avoid flooding) 最近发送FIR的时间（避免泛滥）*/
-	gint fir_seq;		/* FIR sequence number #FIR序列号*/
-	gboolean recording_active;	/* Whether this publisher has to be recorded or not 此发布者是否需要被记录 */
-	gchar *recording_base;	/* Base name for the recording (e.g., /path/to/filename, will generate /path/to/filename-audio.mjr and/or /path/to/filename-video.mjr 记录的文件名称 */
-	janus_recorder *arc;	/* The Janus recorder instance for this publisher's audio, if enabled 此发布者音频的 Janus 记录器实例（如果已启用） */
-	janus_recorder *vrc;	/* The Janus recorder instance for this user's video, if enabled 此用户视频的 Janus 记录器实例（如果已启用）*/
-	janus_recorder *drc;	/* The Janus recorder instance for this publisher's data, if enabled 此发布者数据的 Janus 记录器实例（如果启用） */
+	gint64 remb_startup;	   /* Incremental changes on REMB to reach the target at startup 在几次增加之后到达最大比特率*/
+	gint64 remb_latest;		   /* Time of latest sent REMB (to avoid flooding) 最近发送REMB的时间（避免泛滥） */
+	gint64 fir_latest;		   /* Time of latest sent FIR (to avoid flooding) 最近发送FIR的时间（避免泛滥）*/
+	gint fir_seq;			   /* FIR sequence number #FIR序列号*/
+	gboolean recording_active; /* Whether this publisher has to be recorded or not 此发布者是否需要被记录 */
+	gchar *recording_base;	   /* Base name for the recording (e.g., /path/to/filename, will generate /path/to/filename-audio.mjr and/or /path/to/filename-video.mjr 记录的文件名称 */
+	janus_recorder *arc;	   /* The Janus recorder instance for this publisher's audio, if enabled 此发布者音频的 Janus 记录器实例（如果已启用） */
+	janus_recorder *vrc;	   /* The Janus recorder instance for this user's video, if enabled 此用户视频的 Janus 记录器实例（如果已启用）*/
+	janus_recorder *drc;	   /* The Janus recorder instance for this publisher's data, if enabled 此发布者数据的 Janus 记录器实例（如果启用） */
 	janus_rtp_switching_context rec_ctx;
 	janus_rtp_simulcasting_context rec_simctx;
-	janus_mutex rec_mutex;	/* Mutex to protect the recorders from race conditions 互斥锁以保护记录器免受竞争条件的影响 */
-	GSList *subscribers;	/* Subscriptions to this publisher (who's watching this publisher)  订阅此发布者的人（谁在关注此发布者）谁在看我 */
-	GSList *subscriptions;	/* Subscriptions this publisher has created (who this publisher is watching) 此发布者创建的订阅（此发布者正在观看的对象）我在看谁 */
+	janus_mutex rec_mutex; /* Mutex to protect the recorders from race conditions 互斥锁以保护记录器免受竞争条件的影响 */
+	GSList *subscribers;   /* Subscriptions to this publisher (who's watching this publisher)  订阅此发布者的人（谁在关注此发布者）谁在看我 */
+	GSList *subscriptions; /* Subscriptions this publisher has created (who this publisher is watching) 此发布者创建的订阅（此发布者正在观看的对象）我在看谁 */
 	janus_mutex subscribers_mutex;
 	janus_mutex own_subscriptions_mutex;
 	GHashTable *rtp_forwarders;
 	GHashTable *srtp_contexts;
 	janus_mutex rtp_forwarders_mutex;
-	int udp_sock; /* The udp socket on which to forward rtp packets 用于转发 rtp 数据包的 udp 套接字 */
-	gboolean kicked;	/* Whether this participant has been kicked 该参与者是否被踢 */
-	gboolean e2ee;		/* If media from this publisher is end-to-end encrypted 如果来自此发布者的媒体是端到端加密的 */
+	int udp_sock;	 /* The udp socket on which to forward rtp packets 用于转发 rtp 数据包的 udp 套接字 */
+	gboolean kicked; /* Whether this participant has been kicked 该参与者是否被踢 */
+	gboolean e2ee;	 /* If media from this publisher is end-to-end encrypted 如果来自此发布者的媒体是端到端加密的 */
 	volatile gint destroyed;
 	janus_refcount ref;
 } janus_videoroom_publisher;
 static guint32 janus_videoroom_rtp_forwarder_add_helper(janus_videoroom_publisher *p,
-	const gchar *host, int port, int rtcp_port, int pt, uint32_t ssrc,
-	gboolean simulcast, int srtp_suite, const char *srtp_crypto,
-	int substream, gboolean is_video, gboolean is_data);
+														const gchar *host, int port, int rtcp_port, int pt, uint32_t ssrc,
+														gboolean simulcast, int srtp_suite, const char *srtp_crypto,
+														int substream, gboolean is_video, gboolean is_data);
 
-typedef struct janus_videoroom_subscriber {
+typedef struct janus_videoroom_subscriber
+{
 	janus_videoroom_session *session;
-	janus_videoroom *room;	/* Room */
-	guint64 room_id;		/* Unique room ID 房间id 整型*/
-	gchar *room_id_str;		/* Unique room ID (when using strings) 房间id 字符串 */
-	janus_videoroom_publisher *feed;	/* Participant this subscriber is subscribed to 此订阅者订阅的参与者（我在看谁）*/
-	gboolean close_pc;		/* Whether we should automatically close the PeerConnection when the publisher goes away 当发布者离开时我们是否应该自动关闭 PeerConnection */
-	guint32 pvt_id;			/* Private ID of the participant that is subscribing (if available/provided) 订阅的参与者的私人 ID（如果可用/被提供） */
-	janus_sdp *sdp;			/* Offer we sent this listener (may be updated within renegotiations) 我们发送给订阅人的sdp（当重新协商之后可能会更新） */
-	janus_rtp_switching_context context;	/* Needed in case there are publisher switches on this subscriber 如果此订阅者上有发布者开关，则需要 */
+	janus_videoroom *room;				 /* Room */
+	guint64 room_id;					 /* Unique room ID 房间id 整型*/
+	gchar *room_id_str;					 /* Unique room ID (when using strings) 房间id 字符串 */
+	janus_videoroom_publisher *feed;	 /* Participant this subscriber is subscribed to 此订阅者订阅的参与者（我在看谁）*/
+	gboolean close_pc;					 /* Whether we should automatically close the PeerConnection when the publisher goes away 当发布者离开时我们是否应该自动关闭 PeerConnection */
+	guint32 pvt_id;						 /* Private ID of the participant that is subscribing (if available/provided) 订阅的参与者的私人 ID（如果可用/被提供） */
+	janus_sdp *sdp;						 /* Offer we sent this listener (may be updated within renegotiations) 我们发送给订阅人的sdp（当重新协商之后可能会更新） */
+	janus_rtp_switching_context context; /* Needed in case there are publisher switches on this subscriber 如果此订阅者上有发布者开关，则需要 */
 	janus_rtp_simulcasting_context sim_context;
 	janus_vp8_simulcast_context vp8_context;
-	gboolean audio, video, data;		/* Whether audio, video and/or data must be sent to this subscriber 是否必须向该订阅者发送音频、视频和/或数据 */
-	/* As above, but can't change dynamically (says whether something was negotiated at all in SDP) 
+	gboolean audio, video, data; /* Whether audio, video and/or data must be sent to this subscriber 是否必须向该订阅者发送音频、视频和/或数据 */
+	/* As above, but can't change dynamically (says whether something was negotiated at all in SDP)
 	如上所述，但不能动态更改（表示是否在 SDP 中协商了某些内容）*/
 	gboolean audio_offered, video_offered, data_offered;
 	gboolean paused;
-	gboolean kicked;	/* Whether this subscription belongs to a participant that has been kicked 这个订阅是否属于被踢掉的参与者 */
+	gboolean kicked; /* Whether this subscription belongs to a participant that has been kicked 这个订阅是否属于被踢掉的参与者 */
 	/* The following are only relevant if we're doing VP9 SVC, and are not to be confused with plain
-	 * simulcast, which has similar info (substream/templayer) but in a completely different context 
+	 * simulcast, which has similar info (substream/templayer) but in a completely different context
 	 下面的字段只会出现在我们使用VP9 SVC的情况下，不需要和simulcast的一些信息（substream/templayer）混淆，他们完全不同
 	 */
 	int spatial_layer, target_spatial_layer;
 	gint64 last_spatial_layer[3];
 	int temporal_layer, target_temporal_layer;
-	gboolean e2ee;		/* If media for this subscriber is end-to-end encrypted 如果此订阅者的媒体是端到端加密的 */
+	gboolean e2ee; /* If media for this subscriber is end-to-end encrypted 如果此订阅者的媒体是端到端加密的 */
 	volatile gint destroyed;
 	janus_refcount ref;
 } janus_videoroom_subscriber;
 
-typedef struct janus_videoroom_rtp_relay_packet {
+typedef struct janus_videoroom_rtp_relay_packet
+{
 	janus_rtp_header *data;
 	gint length;
-	gboolean is_rtp;	/* This may be a data packet and not RTP 是否是RTP包 */
+	gboolean is_rtp; /* This may be a data packet and not RTP 是否是RTP包 */
 	gboolean is_video;
 	uint32_t ssrc[3];
 	uint32_t timestamp;
@@ -1742,12 +1728,14 @@ static void janus_videoroom_recorder_close(janus_videoroom_publisher *participan
 
 /* Freeing stuff 释放一些内容 */
 /*销毁房间订阅者*/
-static void janus_videoroom_subscriber_destroy(janus_videoroom_subscriber *s) {
-	if(s && g_atomic_int_compare_and_exchange(&s->destroyed, 0, 1))
+static void janus_videoroom_subscriber_destroy(janus_videoroom_subscriber *s)
+{
+	if (s && g_atomic_int_compare_and_exchange(&s->destroyed, 0, 1))
 		janus_refcount_decrease(&s->ref);
 }
 
-static void janus_videoroom_subscriber_free(const janus_refcount *s_ref) {
+static void janus_videoroom_subscriber_free(const janus_refcount *s_ref)
+{
 	janus_videoroom_subscriber *s = janus_refcount_containerof(s_ref, janus_videoroom_subscriber, ref);
 	/* This subscriber can be destroyed, free all the resources 此订阅者可以被销毁，释放所有资源 */
 	g_free(s->room_id_str);
@@ -1755,40 +1743,49 @@ static void janus_videoroom_subscriber_free(const janus_refcount *s_ref) {
 	g_free(s);
 }
 
-static void janus_videoroom_publisher_dereference(janus_videoroom_publisher *p) {
+static void janus_videoroom_publisher_dereference(janus_videoroom_publisher *p)
+{
 	/* This is used by g_pointer_clear and g_hash_table_new_full so that NULL is only possible if that was inserted into the hash table. */
 	janus_refcount_decrease(&p->ref);
 }
-static void janus_videoroom_publisher_dereference_void(void *p) {
+static void janus_videoroom_publisher_dereference_void(void *p)
+{
 	janus_videoroom_publisher_dereference((janus_videoroom_publisher *)p);
 }
 
-static void janus_videoroom_publisher_dereference_by_subscriber(janus_videoroom_publisher *p) {
+static void janus_videoroom_publisher_dereference_by_subscriber(janus_videoroom_publisher *p)
+{
 	/* This is used by g_pointer_clear and g_hash_table_new_full so that NULL is only possible if that was inserted into the hash table. */
 	janus_refcount_decrease(&p->session->ref);
 	janus_refcount_decrease(&p->ref);
 }
 
-static void janus_videoroom_publisher_dereference_nodebug(janus_videoroom_publisher *p) {
+static void janus_videoroom_publisher_dereference_nodebug(janus_videoroom_publisher *p)
+{
 	janus_refcount_decrease_nodebug(&p->ref);
 }
 
 /**
  * @brief 销毁房间发布者
- * 
- * @param p 
+ *
+ * @param p
  */
-static void janus_videoroom_publisher_destroy(janus_videoroom_publisher *p) {
-	if(p && g_atomic_int_compare_and_exchange(&p->destroyed, 0, 1)) {
+static void janus_videoroom_publisher_destroy(janus_videoroom_publisher *p)
+{
+	if (p && g_atomic_int_compare_and_exchange(&p->destroyed, 0, 1))
+	{
 		/* Forwarders with RTCP support may have an extra reference, stop their source 支持 RTCP 的转发器可能有额外的引用，停止它们的源 */
 		janus_mutex_lock(&p->rtp_forwarders_mutex);
-		if(g_hash_table_size(p->rtp_forwarders) > 0) {
+		if (g_hash_table_size(p->rtp_forwarders) > 0)
+		{
 			GHashTableIter iter_f;
 			gpointer key_f, value_f;
 			g_hash_table_iter_init(&iter_f, p->rtp_forwarders);
-			while(g_hash_table_iter_next(&iter_f, &key_f, &value_f)) {
+			while (g_hash_table_iter_next(&iter_f, &key_f, &value_f))
+			{
 				janus_videoroom_rtp_forwarder *rpv = value_f;
-				if(rpv->rtcp_recv) {
+				if (rpv->rtcp_recv)
+				{
 					GSource *source = rpv->rtcp_recv;
 					rpv->rtcp_recv = NULL;
 					g_source_destroy(source);
@@ -1801,7 +1798,8 @@ static void janus_videoroom_publisher_destroy(janus_videoroom_publisher *p) {
 	}
 }
 
-static void janus_videoroom_publisher_free(const janus_refcount *p_ref) {
+static void janus_videoroom_publisher_free(const janus_refcount *p_ref)
+{
 	janus_videoroom_publisher *p = janus_refcount_containerof(p_ref, janus_videoroom_publisher, ref);
 	g_free(p->room_id_str);
 	g_free(p->user_id_str);
@@ -1813,7 +1811,7 @@ static void janus_videoroom_publisher_free(const janus_refcount *p_ref) {
 	janus_recorder_destroy(p->vrc);
 	janus_recorder_destroy(p->drc);
 
-	if(p->udp_sock > 0)
+	if (p->udp_sock > 0)
 		close(p->udp_sock);
 	g_hash_table_destroy(p->rtp_forwarders);
 	p->rtp_forwarders = NULL;
@@ -1826,12 +1824,14 @@ static void janus_videoroom_publisher_free(const janus_refcount *p_ref) {
 	g_free(p);
 }
 
-static void janus_videoroom_session_destroy(janus_videoroom_session *session) {
-	if(session && g_atomic_int_compare_and_exchange(&session->destroyed, 0, 1))
+static void janus_videoroom_session_destroy(janus_videoroom_session *session)
+{
+	if (session && g_atomic_int_compare_and_exchange(&session->destroyed, 0, 1))
 		janus_refcount_decrease(&session->ref);
 }
 
-static void janus_videoroom_session_free(const janus_refcount *session_ref) {
+static void janus_videoroom_session_free(const janus_refcount *session_ref)
+{
 	janus_videoroom_session *session = janus_refcount_containerof(session_ref, janus_videoroom_session, ref);
 	/* Remove the reference to the core plugin session 删除对核心插件会话的引用 */
 	janus_refcount_decrease(&session->handle->ref);
@@ -1840,16 +1840,19 @@ static void janus_videoroom_session_free(const janus_refcount *session_ref) {
 	g_free(session);
 }
 
-static void janus_videoroom_room_dereference(janus_videoroom *room) {
+static void janus_videoroom_room_dereference(janus_videoroom *room)
+{
 	janus_refcount_decrease(&room->ref);
 }
 
-static void janus_videoroom_room_destroy(janus_videoroom *room) {
-	if(room && g_atomic_int_compare_and_exchange(&room->destroyed, 0, 1))
+static void janus_videoroom_room_destroy(janus_videoroom *room)
+{
+	if (room && g_atomic_int_compare_and_exchange(&room->destroyed, 0, 1))
 		janus_refcount_decrease(&room->ref);
 }
 
-static void janus_videoroom_room_free(const janus_refcount *room_ref) {
+static void janus_videoroom_room_free(const janus_refcount *room_ref)
+{
 	janus_videoroom *room = janus_refcount_containerof(room_ref, janus_videoroom, ref);
 	/* This room can be destroyed, free all the resources 此房间可以被销毁，释放所有资源*/
 	g_free(room->room_id_str);
@@ -1867,14 +1870,16 @@ static void janus_videoroom_room_free(const janus_refcount *room_ref) {
 
 /**
  * @brief 释放消息内存
- * 
- * @param msg 
+ *
+ * @param msg
  */
-static void janus_videoroom_message_free(janus_videoroom_message *msg) {
-	if(!msg || msg == &exit_message)
+static void janus_videoroom_message_free(janus_videoroom_message *msg)
+{
+	if (!msg || msg == &exit_message)
 		return;
 
-	if(msg->handle && msg->handle->plugin_handle) {
+	if (msg->handle && msg->handle->plugin_handle)
+	{
 		janus_videoroom_session *session = (janus_videoroom_session *)msg->handle->plugin_handle;
 		janus_refcount_decrease(&session->ref);
 	}
@@ -1882,10 +1887,10 @@ static void janus_videoroom_message_free(janus_videoroom_message *msg) {
 
 	g_free(msg->transaction);
 	msg->transaction = NULL;
-	if(msg->message)
+	if (msg->message)
 		json_decref(msg->message);
 	msg->message = NULL;
-	if(msg->jsep)
+	if (msg->jsep)
 		json_decref(msg->jsep);
 	msg->jsep = NULL;
 
@@ -1894,50 +1899,61 @@ static void janus_videoroom_message_free(janus_videoroom_message *msg) {
 
 /**
  * @brief 获取音视频编解码的类型字符串
- * 
- * @param videoroom 
- * @param audio_codecs 
- * @param video_codecs 
- * @param str_len 
- * @param split 
+ *
+ * @param videoroom
+ * @param audio_codecs
+ * @param video_codecs
+ * @param str_len
+ * @param split
  */
-static void janus_videoroom_codecstr(janus_videoroom *videoroom, char *audio_codecs, char *video_codecs, int str_len, const char *split) {
-	if (audio_codecs) {
+static void janus_videoroom_codecstr(janus_videoroom *videoroom, char *audio_codecs, char *video_codecs, int str_len, const char *split)
+{
+	if (audio_codecs)
+	{
 		audio_codecs[0] = 0;
 		g_snprintf(audio_codecs, str_len, "%s", janus_audiocodec_name(videoroom->acodec[0]));
-		if (videoroom->acodec[1] != JANUS_AUDIOCODEC_NONE) {
+		if (videoroom->acodec[1] != JANUS_AUDIOCODEC_NONE)
+		{
 			janus_strlcat(audio_codecs, split, str_len);
 			janus_strlcat(audio_codecs, janus_audiocodec_name(videoroom->acodec[1]), str_len);
 		}
-		if (videoroom->acodec[2] != JANUS_AUDIOCODEC_NONE) {
+		if (videoroom->acodec[2] != JANUS_AUDIOCODEC_NONE)
+		{
 			janus_strlcat(audio_codecs, split, str_len);
 			janus_strlcat(audio_codecs, janus_audiocodec_name(videoroom->acodec[2]), str_len);
 		}
-		if (videoroom->acodec[3] != JANUS_AUDIOCODEC_NONE) {
+		if (videoroom->acodec[3] != JANUS_AUDIOCODEC_NONE)
+		{
 			janus_strlcat(audio_codecs, split, str_len);
 			janus_strlcat(audio_codecs, janus_audiocodec_name(videoroom->acodec[3]), str_len);
 		}
-		if (videoroom->acodec[4] != JANUS_AUDIOCODEC_NONE) {
+		if (videoroom->acodec[4] != JANUS_AUDIOCODEC_NONE)
+		{
 			janus_strlcat(audio_codecs, split, str_len);
 			janus_strlcat(audio_codecs, janus_audiocodec_name(videoroom->acodec[4]), str_len);
 		}
 	}
-	if (video_codecs) {
+	if (video_codecs)
+	{
 		video_codecs[0] = 0;
 		g_snprintf(video_codecs, str_len, "%s", janus_videocodec_name(videoroom->vcodec[0]));
-		if (videoroom->vcodec[1] != JANUS_VIDEOCODEC_NONE) {
+		if (videoroom->vcodec[1] != JANUS_VIDEOCODEC_NONE)
+		{
 			janus_strlcat(video_codecs, split, str_len);
 			janus_strlcat(video_codecs, janus_videocodec_name(videoroom->vcodec[1]), str_len);
 		}
-		if (videoroom->vcodec[2] != JANUS_VIDEOCODEC_NONE) {
+		if (videoroom->vcodec[2] != JANUS_VIDEOCODEC_NONE)
+		{
 			janus_strlcat(video_codecs, split, str_len);
 			janus_strlcat(video_codecs, janus_videocodec_name(videoroom->vcodec[2]), str_len);
 		}
-		if (videoroom->vcodec[3] != JANUS_VIDEOCODEC_NONE) {
+		if (videoroom->vcodec[3] != JANUS_VIDEOCODEC_NONE)
+		{
 			janus_strlcat(video_codecs, split, str_len);
 			janus_strlcat(video_codecs, janus_videocodec_name(videoroom->vcodec[3]), str_len);
 		}
-		if (videoroom->vcodec[4] != JANUS_VIDEOCODEC_NONE) {
+		if (videoroom->vcodec[4] != JANUS_VIDEOCODEC_NONE)
+		{
 			janus_strlcat(video_codecs, split, str_len);
 			janus_strlcat(video_codecs, janus_videocodec_name(videoroom->vcodec[4]), str_len);
 		}
@@ -1946,65 +1962,67 @@ static void janus_videoroom_codecstr(janus_videoroom *videoroom, char *audio_cod
 
 /**
  * @brief 报告pli 请求关键帧
- * 
- * @param publisher 
- * @param reason 
+ *
+ * @param publisher
+ * @param reason
  */
-static void janus_videoroom_reqpli(janus_videoroom_publisher *publisher, const char *reason) {
-	if(publisher == NULL || g_atomic_int_get(&publisher->destroyed))
+static void janus_videoroom_reqpli(janus_videoroom_publisher *publisher, const char *reason)
+{
+	if (publisher == NULL || g_atomic_int_get(&publisher->destroyed))
 		return;
 	/* Send a PLI 发送一个PLI */
 	JANUS_LOG(LOG_VERB, "%s sending PLI to %s (%s)\n", reason,
-		publisher->user_id_str, publisher->display ? publisher->display : "??");
+			  publisher->user_id_str, publisher->display ? publisher->display : "??");
 	gateway->send_pli(publisher->session->handle);
-	/* Update the time of when we last sent a keyframe request 
+	/* Update the time of when we last sent a keyframe request
 	更新最后一次请求关键帧的时间 */
 	publisher->fir_latest = janus_get_monotonic_time();
 }
 
 /* Error codes 错误的代号 */
-#define JANUS_VIDEOROOM_ERROR_UNKNOWN_ERROR		499
-#define JANUS_VIDEOROOM_ERROR_NO_MESSAGE		421
-#define JANUS_VIDEOROOM_ERROR_INVALID_JSON		422
-#define JANUS_VIDEOROOM_ERROR_INVALID_REQUEST	423
-#define JANUS_VIDEOROOM_ERROR_JOIN_FIRST		424
-#define JANUS_VIDEOROOM_ERROR_ALREADY_JOINED	425
-#define JANUS_VIDEOROOM_ERROR_NO_SUCH_ROOM		426
-#define JANUS_VIDEOROOM_ERROR_ROOM_EXISTS		427
-#define JANUS_VIDEOROOM_ERROR_NO_SUCH_FEED		428
-#define JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT	429
-#define JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT	430
-#define JANUS_VIDEOROOM_ERROR_INVALID_SDP_TYPE	431
-#define JANUS_VIDEOROOM_ERROR_PUBLISHERS_FULL	432
-#define JANUS_VIDEOROOM_ERROR_UNAUTHORIZED		433
-#define JANUS_VIDEOROOM_ERROR_ALREADY_PUBLISHED	434
-#define JANUS_VIDEOROOM_ERROR_NOT_PUBLISHED		435
-#define JANUS_VIDEOROOM_ERROR_ID_EXISTS			436
-#define JANUS_VIDEOROOM_ERROR_INVALID_SDP		437
-
+#define JANUS_VIDEOROOM_ERROR_UNKNOWN_ERROR 499
+#define JANUS_VIDEOROOM_ERROR_NO_MESSAGE 421
+#define JANUS_VIDEOROOM_ERROR_INVALID_JSON 422
+#define JANUS_VIDEOROOM_ERROR_INVALID_REQUEST 423
+#define JANUS_VIDEOROOM_ERROR_JOIN_FIRST 424
+#define JANUS_VIDEOROOM_ERROR_ALREADY_JOINED 425
+#define JANUS_VIDEOROOM_ERROR_NO_SUCH_ROOM 426
+#define JANUS_VIDEOROOM_ERROR_ROOM_EXISTS 427
+#define JANUS_VIDEOROOM_ERROR_NO_SUCH_FEED 428
+#define JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT 429
+#define JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT 430
+#define JANUS_VIDEOROOM_ERROR_INVALID_SDP_TYPE 431
+#define JANUS_VIDEOROOM_ERROR_PUBLISHERS_FULL 432
+#define JANUS_VIDEOROOM_ERROR_UNAUTHORIZED 433
+#define JANUS_VIDEOROOM_ERROR_ALREADY_PUBLISHED 434
+#define JANUS_VIDEOROOM_ERROR_NOT_PUBLISHED 435
+#define JANUS_VIDEOROOM_ERROR_ID_EXISTS 436
+#define JANUS_VIDEOROOM_ERROR_INVALID_SDP 437
 
 /**
- * @brief 
- * 
+ * @brief
+ *
  * @param p janus_videoroom_publisher
- * @param host 
- * @param port 
- * @param rtcp_port 
- * @param pt 
- * @param ssrc 
- * @param simulcast 
- * @param srtp_suite 
- * @param srtp_crypto 
- * @param substream 
- * @param is_video 
- * @param is_data 
- * @return guint32 
+ * @param host
+ * @param port
+ * @param rtcp_port
+ * @param pt
+ * @param ssrc
+ * @param simulcast
+ * @param srtp_suite
+ * @param srtp_crypto
+ * @param substream
+ * @param is_video
+ * @param is_data
+ * @return guint32
  */
 static guint32 janus_videoroom_rtp_forwarder_add_helper(janus_videoroom_publisher *p,
-		const gchar *host, int port, int rtcp_port, int pt, uint32_t ssrc,
-		gboolean simulcast, int srtp_suite, const char *srtp_crypto,
-		int substream, gboolean is_video, gboolean is_data) {
-	if(!p || !host) {
+														const gchar *host, int port, int rtcp_port, int pt, uint32_t ssrc,
+														gboolean simulcast, int srtp_suite, const char *srtp_crypto,
+														int substream, gboolean is_video, gboolean is_data)
+{
+	if (!p || !host)
+	{
 		return 0;
 	}
 	janus_refcount_increase(&p->ref);
@@ -2012,44 +2030,48 @@ static guint32 janus_videoroom_rtp_forwarder_add_helper(janus_videoroom_publishe
 	/* Do we need to bind to a port for RTCP? 我们是否需要为了RTCP绑定一个端口 */
 	int fd = -1;
 	uint16_t local_rtcp_port = 0;
-	if(!is_data && rtcp_port > 0) {
+	if (!is_data && rtcp_port > 0)
+	{
 		/*需要使用套接字绑定一个RTCP端口，创建一个UDP类型socket*/
 		fd = socket(AF_INET6, SOCK_DGRAM, IPPROTO_UDP);
-		if(fd < 0) {
+		if (fd < 0)
+		{
 			janus_mutex_unlock(&p->rtp_forwarders_mutex);
 			janus_refcount_decrease(&p->ref);
 			JANUS_LOG(LOG_ERR, "Error creating RTCP socket for new RTP forwarder... %d (%s)\n",
-				errno, g_strerror(errno));
+					  errno, g_strerror(errno));
 			return 0;
 		}
 		int v6only = 0;
 		/*设置socket的一些属性*/
-		if(setsockopt(fd, IPPROTO_IPV6, IPV6_V6ONLY, &v6only, sizeof(v6only)) != 0) {
+		if (setsockopt(fd, IPPROTO_IPV6, IPV6_V6ONLY, &v6only, sizeof(v6only)) != 0)
+		{
 			janus_mutex_unlock(&p->rtp_forwarders_mutex);
 			janus_refcount_decrease(&p->ref);
 			JANUS_LOG(LOG_ERR, "Error creating RTCP socket for new RTP forwarder... %d (%s)\n",
-				errno, g_strerror(errno));
+					  errno, g_strerror(errno));
 			close(fd);
 			return 0;
 		}
-		struct sockaddr_in6 address = { 0 };
+		struct sockaddr_in6 address = {0};
 		socklen_t len = sizeof(address);
 		memset(&address, 0, sizeof(address));
 		address.sin6_family = AF_INET6;
-		address.sin6_port = htons(0);	/* The RTCP port we received is the remote one 我们收到的 RTCP 端口是远程的 */
+		address.sin6_port = htons(0); /* The RTCP port we received is the remote one 我们收到的 RTCP 端口是远程的 */
 		address.sin6_addr = in6addr_any;
 		/*绑定socket 和地址 */
-		if(bind(fd, (struct sockaddr *)&address, len) < 0 || getsockname(fd, (struct sockaddr *)&address, &len) < 0) {
+		if (bind(fd, (struct sockaddr *)&address, len) < 0 || getsockname(fd, (struct sockaddr *)&address, &len) < 0)
+		{
 			janus_mutex_unlock(&p->rtp_forwarders_mutex);
 			janus_refcount_decrease(&p->ref);
 			JANUS_LOG(LOG_ERR, "Error binding RTCP socket for new RTP forwarder... %d (%s)\n",
-				errno, g_strerror(errno));
+					  errno, g_strerror(errno));
 			close(fd);
 			return 0;
 		}
 		local_rtcp_port = ntohs(address.sin6_port);
-		JANUS_LOG(LOG_VERB, "Bound local %s RTCP port: %"SCNu16"\n",
-			is_video ? "video" : "audio", local_rtcp_port);
+		JANUS_LOG(LOG_VERB, "Bound local %s RTCP port: %" SCNu16 "\n",
+				  is_video ? "video" : "audio", local_rtcp_port);
 	}
 	/*初始化janus_videoroom_rtp_forwarder*/
 	janus_videoroom_rtp_forwarder *forward = g_malloc0(sizeof(janus_videoroom_rtp_forwarder));
@@ -2057,40 +2079,48 @@ static guint32 janus_videoroom_rtp_forwarder_add_helper(janus_videoroom_publishe
 	forward->rtcp_fd = fd;
 	forward->local_rtcp_port = local_rtcp_port;
 	forward->remote_rtcp_port = rtcp_port;
-	/* First of all, let's check if we need to setup an SRTP forwarder 
+	/* First of all, let's check if we need to setup an SRTP forwarder
 	首先，让我们检查一下是否需要设置SRTP转发器 */
-	if(!is_data && srtp_suite > 0 && srtp_crypto != NULL) {
+	if (!is_data && srtp_suite > 0 && srtp_crypto != NULL)
+	{
 		/* First of all, let's check if there's already an RTP forwarder with
-		 * the same SRTP context: make sure SSRC and pt are the same too 
+		 * the same SRTP context: make sure SSRC and pt are the same too
 		 首先，让我们确认是否已经存在相同SRTP内容的RTP转发器，确保SSRC和pt是一样的*/
 		char media[10] = {0};
-		if(!is_video) {
+		if (!is_video)
+		{
 			g_sprintf(media, "audio");
-		} else if(is_video) {
+		}
+		else if (is_video)
+		{
 			g_sprintf(media, "video%d", substream);
 		}
 		char srtp_id[256] = {0};
-		g_snprintf(srtp_id, 255, "%s-%s-%"SCNu32"-%d", srtp_crypto, media, ssrc, pt);
+		g_snprintf(srtp_id, 255, "%s-%s-%" SCNu32 "-%d", srtp_crypto, media, ssrc, pt);
 		JANUS_LOG(LOG_VERB, "SRTP context ID: %s\n", srtp_id);
 		janus_videoroom_srtp_context *srtp_ctx = g_hash_table_lookup(p->srtp_contexts, srtp_id);
-		if(srtp_ctx != NULL) {
+		if (srtp_ctx != NULL)
+		{
 			JANUS_LOG(LOG_VERB, "  -- Reusing existing SRTP context\n");
 			srtp_ctx->count++;
 			forward->srtp_ctx = srtp_ctx;
-		} else {
-			/* Nope, base64 decode the crypto string and set it as a new SRTP context 
-		    base64 解码加密字符串并将其设置为新的 SRTP 上下文*/
+		}
+		else
+		{
+			/* Nope, base64 decode the crypto string and set it as a new SRTP context
+			base64 解码加密字符串并将其设置为新的 SRTP 上下文*/
 			JANUS_LOG(LOG_VERB, "  -- Creating new SRTP context\n");
 			srtp_ctx = g_malloc0(sizeof(janus_videoroom_srtp_context));
 			gsize len = 0;
 			guchar *decoded = g_base64_decode(srtp_crypto, &len);
-			if(len < SRTP_MASTER_LENGTH) {
+			if (len < SRTP_MASTER_LENGTH)
+			{
 				janus_mutex_unlock(&p->rtp_forwarders_mutex);
 				janus_refcount_decrease(&p->ref);
 				JANUS_LOG(LOG_ERR, "Invalid SRTP crypto (%s)\n", srtp_crypto);
 				g_free(decoded);
 				g_free(srtp_ctx);
-				if(forward->rtcp_fd > -1)
+				if (forward->rtcp_fd > -1)
 					close(forward->rtcp_fd);
 				g_free(forward);
 				return 0;
@@ -2098,9 +2128,12 @@ static guint32 janus_videoroom_rtp_forwarder_add_helper(janus_videoroom_publishe
 			/* Set SRTP policy 设置 SRTP 策略 */
 			srtp_policy_t *policy = &srtp_ctx->policy;
 			srtp_crypto_policy_set_rtp_default(&(policy->rtp));
-			if(srtp_suite == 32) {
+			if (srtp_suite == 32)
+			{
 				srtp_crypto_policy_set_aes_cm_128_hmac_sha1_32(&(policy->rtp));
-			} else if(srtp_suite == 80) {
+			}
+			else if (srtp_suite == 80)
+			{
 				srtp_crypto_policy_set_aes_cm_128_hmac_sha1_80(&(policy->rtp));
 			}
 			policy->ssrc.type = ssrc_any_outbound;
@@ -2108,7 +2141,8 @@ static guint32 janus_videoroom_rtp_forwarder_add_helper(janus_videoroom_publishe
 			policy->next = NULL;
 			/* Create SRTP context 创建SRTP内容*/
 			srtp_err_status_t res = srtp_create(&srtp_ctx->ctx, policy);
-			if(res != srtp_err_status_ok) {
+			if (res != srtp_err_status_ok)
+			{
 				/* Something went wrong... 某些地方出错了 */
 				janus_mutex_unlock(&p->rtp_forwarders_mutex);
 				janus_refcount_decrease(&p->ref);
@@ -2116,7 +2150,7 @@ static guint32 janus_videoroom_rtp_forwarder_add_helper(janus_videoroom_publishe
 				g_free(decoded);
 				policy->key = NULL;
 				g_free(srtp_ctx);
-				if(forward->rtcp_fd > -1)
+				if (forward->rtcp_fd > -1)
 					close(forward->rtcp_fd);
 				g_free(forward);
 				return 0;
@@ -2135,16 +2169,20 @@ static guint32 janus_videoroom_rtp_forwarder_add_helper(janus_videoroom_publishe
 	forward->substream = substream;
 	forward->is_data = is_data;
 	/* Check if the host address is IPv4 or IPv6 检查是IPv4还是IPv6 */
-	if(strstr(host, ":") != NULL) {
+	if (strstr(host, ":") != NULL)
+	{
 		forward->serv_addr6.sin6_family = AF_INET6;
 		inet_pton(AF_INET6, host, &(forward->serv_addr6.sin6_addr));
 		forward->serv_addr6.sin6_port = htons(port);
-	} else {
+	}
+	else
+	{
 		forward->serv_addr.sin_family = AF_INET;
 		inet_pton(AF_INET, host, &(forward->serv_addr.sin_addr));
 		forward->serv_addr.sin_port = htons(port);
 	}
-	if(is_video && simulcast) {
+	if (is_video && simulcast)
+	{
 		forward->simulcast = TRUE;
 		janus_rtp_switching_context_reset(&forward->context);
 		janus_rtp_simulcasting_context_reset(&forward->sim_context);
@@ -2154,11 +2192,13 @@ static guint32 janus_videoroom_rtp_forwarder_add_helper(janus_videoroom_publishe
 	}
 	janus_refcount_init(&forward->ref, janus_videoroom_rtp_forwarder_free);
 	guint32 stream_id = janus_random_uint32();
-	while(g_hash_table_lookup(p->rtp_forwarders, GUINT_TO_POINTER(stream_id)) != NULL) {
+	while (g_hash_table_lookup(p->rtp_forwarders, GUINT_TO_POINTER(stream_id)) != NULL)
+	{
 		stream_id = janus_random_uint32();
 	}
 	g_hash_table_insert(p->rtp_forwarders, GUINT_TO_POINTER(stream_id), forward);
-	if(fd > -1) {
+	if (fd > -1)
+	{
 		/* We need RTCP: track this file descriptor, and ref the forwarder
 		我们需要 RTCP：跟踪这个文件描述符，并引用转发器  */
 		janus_refcount_increase(&p->ref);
@@ -2169,19 +2209,22 @@ static guint32 janus_videoroom_rtp_forwarder_add_helper(janus_videoroom_publishe
 		g_source_set_priority(forward->rtcp_recv, G_PRIORITY_DEFAULT);
 		g_source_add_unix_fd(forward->rtcp_recv, fd, G_IO_IN | G_IO_ERR);
 		g_source_attach((GSource *)forward->rtcp_recv, rtcpfwd_ctx);
-		/* Send a couple of empty RTP packets to the remote port to do latching 
+		/* Send a couple of empty RTP packets to the remote port to do latching
 		向远程端口发送几个空 RTP 数据包进行锁存 */
 		struct sockaddr *address = NULL;
-		struct sockaddr_in addr4 = { 0 };
-		struct sockaddr_in6 addr6 = { 0 };
+		struct sockaddr_in addr4 = {0};
+		struct sockaddr_in6 addr6 = {0};
 		socklen_t addrlen = 0;
-		if(forward->serv_addr.sin_family == AF_INET) {
+		if (forward->serv_addr.sin_family == AF_INET)
+		{
 			addr4.sin_family = AF_INET;
 			addr4.sin_addr.s_addr = forward->serv_addr.sin_addr.s_addr;
 			addr4.sin_port = htons(forward->remote_rtcp_port);
 			address = (struct sockaddr *)&addr4;
 			addrlen = sizeof(addr4);
-		} else {
+		}
+		else
+		{
 			addr6.sin6_family = AF_INET6;
 			memcpy(&addr6.sin6_addr, &forward->serv_addr6.sin6_addr, sizeof(struct in6_addr));
 			addr6.sin6_port = htons(forward->remote_rtcp_port);
@@ -2196,19 +2239,22 @@ static guint32 janus_videoroom_rtp_forwarder_add_helper(janus_videoroom_publishe
 	}
 	janus_mutex_unlock(&p->rtp_forwarders_mutex);
 	janus_refcount_decrease(&p->ref);
-	JANUS_LOG(LOG_VERB, "Added %s/%d rtp_forward to participant %s host: %s:%d stream_id: %"SCNu32"\n",
-		is_data ? "data" : (is_video ? "video" : "audio"), substream, p->user_id_str, host, port, stream_id);
+	JANUS_LOG(LOG_VERB, "Added %s/%d rtp_forward to participant %s host: %s:%d stream_id: %" SCNu32 "\n",
+			  is_data ? "data" : (is_video ? "video" : "audio"), substream, p->user_id_str, host, port, stream_id);
 	return stream_id;
 }
 
 /**
  * @brief 销毁RTP转发器
- * 
- * @param forward 
+ *
+ * @param forward
  */
-static void janus_videoroom_rtp_forwarder_destroy(janus_videoroom_rtp_forwarder *forward) {
-	if(forward && g_atomic_int_compare_and_exchange(&forward->destroyed, 0, 1)) {
-		if(forward->rtcp_fd > -1 && forward->rtcp_recv != NULL) {
+static void janus_videoroom_rtp_forwarder_destroy(janus_videoroom_rtp_forwarder *forward)
+{
+	if (forward && g_atomic_int_compare_and_exchange(&forward->destroyed, 0, 1))
+	{
+		if (forward->rtcp_fd > -1 && forward->rtcp_recv != NULL)
+		{
 			g_source_destroy(forward->rtcp_recv);
 			g_source_unref(forward->rtcp_recv);
 		}
@@ -2218,16 +2264,18 @@ static void janus_videoroom_rtp_forwarder_destroy(janus_videoroom_rtp_forwarder 
 
 /**
  * @brief 释放RTP转发器的内存
- * 
- * @param f_ref 
+ *
+ * @param f_ref
  */
-static void janus_videoroom_rtp_forwarder_free(const janus_refcount *f_ref) {
+static void janus_videoroom_rtp_forwarder_free(const janus_refcount *f_ref)
+{
 	janus_videoroom_rtp_forwarder *forward = janus_refcount_containerof(f_ref, janus_videoroom_rtp_forwarder, ref);
-	if(forward->rtcp_fd > -1)
+	if (forward->rtcp_fd > -1)
 		close(forward->rtcp_fd);
-	if(forward->is_srtp && forward->srtp_ctx) {
+	if (forward->is_srtp && forward->srtp_ctx)
+	{
 		forward->srtp_ctx->count--;
-		if(forward->srtp_ctx->count == 0 && forward->srtp_ctx->contexts != NULL)
+		if (forward->srtp_ctx->count == 0 && forward->srtp_ctx->contexts != NULL)
 			g_hash_table_remove(forward->srtp_ctx->contexts, forward->srtp_ctx->id);
 	}
 	g_free(forward);
@@ -2236,13 +2284,16 @@ static void janus_videoroom_rtp_forwarder_free(const janus_refcount *f_ref) {
 
 /**
  * @brief 释放SRTP上下文的内存
- * 
- * @param data 
+ *
+ * @param data
  */
-static void janus_videoroom_srtp_context_free(gpointer data) {
-	if(data) {
+static void janus_videoroom_srtp_context_free(gpointer data)
+{
+	if (data)
+	{
 		janus_videoroom_srtp_context *srtp_ctx = (janus_videoroom_srtp_context *)data;
-		if(srtp_ctx) {
+		if (srtp_ctx)
+		{
 			g_free(srtp_ctx->id);
 			srtp_dealloc(srtp_ctx->ctx);
 			g_free(srtp_ctx->policy.key);
@@ -2252,34 +2303,36 @@ static void janus_videoroom_srtp_context_free(gpointer data) {
 	}
 }
 
-
 /**
  * 初始化插件
- * @brief 
- * 
- * @param callback 
- * @param config_path 
- * @return * Plugin 
+ * @brief
+ *
+ * @param callback
+ * @param config_path
+ * @return * Plugin
  */
-*/
-int janus_videoroom_init(janus_callbacks *callback, const char *config_path) {
+* /
+	int janus_videoroom_init(janus_callbacks *callback, const char *config_path)
+{
 	/**
 	 * 原子操作,获取是否停止标志
 	 */
-	if(g_atomic_int_get(&stopping)) {
+	if (g_atomic_int_get(&stopping))
+	{
 		/* Still stopping from before */
 		return -1;
 	}
 	/**
 	 * 检查callback和配置路径是否为空
 	 */
-	if(callback == NULL || config_path == NULL) {
+	if (callback == NULL || config_path == NULL)
+	{
 		/* Invalid arguments */
 		return -1;
 	}
 
 	/**
-	 * Read configuration 
+	 * Read configuration
 	 * 读取配置文件
 	 * */
 	char filename[255];
@@ -2292,57 +2345,64 @@ int janus_videoroom_init(janus_callbacks *callback, const char *config_path) {
 	 * 解析配置文件
 	 */
 	config = janus_config_parse(filename);
-	if(config == NULL) {
+	if (config == NULL)
+	{
 		JANUS_LOG(LOG_WARN, "Couldn't find .jcfg configuration file (%s), trying .cfg\n", JANUS_VIDEOROOM_PACKAGE);
 		g_snprintf(filename, 255, "%s/%s.cfg", config_path, JANUS_VIDEOROOM_PACKAGE);
 		JANUS_LOG(LOG_VERB, "Configuration file: %s\n", filename);
 		config = janus_config_parse(filename);
 	}
-	
-	if(config != NULL)
-	    /*打印配置*/
+
+	if (config != NULL)
+		/*打印配置*/
 		janus_config_print(config);
 
 	/* 创建session hashTable */
 	sessions = g_hash_table_new_full(NULL, NULL, NULL, (GDestroyNotify)janus_videoroom_session_destroy);
 	/* 创建异步事件队列 */
-	messages = g_async_queue_new_full((GDestroyNotify) janus_videoroom_message_free);
+	messages = g_async_queue_new_full((GDestroyNotify)janus_videoroom_message_free);
 
 	/* This is the callback we'll need to invoke to contact the Janus core 调用janus Core代码的回调 */
 	gateway = callback;
 
 	/* Parse configuration to populate the rooms list 解析配置以填充房间列表 */
-	if(config != NULL) {
+	if (config != NULL)
+	{
 		janus_config_category *config_general = janus_config_get_create(config, NULL, janus_config_type_category, "general");
 		/* Any admin key to limit who can "create"? */
 		janus_config_item *key = janus_config_get(config, config_general, janus_config_type_item, "admin_key");
-		if(key != NULL && key->value != NULL)
+		if (key != NULL && key->value != NULL)
 			admin_key = g_strdup(key->value);
 		janus_config_item *lrf = janus_config_get(config, config_general, janus_config_type_item, "lock_rtp_forward");
-		if(admin_key && lrf != NULL && lrf->value != NULL)
+		if (admin_key && lrf != NULL && lrf->value != NULL)
 			lock_rtpfwd = janus_is_true(lrf->value);
 		janus_config_item *events = janus_config_get(config, config_general, janus_config_type_item, "events");
-		if(events != NULL && events->value != NULL)
+		if (events != NULL && events->value != NULL)
 			notify_events = janus_is_true(events->value);
-		if(!notify_events && callback->events_is_enabled()) {
+		if (!notify_events && callback->events_is_enabled())
+		{
 			JANUS_LOG(LOG_WARN, "Notification of events to handlers disabled for %s\n", JANUS_VIDEOROOM_NAME);
 		}
 		janus_config_item *ids = janus_config_get(config, config_general, janus_config_type_item, "string_ids");
-		if(ids != NULL && ids->value != NULL)
+		if (ids != NULL && ids->value != NULL)
 			string_ids = janus_is_true(ids->value);
-		if(string_ids) {
+		if (string_ids)
+		{
 			JANUS_LOG(LOG_INFO, "VideoRoom will use alphanumeric IDs, not numeric\n");
 		}
 	}
 	/* 创建房间列表hashTable */
 	rooms = g_hash_table_new_full(string_ids ? g_str_hash : g_int64_hash, string_ids ? g_str_equal : g_int64_equal,
-		(GDestroyNotify)g_free, (GDestroyNotify)janus_videoroom_room_destroy);
+								  (GDestroyNotify)g_free, (GDestroyNotify)janus_videoroom_room_destroy);
 	/* Iterate on all rooms 迭代所有房间 */
-	if(config != NULL) {
+	if (config != NULL)
+	{
 		GList *clist = janus_config_get_categories(config, NULL), *cl = clist;
-		while(cl != NULL) {
+		while (cl != NULL)
+		{
 			janus_config_category *cat = (janus_config_category *)cl->data;
-			if(cat->name == NULL || !strcasecmp(cat->name, "general")) {
+			if (cat->name == NULL || !strcasecmp(cat->name, "general"))
+			{
 				cl = cl->next;
 				continue;
 			}
@@ -2379,11 +2439,13 @@ int janus_videoroom_init(janus_callbacks *callback, const char *config_path) {
 			/* Create the video room 创建房间 */
 			janus_videoroom *videoroom = g_malloc0(sizeof(janus_videoroom));
 			const char *room_num = cat->name;
-			if(strstr(room_num, "room-") == room_num)
+			if (strstr(room_num, "room-") == room_num)
 				room_num += 5;
-			if(!string_ids) {
+			if (!string_ids)
+			{
 				videoroom->room_id = g_ascii_strtoull(room_num, NULL, 0);
-				if(videoroom->room_id == 0) {
+				if (videoroom->room_id == 0)
+				{
 					JANUS_LOG(LOG_ERR, "Can't add the VideoRoom room, invalid ID 0...\n");
 					g_free(videoroom);
 					cl = cl->next;
@@ -2391,8 +2453,9 @@ int janus_videoroom_init(janus_callbacks *callback, const char *config_path) {
 				}
 				/* Make sure the ID is completely numeric */
 				char room_id_str[30];
-				g_snprintf(room_id_str, sizeof(room_id_str), "%"SCNu64, videoroom->room_id);
-				if(strcmp(room_num, room_id_str)) {
+				g_snprintf(room_id_str, sizeof(room_id_str), "%" SCNu64, videoroom->room_id);
+				if (strcmp(room_num, room_id_str))
+				{
 					JANUS_LOG(LOG_ERR, "Can't add the VideoRoom room, ID '%s' is not numeric...\n", room_num);
 					g_free(videoroom);
 					cl = cl->next;
@@ -2401,7 +2464,8 @@ int janus_videoroom_init(janus_callbacks *callback, const char *config_path) {
 			}
 			/* Let's make sure the room doesn't exist already */
 			janus_mutex_lock(&rooms_mutex);
-			if(g_hash_table_lookup(rooms, string_ids ? (gpointer)room_num : (gpointer)&videoroom->room_id) != NULL) {
+			if (g_hash_table_lookup(rooms, string_ids ? (gpointer)room_num : (gpointer)&videoroom->room_id) != NULL)
+			{
 				/* It does... */
 				janus_mutex_unlock(&rooms_mutex);
 				JANUS_LOG(LOG_ERR, "Can't add the VideoRoom room, room %s already exists...\n", room_num);
@@ -2412,40 +2476,46 @@ int janus_videoroom_init(janus_callbacks *callback, const char *config_path) {
 			janus_mutex_unlock(&rooms_mutex);
 			videoroom->room_id_str = g_strdup(room_num);
 			char *description = NULL;
-			if(desc != NULL && desc->value != NULL && strlen(desc->value) > 0)
+			if (desc != NULL && desc->value != NULL && strlen(desc->value) > 0)
 				description = g_strdup(desc->value);
 			else
 				description = g_strdup(cat->name);
 			videoroom->room_name = description;
-			if(secret != NULL && secret->value != NULL) {
+			if (secret != NULL && secret->value != NULL)
+			{
 				videoroom->room_secret = g_strdup(secret->value);
 			}
-			if(pin != NULL && pin->value != NULL) {
+			if (pin != NULL && pin->value != NULL)
+			{
 				videoroom->room_pin = g_strdup(pin->value);
 			}
 			videoroom->is_private = priv && priv->value && janus_is_true(priv->value);
 			videoroom->require_pvtid = req_pvtid && req_pvtid->value && janus_is_true(req_pvtid->value);
-			if(signed_tokens && signed_tokens->value && janus_is_true(signed_tokens->value)) {
-				if(!gateway->auth_is_signed()) {
+			if (signed_tokens && signed_tokens->value && janus_is_true(signed_tokens->value))
+			{
+				if (!gateway->auth_is_signed())
+				{
 					JANUS_LOG(LOG_WARN, "Can't enforce signed tokens for this room, signed-mode not in use in the core\n");
-				} else {
+				}
+				else
+				{
 					videoroom->signed_tokens = TRUE;
 				}
 			}
 			videoroom->require_e2ee = req_e2ee && req_e2ee->value && janus_is_true(req_e2ee->value);
-			videoroom->max_publishers = 3;	/* FIXME How should we choose a default? 默认3*/
-			if(maxp != NULL && maxp->value != NULL)
+			videoroom->max_publishers = 3; /* FIXME How should we choose a default? 默认3*/
+			if (maxp != NULL && maxp->value != NULL)
 				videoroom->max_publishers = atol(maxp->value);
-			if(videoroom->max_publishers < 0)
-				videoroom->max_publishers = 3;	/* FIXME How should we choose a default? 默认3*/
+			if (videoroom->max_publishers < 0)
+				videoroom->max_publishers = 3; /* FIXME How should we choose a default? 默认3*/
 			videoroom->bitrate = 0;
-			if(bitrate != NULL && bitrate->value != NULL)
+			if (bitrate != NULL && bitrate->value != NULL)
 				videoroom->bitrate = atol(bitrate->value);
-			if(videoroom->bitrate > 0 && videoroom->bitrate < 64000)
-				videoroom->bitrate = 64000;	/* Don't go below 64k */
+			if (videoroom->bitrate > 0 && videoroom->bitrate < 64000)
+				videoroom->bitrate = 64000; /* Don't go below 64k */
 			videoroom->bitrate_cap = bitrate_cap && bitrate_cap->value && janus_is_true(bitrate_cap->value);
 			videoroom->fir_freq = 0;
-			if(firfreq != NULL && firfreq->value != NULL)
+			if (firfreq != NULL && firfreq->value != NULL)
 				videoroom->fir_freq = atol(firfreq->value);
 			/* By default, we force Opus as the only audio codec 默认opus作为音频编解码器*/
 			videoroom->acodec[0] = JANUS_AUDIOCODEC_OPUS;
@@ -2455,17 +2525,21 @@ int janus_videoroom_init(janus_callbacks *callback, const char *config_path) {
 			videoroom->acodec[4] = JANUS_AUDIOCODEC_NONE;
 			/* Check if we're forcing a different single codec, or allowing more than one
 			 检查我们是强制使用不同的单个编解码器，还是允许使用多个编解码器 */
-			if(audiocodec && audiocodec->value) {
+			if (audiocodec && audiocodec->value)
+			{
 				gchar **list = g_strsplit(audiocodec->value, ",", 6);
 				gchar *codec = list[0];
-				if(codec != NULL) {
-					int i=0;
-					while(codec != NULL) {
-						if(i == 5) {
+				if (codec != NULL)
+				{
+					int i = 0;
+					while (codec != NULL)
+					{
+						if (i == 5)
+						{
 							JANUS_LOG(LOG_WARN, "Ignoring extra audio codecs: %s\n", codec);
 							break;
 						}
-						if(strlen(codec) > 0)
+						if (strlen(codec) > 0)
 							videoroom->acodec[i] = janus_audiocodec_from_name(codec);
 						i++;
 						codec = list[i];
@@ -2480,17 +2554,21 @@ int janus_videoroom_init(janus_callbacks *callback, const char *config_path) {
 			videoroom->vcodec[3] = JANUS_VIDEOCODEC_NONE;
 			videoroom->vcodec[4] = JANUS_VIDEOCODEC_NONE;
 			/* Check if we're forcing a different single codec, or allowing more than one */
-			if(videocodec && videocodec->value) {
+			if (videocodec && videocodec->value)
+			{
 				gchar **list = g_strsplit(videocodec->value, ",", 6);
 				gchar *codec = list[0];
-				if(codec != NULL) {
-					int i=0;
-					while(codec != NULL) {
-						if(i == 5) {
+				if (codec != NULL)
+				{
+					int i = 0;
+					while (codec != NULL)
+					{
+						if (i == 5)
+						{
 							JANUS_LOG(LOG_WARN, "Ignoring extra video codecs: %s\n", codec);
 							break;
 						}
-						if(strlen(codec) > 0)
+						if (strlen(codec) > 0)
 							videoroom->vcodec[i] = janus_videocodec_from_name(codec);
 						i++;
 						codec = list[i];
@@ -2499,146 +2577,160 @@ int janus_videoroom_init(janus_callbacks *callback, const char *config_path) {
 				g_clear_pointer(&list, g_strfreev);
 			}
 			/* 如果配置了vp9profile 检查视频编解码器是否为vp9 否则不生效*/
-			if(vp9profile && vp9profile->value && (videoroom->vcodec[0] == JANUS_VIDEOCODEC_VP9 ||
-					videoroom->vcodec[1] == JANUS_VIDEOCODEC_VP9 ||
-					videoroom->vcodec[2] == JANUS_VIDEOCODEC_VP9 ||
-					videoroom->vcodec[3] == JANUS_VIDEOCODEC_VP9 ||
-					videoroom->vcodec[4] == JANUS_VIDEOCODEC_VP9)) {
+			if (vp9profile && vp9profile->value && (videoroom->vcodec[0] == JANUS_VIDEOCODEC_VP9 || videoroom->vcodec[1] == JANUS_VIDEOCODEC_VP9 || videoroom->vcodec[2] == JANUS_VIDEOCODEC_VP9 || videoroom->vcodec[3] == JANUS_VIDEOCODEC_VP9 || videoroom->vcodec[4] == JANUS_VIDEOCODEC_VP9))
+			{
 				videoroom->vp9_profile = g_strdup(vp9profile->value);
 			}
 			/* h264profile 检查视频编解码器是否为h264 否则不生效*/
-			if(h264profile && h264profile->value && (videoroom->vcodec[0] == JANUS_VIDEOCODEC_H264 ||
-					videoroom->vcodec[1] == JANUS_VIDEOCODEC_H264 ||
-					videoroom->vcodec[2] == JANUS_VIDEOCODEC_H264 ||
-					videoroom->vcodec[3] == JANUS_VIDEOCODEC_H264 ||
-					videoroom->vcodec[4] == JANUS_VIDEOCODEC_H264)) {
+			if (h264profile && h264profile->value && (videoroom->vcodec[0] == JANUS_VIDEOCODEC_H264 || videoroom->vcodec[1] == JANUS_VIDEOCODEC_H264 || videoroom->vcodec[2] == JANUS_VIDEOCODEC_H264 || videoroom->vcodec[3] == JANUS_VIDEOCODEC_H264 || videoroom->vcodec[4] == JANUS_VIDEOCODEC_H264))
+			{
 				videoroom->h264_profile = g_strdup(h264profile->value);
 			}
 			/* <true | false，是否必须协商带内FEC（注：仅适用于Opus）（可选）>， */
-			if(fec && fec->value) {
+			if (fec && fec->value)
+			{
 				videoroom->do_opusfec = janus_is_true(fec->value);
-				if(videoroom->acodec[0] != JANUS_AUDIOCODEC_OPUS &&
-						videoroom->acodec[1] != JANUS_AUDIOCODEC_OPUS &&
-						videoroom->acodec[2] != JANUS_AUDIOCODEC_OPUS &&
-						videoroom->acodec[3] != JANUS_AUDIOCODEC_OPUS &&
-						videoroom->acodec[4] != JANUS_AUDIOCODEC_OPUS) {
+				if (videoroom->acodec[0] != JANUS_AUDIOCODEC_OPUS &&
+					videoroom->acodec[1] != JANUS_AUDIOCODEC_OPUS &&
+					videoroom->acodec[2] != JANUS_AUDIOCODEC_OPUS &&
+					videoroom->acodec[3] != JANUS_AUDIOCODEC_OPUS &&
+					videoroom->acodec[4] != JANUS_AUDIOCODEC_OPUS)
+				{
 					videoroom->do_opusfec = FALSE;
 					JANUS_LOG(LOG_WARN, "Inband FEC is only supported for rooms that allow Opus: disabling it...\n");
 				}
 			}
 			/* <true | false，视频是否必须进行SVC（注意：目前仅适用于VP9）（可选）> */
-			if(svc && svc->value && janus_is_true(svc->value)) {
-				if(videoroom->vcodec[0] == JANUS_VIDEOCODEC_VP9 &&
-						videoroom->vcodec[1] == JANUS_VIDEOCODEC_NONE &&
-						videoroom->vcodec[2] == JANUS_VIDEOCODEC_NONE &&
-						videoroom->vcodec[3] == JANUS_VIDEOCODEC_NONE &&
-						videoroom->vcodec[4] == JANUS_VIDEOCODEC_NONE) {
+			if (svc && svc->value && janus_is_true(svc->value))
+			{
+				if (videoroom->vcodec[0] == JANUS_VIDEOCODEC_VP9 &&
+					videoroom->vcodec[1] == JANUS_VIDEOCODEC_NONE &&
+					videoroom->vcodec[2] == JANUS_VIDEOCODEC_NONE &&
+					videoroom->vcodec[3] == JANUS_VIDEOCODEC_NONE &&
+					videoroom->vcodec[4] == JANUS_VIDEOCODEC_NONE)
+				{
 					videoroom->do_svc = TRUE;
-				} else {
+				}
+				else
+				{
 					JANUS_LOG(LOG_WARN, "SVC is only supported, in an experimental way, for VP9 only rooms: disabling it...\n");
 				}
 			}
 			/* 是否必须为新发布者协商ssrc音频级别扩展 默认true */
 			videoroom->audiolevel_ext = TRUE;
-			if(audiolevel_ext != NULL && audiolevel_ext->value != NULL)
+			if (audiolevel_ext != NULL && audiolevel_ext->value != NULL)
 				videoroom->audiolevel_ext = janus_is_true(audiolevel_ext->value);
 			/* 是否向其他用户发出关于audiolevel的事件 默认false */
 			videoroom->audiolevel_event = FALSE;
-			if(audiolevel_event != NULL && audiolevel_event->value != NULL)
+			if (audiolevel_event != NULL && audiolevel_event->value != NULL)
 				videoroom->audiolevel_event = janus_is_true(audiolevel_event->value);
 			/* 判断是否开启音频级别事件 */
-			if(videoroom->audiolevel_event) {
+			if (videoroom->audiolevel_event)
+			{
 				/* 用于检查的具有音频级别的数据包数量 默认100*/
 				videoroom->audio_active_packets = 100;
-				if(audio_active_packets != NULL && audio_active_packets->value != NULL){
-					if(atoi(audio_active_packets->value) > 0) {
+				if (audio_active_packets != NULL && audio_active_packets->value != NULL)
+				{
+					if (atoi(audio_active_packets->value) > 0)
+					{
 						videoroom->audio_active_packets = atoi(audio_active_packets->value);
-					} else {
+					}
+					else
+					{
 						JANUS_LOG(LOG_WARN, "Invalid audio_active_packets value, using default: %d\n", videoroom->audio_active_packets);
 					}
 				}
 				/*音频平均级别 默认25 */
 				videoroom->audio_level_average = 25;
-				if(audio_level_average != NULL && audio_level_average->value != NULL) {
-					if(atoi(audio_level_average->value) > 0) {
+				if (audio_level_average != NULL && audio_level_average->value != NULL)
+				{
+					if (atoi(audio_level_average->value) > 0)
+					{
 						videoroom->audio_level_average = atoi(audio_level_average->value);
-					} else {
+					}
+					else
+					{
 						JANUS_LOG(LOG_WARN, "Invalid audio_level_average value provided, using default: %d\n", videoroom->audio_level_average);
 					}
 				}
 			}
 			/* 是否必须为新发布者协商ssrc视频级别扩展 默认true */
 			videoroom->videoorient_ext = TRUE;
-			if(videoorient_ext != NULL && videoorient_ext->value != NULL)
+			if (videoorient_ext != NULL && videoorient_ext->value != NULL)
 				videoroom->videoorient_ext = janus_is_true(videoorient_ext->value);
-            /* 是否必须为新发布者协商延长播放延迟 默认true */
+			/* 是否必须为新发布者协商延长播放延迟 默认true */
 			videoroom->playoutdelay_ext = TRUE;
-			if(playoutdelay_ext != NULL && playoutdelay_ext->value != NULL)
+			if (playoutdelay_ext != NULL && playoutdelay_ext->value != NULL)
 				videoroom->playoutdelay_ext = janus_is_true(playoutdelay_ext->value);
-		    /* 是否必须为新发布者协商传输范围cc扩展 默认true */
+			/* 是否必须为新发布者协商传输范围cc扩展 默认true */
 			videoroom->transport_wide_cc_ext = TRUE;
-			if(transport_wide_cc_ext != NULL && transport_wide_cc_ext->value != NULL)
+			if (transport_wide_cc_ext != NULL && transport_wide_cc_ext->value != NULL)
 				videoroom->transport_wide_cc_ext = janus_is_true(transport_wide_cc_ext->value);
 			/* 是否开启录制 */
-			if(record && record->value) {
+			if (record && record->value)
+			{
 				videoroom->record = janus_is_true(record->value);
 			}
 			/* 如果启用录制，保存此房间的录制的位置 */
-			if(rec_dir && rec_dir->value) {
+			if (rec_dir && rec_dir->value)
+			{
 				videoroom->rec_dir = g_strdup(rec_dir->value);
 			}
 			/* 是否只能在提供房间密码的情况下更改录制状态 */
-			if(lock_record && lock_record->value) {
+			if (lock_record && lock_record->value)
+			{
 				videoroom->lock_record = janus_is_true(lock_record->value);
 			}
 			/* By default, the VideoRoom plugin does not notify about participants simply joining the room.
-			   It only notifies when the participant actually starts publishing media. 
+			   It only notifies when the participant actually starts publishing media.
 			   默认情况下，VideoRoom插件不会通知参与者只是加入房间。它仅在参与者实际开始发布媒体时发出通知。*/
 			videoroom->notify_joining = FALSE;
-			if(notify_joining != NULL && notify_joining->value != NULL)
+			if (notify_joining != NULL && notify_joining->value != NULL)
 				videoroom->notify_joining = janus_is_true(notify_joining->value);
-			/* 原子操作 设置房间销毁标志为0 未销毁 */	
+			/* 原子操作 设置房间销毁标志为0 未销毁 */
 			g_atomic_int_set(&videoroom->destroyed, 0);
 			janus_mutex_init(&videoroom->mutex);
 			/* 初始化房间 引用计数 */
 			janus_refcount_init(&videoroom->ref, janus_videoroom_room_free);
 			/* 初始化房间参与者hashTable */
 			videoroom->participants = g_hash_table_new_full(string_ids ? g_str_hash : g_int64_hash, string_ids ? g_str_equal : g_int64_equal,
-				(GDestroyNotify)g_free, (GDestroyNotify)janus_videoroom_publisher_dereference);
+															(GDestroyNotify)g_free, (GDestroyNotify)janus_videoroom_publisher_dereference);
 			/* 初始化房间私有id hashTable */
 			videoroom->private_ids = g_hash_table_new(NULL, NULL);
 			/* 参与者加入时是否检查令牌 默认false*/
-			videoroom->check_allowed = FALSE;	/* Static rooms can't have an "allowed" list yet, no hooks to the configuration file */
+			videoroom->check_allowed = FALSE; /* Static rooms can't have an "allowed" list yet, no hooks to the configuration file */
 			/* 允许加入的参加者hashTable */
 			videoroom->allowed = g_hash_table_new_full(g_str_hash, g_str_equal, (GDestroyNotify)g_free, NULL);
 			janus_mutex_lock(&rooms_mutex);
 			/* 把该房间添加到房间hashTable中 */
 			g_hash_table_insert(rooms,
-				string_ids ? (gpointer)g_strdup(videoroom->room_id_str) : (gpointer)janus_uint64_dup(videoroom->room_id),
-				videoroom);
+								string_ids ? (gpointer)g_strdup(videoroom->room_id_str) : (gpointer)janus_uint64_dup(videoroom->room_id),
+								videoroom);
 			janus_mutex_unlock(&rooms_mutex);
 			/* Compute a list of the supported codecs for the summary */
 			char audio_codecs[100], video_codecs[100];
 			/* 计算支持的编解码器列表 */
 			janus_videoroom_codecstr(videoroom, audio_codecs, video_codecs, sizeof(audio_codecs), "|");
 			JANUS_LOG(LOG_VERB, "Created VideoRoom: %s (%s, %s, %s/%s codecs, secret: %s, pin: %s, pvtid: %s)\n",
-				videoroom->room_id_str, videoroom->room_name,
-				videoroom->is_private ? "private" : "public",
-				audio_codecs, video_codecs,
-				videoroom->room_secret ? videoroom->room_secret : "no secret",
-				videoroom->room_pin ? videoroom->room_pin : "no pin",
-				videoroom->require_pvtid ? "required" : "optional");
-			if(videoroom->record) {
+					  videoroom->room_id_str, videoroom->room_name,
+					  videoroom->is_private ? "private" : "public",
+					  audio_codecs, video_codecs,
+					  videoroom->room_secret ? videoroom->room_secret : "no secret",
+					  videoroom->room_pin ? videoroom->room_pin : "no pin",
+					  videoroom->require_pvtid ? "required" : "optional");
+			if (videoroom->record)
+			{
 				JANUS_LOG(LOG_VERB, "  -- Room is going to be recorded in %s\n",
-					videoroom->rec_dir ? videoroom->rec_dir : "the current folder");
+						  videoroom->rec_dir ? videoroom->rec_dir : "the current folder");
 			}
 			/* 是否需要端到端加密发布服务器 */
-			if(videoroom->require_e2ee) {
+			if (videoroom->require_e2ee)
+			{
 				JANUS_LOG(LOG_VERB, "  -- All publishers MUST use end-to-end encryption\n");
 			}
 			cl = cl->next;
 		}
-		/* Done: we keep the configuration file open in case we get a "create" or "destroy" with permanent=true 
+		/* Done: we keep the configuration file open in case we get a "create" or "destroy" with permanent=true
 		我们保持配置文件打开，以防我们得到“create”或“destroy”的permanent=true*/
 	}
 
@@ -2647,14 +2739,15 @@ int janus_videoroom_init(janus_callbacks *callback, const char *config_path) {
 	GHashTableIter iter;
 	gpointer value;
 	g_hash_table_iter_init(&iter, rooms);
-	while (g_hash_table_iter_next(&iter, NULL, &value)) {
+	while (g_hash_table_iter_next(&iter, NULL, &value))
+	{
 		janus_videoroom *vr = value;
 		/* Compute a list of the supported codecs for the summary 为摘要计算支持的编解码器列表 */
 		char audio_codecs[100], video_codecs[100];
 		janus_videoroom_codecstr(vr, audio_codecs, video_codecs, sizeof(audio_codecs), "|");
-		JANUS_LOG(LOG_VERB, "  ::: [%s][%s] %"SCNu32", max %d publishers, FIR frequency of %d seconds, %s audio codec(s), %s video codec(s)\n",
-			vr->room_id_str, vr->room_name, vr->bitrate, vr->max_publishers, vr->fir_freq,
-			audio_codecs, video_codecs);
+		JANUS_LOG(LOG_VERB, "  ::: [%s][%s] %" SCNu32 ", max %d publishers, FIR frequency of %d seconds, %s audio codec(s), %s video codec(s)\n",
+				  vr->room_id_str, vr->room_name, vr->bitrate, vr->max_publishers, vr->fir_freq,
+				  audio_codecs, video_codecs);
 	}
 	janus_mutex_unlock(&rooms_mutex);
 
@@ -2663,22 +2756,24 @@ int janus_videoroom_init(janus_callbacks *callback, const char *config_path) {
 	rtcpfwd_loop = g_main_loop_new(rtcpfwd_ctx, FALSE);
 	GError *error = NULL;
 	rtcpfwd_thread = g_thread_try_new("videoroom rtcpfwd", janus_videoroom_rtp_forwarder_rtcp_thread, NULL, &error);
-	if(error != NULL) {
+	if (error != NULL)
+	{
 		/* We show the error but it's not fatal 我们显示错误，但它不是致命的 */
 		JANUS_LOG(LOG_ERR, "Got error %d (%s) trying to launch the VideoRoom RTCP thread for RTP forwarders...\n",
-			error->code, error->message ? error->message : "??");
+				  error->code, error->message ? error->message : "??");
 		g_error_free(error);
 	}
 
 	g_atomic_int_set(&initialized, 1);
 
-	/* Launch the thread that will handle incoming messages 启动将处理传入消息的线程*/
+	/* Launch the thread that will handle incoming messages 启动将专门的线程来处理进入到videoRoom插件的异步消息*/
 	error = NULL;
 	handler_thread = g_thread_try_new("videoroom handler", janus_videoroom_handler, NULL, &error);
-	if(error != NULL) {
+	if (error != NULL)
+	{
 		g_atomic_int_set(&initialized, 0);
 		JANUS_LOG(LOG_ERR, "Got error %d (%s) trying to launch the VideoRoom handler thread...\n",
-			error->code, error->message ? error->message : "??");
+				  error->code, error->message ? error->message : "??");
 		g_error_free(error);
 		janus_config_destroy(config);
 		return -1;
@@ -2689,20 +2784,24 @@ int janus_videoroom_init(janus_callbacks *callback, const char *config_path) {
 
 /**
  * @brief 销毁janus videoroom
- * 
+ *
  */
-void janus_videoroom_destroy(void) {
-	if(!g_atomic_int_get(&initialized))
+void janus_videoroom_destroy(void)
+{
+	if (!g_atomic_int_get(&initialized))
 		return;
 	g_atomic_int_set(&stopping, 1);
 
 	g_async_queue_push(messages, &exit_message);
-	if(handler_thread != NULL) {
+	if (handler_thread != NULL)
+	{
 		g_thread_join(handler_thread);
 		handler_thread = NULL;
 	}
-	if(rtcpfwd_thread != NULL) {
-		if(g_main_loop_is_running(rtcpfwd_loop)) {
+	if (rtcpfwd_thread != NULL)
+	{
+		if (g_main_loop_is_running(rtcpfwd_loop))
+		{
 			g_main_loop_quit(rtcpfwd_loop);
 			g_main_context_wakeup(rtcpfwd_ctx);
 		}
@@ -2734,72 +2833,81 @@ void janus_videoroom_destroy(void) {
 
 /**
  * @brief 获取videoroom api版本
- * 
- * @return int 
+ *
+ * @return int
  */
-int janus_videoroom_get_api_compatibility(void) {
-	/* Important! This is what your plugin MUST always return: don't lie here or bad things will happen 
+int janus_videoroom_get_api_compatibility(void)
+{
+	/* Important! This is what your plugin MUST always return: don't lie here or bad things will happen
 	重要的！ 这是您的插件必须始终返回的内容，不要欺骗，否则会发生坏事*/
 	return JANUS_PLUGIN_API_VERSION;
 }
 /**
  * @brief 获取videoroom 版本 整型
- * 
- * @return int 
+ *
+ * @return int
  */
-int janus_videoroom_get_version(void) {
+int janus_videoroom_get_version(void)
+{
 	return JANUS_VIDEOROOM_VERSION;
 }
 /**
  * @brief 获取videoroom 版本 字符串
- * 
- * @return int 
+ *
+ * @return int
  */
-const char *janus_videoroom_get_version_string(void) {
+const char *janus_videoroom_get_version_string(void)
+{
 	return JANUS_VIDEOROOM_VERSION_STRING;
 }
 /**
  * @brief 获取videoroom 描述
- * 
- * @return const char* 
+ *
+ * @return const char*
  */
-const char *janus_videoroom_get_description(void) {
+const char *janus_videoroom_get_description(void)
+{
 	return JANUS_VIDEOROOM_DESCRIPTION;
 }
 /**
  * @brief 获取videoroom 名称
- * 
- * @return const char* 
+ *
+ * @return const char*
  */
-const char *janus_videoroom_get_name(void) {
+const char *janus_videoroom_get_name(void)
+{
 	return JANUS_VIDEOROOM_NAME;
 }
 /**
  * @brief 获取videoroom 作者
- * 
- * @return const char* 
+ *
+ * @return const char*
  */
-const char *janus_videoroom_get_author(void) {
+const char *janus_videoroom_get_author(void)
+{
 	return JANUS_VIDEOROOM_AUTHOR;
 }
 /**
  * @brief 获取videoroom 包名
- * 
- * @return const char* 
+ *
+ * @return const char*
  */
-const char *janus_videoroom_get_package(void) {
+const char *janus_videoroom_get_package(void)
+{
 	return JANUS_VIDEOROOM_PACKAGE;
 }
 
 /**
  * @brief 根据handle查找videoroom session
- * 
- * @param handle 
- * @return janus_videoroom_session* 
+ *
+ * @param handle
+ * @return janus_videoroom_session*
  */
-static janus_videoroom_session *janus_videoroom_lookup_session(janus_plugin_session *handle) {
+static janus_videoroom_session *janus_videoroom_lookup_session(janus_plugin_session *handle)
+{
 	janus_videoroom_session *session = NULL;
-	if (g_hash_table_contains(sessions, handle)) {
+	if (g_hash_table_contains(sessions, handle))
+	{
 		session = (janus_videoroom_session *)handle->plugin_handle;
 	}
 	return session;
@@ -2807,12 +2915,14 @@ static janus_videoroom_session *janus_videoroom_lookup_session(janus_plugin_sess
 
 /**
  * @brief 为handle创建videoroom session
- * 
- * @param handle 
- * @param error 
+ *
+ * @param handle
+ * @param error
  */
-void janus_videoroom_create_session(janus_plugin_session *handle, int *error) {
-	if(g_atomic_int_get(&stopping) || !g_atomic_int_get(&initialized)) {
+void janus_videoroom_create_session(janus_plugin_session *handle, int *error)
+{
+	if (g_atomic_int_get(&stopping) || !g_atomic_int_get(&initialized))
+	{
 		*error = -1;
 		return;
 	}
@@ -2835,56 +2945,60 @@ void janus_videoroom_create_session(janus_plugin_session *handle, int *error) {
 
 /**
  * @brief 获取session下的发布者 （debug模式下会输出日志）
- * 
- * @param session 
- * @return janus_videoroom_publisher* 
+ *
+ * @param session
+ * @return janus_videoroom_publisher*
  */
-static janus_videoroom_publisher *janus_videoroom_session_get_publisher(janus_videoroom_session *session) {
+static janus_videoroom_publisher *janus_videoroom_session_get_publisher(janus_videoroom_session *session)
+{
 	janus_mutex_lock(&session->mutex);
 	janus_videoroom_publisher *publisher = (janus_videoroom_publisher *)session->participant;
-	if(publisher)
+	if (publisher)
 		janus_refcount_increase(&publisher->ref);
 	janus_mutex_unlock(&session->mutex);
 	return publisher;
 }
 /**
  * @brief 获取session下的发布者 （非debug）debug模式下会输出日志
- * 
- * @param session 
- * @return janus_videoroom_publisher* 
+ *
+ * @param session
+ * @return janus_videoroom_publisher*
  */
-static janus_videoroom_publisher *janus_videoroom_session_get_publisher_nodebug(janus_videoroom_session *session) {
+static janus_videoroom_publisher *janus_videoroom_session_get_publisher_nodebug(janus_videoroom_session *session)
+{
 	janus_mutex_lock(&session->mutex);
 	janus_videoroom_publisher *publisher = (janus_videoroom_publisher *)session->participant;
-	if(publisher)
+	if (publisher)
 		janus_refcount_increase_nodebug(&publisher->ref);
 	janus_mutex_unlock(&session->mutex);
 	return publisher;
 }
 /**
  * @brief 获取session下的订阅者 （debug模式下会输出日志）
- * 
- * @param session 
- * @return janus_videoroom_publisher* 
+ *
+ * @param session
+ * @return janus_videoroom_publisher*
  */
-static janus_videoroom_subscriber *janus_videoroom_session_get_subscriber(janus_videoroom_session *session) {
+static janus_videoroom_subscriber *janus_videoroom_session_get_subscriber(janus_videoroom_session *session)
+{
 	janus_mutex_lock(&session->mutex);
 	janus_videoroom_subscriber *subscriber = (janus_videoroom_subscriber *)session->participant;
-	if(subscriber)
+	if (subscriber)
 		janus_refcount_increase(&subscriber->ref);
 	janus_mutex_unlock(&session->mutex);
 	return subscriber;
 }
 /**
  * @brief 获取session下的订阅者 （非debug）debug模式下会输出日志
- * 
- * @param session 
- * @return janus_videoroom_publisher* 
+ *
+ * @param session
+ * @return janus_videoroom_publisher*
  */
-static janus_videoroom_subscriber *janus_videoroom_session_get_subscriber_nodebug(janus_videoroom_session *session) {
+static janus_videoroom_subscriber *janus_videoroom_session_get_subscriber_nodebug(janus_videoroom_session *session)
+{
 	janus_mutex_lock(&session->mutex);
 	janus_videoroom_subscriber *subscriber = (janus_videoroom_subscriber *)session->participant;
-	if(subscriber)
+	if (subscriber)
 		janus_refcount_increase_nodebug(&subscriber->ref);
 	janus_mutex_unlock(&session->mutex);
 	return subscriber;
@@ -2892,21 +3006,24 @@ static janus_videoroom_subscriber *janus_videoroom_session_get_subscriber_nodebu
 
 /**
  * @brief 通知参与者事件
- * 
- * @param participant 
- * @param msg 
- * @param notify_source_participant 
+ *
+ * @param participant
+ * @param msg
+ * @param notify_source_participant
  */
-static void janus_videoroom_notify_participants(janus_videoroom_publisher *participant, json_t *msg, gboolean notify_source_participant) {
+static void janus_videoroom_notify_participants(janus_videoroom_publisher *participant, json_t *msg, gboolean notify_source_participant)
+{
 	/* participant->room->mutex has to be locked. */
-	if(participant->room == NULL)
+	if (participant->room == NULL)
 		return;
 	GHashTableIter iter;
 	gpointer value;
 	g_hash_table_iter_init(&iter, participant->room->participants);
-	while (participant->room && !g_atomic_int_get(&participant->room->destroyed) && g_hash_table_iter_next(&iter, NULL, &value)) {
+	while (participant->room && !g_atomic_int_get(&participant->room->destroyed) && g_hash_table_iter_next(&iter, NULL, &value))
+	{
 		janus_videoroom_publisher *p = value;
-		if(p && !g_atomic_int_get(&p->destroyed) && p->session && (p != participant || notify_source_participant)) {
+		if (p && !g_atomic_int_get(&p->destroyed) && p->session && (p != participant || notify_source_participant))
+		{
 			JANUS_LOG(LOG_VERB, "Notifying participant %s (%s)\n", p->user_id_str, p->display ? p->display : "??");
 			int ret = gateway->push_event(p->session->handle, &janus_videoroom_plugin, NULL, msg, NULL);
 			JANUS_LOG(LOG_VERB, "  >> %d (%s)\n", ret, janus_get_api_error(ret));
@@ -2915,21 +3032,25 @@ static void janus_videoroom_notify_participants(janus_videoroom_publisher *parti
 }
 /**
  * @brief 通知参与者发生join事件
- * 
- * @param participant 
- * @param msg 
- * @param notify_source_participant 
+ *
+ * @param participant
+ * @param msg
+ * @param notify_source_participant
  */
-static void janus_videoroom_participant_joining(janus_videoroom_publisher *p) {
+static void janus_videoroom_participant_joining(janus_videoroom_publisher *p)
+{
 	/* we need to check if the room still exists, may have been destroyed already
 	我们需要检查房间是否仍然存在，可能已经被摧毁 */
-	if(p->room == NULL)
+	if (p->room == NULL)
 		return;
-	if(!g_atomic_int_get(&p->room->destroyed) && p->room->notify_joining) {
+	// 当有新加入者时是否通知房间里的所有参与者
+	if (!g_atomic_int_get(&p->room->destroyed) && p->room->notify_joining)
+	{
 		json_t *event = json_object();
 		json_t *user = json_object();
 		json_object_set_new(user, "id", string_ids ? json_string(p->user_id_str) : json_integer(p->user_id));
-		if (p->display) {
+		if (p->display)
+		{
 			json_object_set_new(user, "display", json_string(p->display));
 		}
 		json_object_set_new(event, "videoroom", json_string("event"));
@@ -2944,31 +3065,35 @@ static void janus_videoroom_participant_joining(janus_videoroom_publisher *p) {
 
 /**
  * @brief 处理离开或者unpublish消息通知
- * 
- * @param participant 
- * @param is_leaving 
- * @param kicked 
+ *
+ * @param participant
+ * @param is_leaving
+ * @param kicked
  */
-static void janus_videoroom_leave_or_unpublish(janus_videoroom_publisher *participant, gboolean is_leaving, gboolean kicked) {
-	/* we need to check if the room still exists, may have been destroyed already 
+static void janus_videoroom_leave_or_unpublish(janus_videoroom_publisher *participant, gboolean is_leaving, gboolean kicked)
+{
+	/* we need to check if the room still exists, may have been destroyed already
 	我们需要检查房间是否仍然存在，可能已经被摧毁 */
-	if(participant->room == NULL)
+	if (participant->room == NULL)
 		return;
 	janus_mutex_lock(&rooms_mutex);
-	if(!g_hash_table_lookup(rooms, string_ids ? (gpointer)participant->room_id_str : (gpointer)&participant->room_id)) {
+	if (!g_hash_table_lookup(rooms, string_ids ? (gpointer)participant->room_id_str : (gpointer)&participant->room_id))
+	{
 		JANUS_LOG(LOG_ERR, "No such room (%s)\n", participant->room_id_str);
 		janus_mutex_unlock(&rooms_mutex);
 		return;
 	}
 	janus_videoroom *room = participant->room;
-	if(!room || g_atomic_int_get(&room->destroyed)) {
+	if (!room || g_atomic_int_get(&room->destroyed))
+	{
 		janus_mutex_unlock(&rooms_mutex);
 		return;
 	}
 	janus_refcount_increase(&room->ref);
 	janus_mutex_unlock(&rooms_mutex);
 	janus_mutex_lock(&room->mutex);
-	if (!participant->room) {
+	if (!participant->room)
+	{
 		janus_mutex_unlock(&room->mutex);
 		janus_refcount_decrease(&room->ref);
 		return;
@@ -2977,19 +3102,21 @@ static void janus_videoroom_leave_or_unpublish(janus_videoroom_publisher *partic
 	json_object_set_new(event, "videoroom", json_string("event"));
 	json_object_set_new(event, "room", string_ids ? json_string(participant->room_id_str) : json_integer(participant->room_id));
 	json_object_set_new(event, is_leaving ? (kicked ? "kicked" : "leaving") : "unpublished",
-		string_ids ? json_string(participant->user_id_str) : json_integer(participant->user_id));
+						string_ids ? json_string(participant->user_id_str) : json_integer(participant->user_id));
 	janus_videoroom_notify_participants(participant, event, FALSE);
 	/* Also notify event handlers 通知事件处理器 */
-	if(notify_events && gateway->events_is_enabled()) {
+	if (notify_events && gateway->events_is_enabled())
+	{
 		json_t *info = json_object();
 		json_object_set_new(info, "event", json_string(is_leaving ? (kicked ? "kicked" : "leaving") : "unpublished"));
 		json_object_set_new(info, "room", string_ids ? json_string(participant->room_id_str) : json_integer(participant->room_id));
 		json_object_set_new(info, "id", string_ids ? json_string(participant->user_id_str) : json_integer(participant->user_id));
 		gateway->notify_event(&janus_videoroom_plugin, NULL, info);
 	}
-	if(is_leaving) {
+	if (is_leaving)
+	{
 		g_hash_table_remove(participant->room->participants,
-			string_ids ? (gpointer)participant->user_id_str : (gpointer)&participant->user_id);
+							string_ids ? (gpointer)participant->user_id_str : (gpointer)&participant->user_id);
 		g_hash_table_remove(participant->room->private_ids, GUINT_TO_POINTER(participant->pvt_id));
 		g_clear_pointer(&participant->room, janus_videoroom_room_dereference);
 	}
@@ -3000,24 +3127,28 @@ static void janus_videoroom_leave_or_unpublish(janus_videoroom_publisher *partic
 
 /**
  * @brief 销毁handle的session
- * 
- * @param handle 
- * @param error 
+ *
+ * @param handle
+ * @param error
  */
-void janus_videoroom_destroy_session(janus_plugin_session *handle, int *error) {
-	if(g_atomic_int_get(&stopping) || !g_atomic_int_get(&initialized)) {
+void janus_videoroom_destroy_session(janus_plugin_session *handle, int *error)
+{
+	if (g_atomic_int_get(&stopping) || !g_atomic_int_get(&initialized))
+	{
 		*error = -1;
 		return;
 	}
 	janus_mutex_lock(&sessions_mutex);
 	janus_videoroom_session *session = janus_videoroom_lookup_session(handle);
-	if(!session) {
+	if (!session)
+	{
 		janus_mutex_unlock(&sessions_mutex);
 		JANUS_LOG(LOG_ERR, "No VideoRoom session associated with this handle...\n");
 		*error = -2;
 		return;
 	}
-	if(g_atomic_int_get(&session->destroyed)) {
+	if (g_atomic_int_get(&session->destroyed))
+	{
 		janus_mutex_unlock(&sessions_mutex);
 		JANUS_LOG(LOG_WARN, "VideoRoom session already marked as destroyed...\n");
 		return;
@@ -3025,39 +3156,44 @@ void janus_videoroom_destroy_session(janus_plugin_session *handle, int *error) {
 	janus_refcount_increase(&session->ref);
 	g_hash_table_remove(sessions, handle);
 	janus_mutex_unlock(&sessions_mutex);
-	/* Any related WebRTC PeerConnection is not available anymore either 
+	/* Any related WebRTC PeerConnection is not available anymore either
 	任何相关的 WebRTC PeerConnection 也不再可用*/
 	janus_videoroom_hangup_media_internal(session);
-	if(session->participant_type == janus_videoroom_p_type_publisher) {
+	if (session->participant_type == janus_videoroom_p_type_publisher)
+	{
 		/* Get rid of publisher */
 		janus_mutex_lock(&session->mutex);
 		janus_videoroom_publisher *p = (janus_videoroom_publisher *)session->participant;
-		if(p)
+		if (p)
 			janus_refcount_increase(&p->ref);
 		session->participant = NULL;
 		janus_mutex_unlock(&session->mutex);
-		if(p && p->room) {
+		if (p && p->room)
+		{
 			/*处理离开或者unpublish消息通知*/
 			janus_videoroom_leave_or_unpublish(p, TRUE, FALSE);
 		}
 		/*销毁房间发布者*/
 		janus_videoroom_publisher_destroy(p);
-		if(p)
+		if (p)
 			janus_refcount_decrease(&p->ref);
-	} else if(session->participant_type == janus_videoroom_p_type_subscriber) {
+	}
+	else if (session->participant_type == janus_videoroom_p_type_subscriber)
+	{
 		janus_mutex_lock(&session->mutex);
 		janus_videoroom_subscriber *s = (janus_videoroom_subscriber *)session->participant;
-		if(s)
+		if (s)
 			janus_refcount_increase(&s->ref);
 		session->participant = NULL;
 		janus_mutex_unlock(&session->mutex);
-		if(s && s->room) {
+		if (s && s->room)
+		{
 			janus_refcount_decrease(&s->room->ref);
 			janus_refcount_decrease(&s->ref);
 		}
 		/*销毁房间订阅者*/
 		janus_videoroom_subscriber_destroy(s);
-		if(s)
+		if (s)
 			janus_refcount_decrease(&s->ref);
 	}
 	janus_refcount_decrease(&session->ref);
@@ -3066,17 +3202,20 @@ void janus_videoroom_destroy_session(janus_plugin_session *handle, int *error) {
 
 /**
  * @brief 查询该handle的session
- * 
- * @param handle 
- * @return json_t* 
+ *
+ * @param handle
+ * @return json_t*
  */
-json_t *janus_videoroom_query_session(janus_plugin_session *handle) {
-	if(g_atomic_int_get(&stopping) || !g_atomic_int_get(&initialized)) {
+json_t *janus_videoroom_query_session(janus_plugin_session *handle)
+{
+	if (g_atomic_int_get(&stopping) || !g_atomic_int_get(&initialized))
+	{
 		return NULL;
 	}
 	janus_mutex_lock(&sessions_mutex);
 	janus_videoroom_session *session = janus_videoroom_lookup_session(handle);
-	if(!session) {
+	if (!session)
+	{
 		janus_mutex_unlock(&sessions_mutex);
 		JANUS_LOG(LOG_ERR, "No session associated with this handle...\n");
 		return NULL;
@@ -3085,65 +3224,74 @@ json_t *janus_videoroom_query_session(janus_plugin_session *handle) {
 	janus_mutex_unlock(&sessions_mutex);
 	/* Show the participant/room info, if any 展示参与者/房间信息，如果有 */
 	json_t *info = json_object();
-	if(session->participant) {
-		if(session->participant_type == janus_videoroom_p_type_none) {
+	if (session->participant)
+	{
+		if (session->participant_type == janus_videoroom_p_type_none)
+		{
 			json_object_set_new(info, "type", json_string("none"));
-		} else if(session->participant_type == janus_videoroom_p_type_publisher) {
+		}
+		else if (session->participant_type == janus_videoroom_p_type_publisher)
+		{
 			json_object_set_new(info, "type", json_string("publisher"));
 			janus_videoroom_publisher *participant = janus_videoroom_session_get_publisher(session);
-			if(participant && participant->room) {
+			if (participant && participant->room)
+			{
 				janus_videoroom *room = participant->room;
-				json_object_set_new(info, "room", room ?
-					(string_ids ? json_string(room->room_id_str) : json_integer(room->room_id)) : NULL);
+				json_object_set_new(info, "room", room ? (string_ids ? json_string(room->room_id_str) : json_integer(room->room_id)) : NULL);
 				json_object_set_new(info, "id", string_ids ? json_string(participant->user_id_str) : json_integer(participant->user_id));
 				json_object_set_new(info, "private_id", json_integer(participant->pvt_id));
-				if(participant->display)
+				if (participant->display)
 					json_object_set_new(info, "display", json_string(participant->display));
-				if(participant->subscribers)
+				if (participant->subscribers)
 					json_object_set_new(info, "viewers", json_integer(g_slist_length(participant->subscribers)));
 				json_t *media = json_object();
 				json_object_set_new(media, "audio", participant->audio ? json_true() : json_false());
-				if(participant->audio)
+				if (participant->audio)
 					json_object_set_new(media, "audio_codec", json_string(janus_audiocodec_name(participant->acodec)));
 				json_object_set_new(media, "video", participant->video ? json_true() : json_false());
-				if(participant->video)
+				if (participant->video)
 					json_object_set_new(media, "video_codec", json_string(janus_videocodec_name(participant->vcodec)));
 				json_object_set_new(media, "data", participant->data ? json_true() : json_false());
 				json_object_set_new(info, "media", media);
 				json_object_set_new(info, "bitrate", json_integer(participant->bitrate));
-				if(participant->ssrc[0] != 0 || participant->rid[0] != NULL)
+				if (participant->ssrc[0] != 0 || participant->rid[0] != NULL)
 					json_object_set_new(info, "simulcast", json_true());
-				if(participant->arc || participant->vrc || participant->drc) {
+				if (participant->arc || participant->vrc || participant->drc)
+				{
 					json_t *recording = json_object();
-					if(participant->arc && participant->arc->filename)
+					if (participant->arc && participant->arc->filename)
 						json_object_set_new(recording, "audio", json_string(participant->arc->filename));
-					if(participant->vrc && participant->vrc->filename)
+					if (participant->vrc && participant->vrc->filename)
 						json_object_set_new(recording, "video", json_string(participant->vrc->filename));
-					if(participant->drc && participant->drc->filename)
+					if (participant->drc && participant->drc->filename)
 						json_object_set_new(recording, "data", json_string(participant->drc->filename));
 					json_object_set_new(info, "recording", recording);
 				}
-				if(participant->audio_level_extmap_id > 0) {
+				if (participant->audio_level_extmap_id > 0)
+				{
 					json_object_set_new(info, "audio-level-dBov", json_integer(participant->audio_dBov_level));
 					json_object_set_new(info, "talking", participant->talking ? json_true() : json_false());
 				}
-				if(participant->e2ee)
+				if (participant->e2ee)
 					json_object_set_new(info, "e2ee", json_true());
 			}
-			if(participant != NULL)
+			if (participant != NULL)
 				janus_refcount_decrease(&participant->ref);
-		} else if(session->participant_type == janus_videoroom_p_type_subscriber) {
+		}
+		else if (session->participant_type == janus_videoroom_p_type_subscriber)
+		{
 			json_object_set_new(info, "type", json_string("subscriber"));
 			janus_videoroom_subscriber *participant = janus_videoroom_session_get_subscriber(session);
-			if(participant && participant->room) {
+			if (participant && participant->room)
+			{
 				janus_videoroom_publisher *feed = (janus_videoroom_publisher *)participant->feed;
-				if(feed && feed->room) {
+				if (feed && feed->room)
+				{
 					janus_videoroom *room = feed->room;
-					json_object_set_new(info, "room", room ?
-						(string_ids ? json_string(room->room_id_str) : json_integer(room->room_id)) : NULL);
+					json_object_set_new(info, "room", room ? (string_ids ? json_string(room->room_id_str) : json_integer(room->room_id)) : NULL);
 					json_object_set_new(info, "private_id", json_integer(participant->pvt_id));
 					json_object_set_new(info, "feed_id", string_ids ? json_string(feed->user_id_str) : json_integer(feed->user_id));
-					if(feed->display)
+					if (feed->display)
 						json_object_set_new(info, "feed_display", json_string(feed->display));
 				}
 				json_t *media = json_object();
@@ -3154,17 +3302,19 @@ json_t *janus_videoroom_query_session(janus_plugin_session *handle) {
 				json_object_set_new(media, "data", participant->data ? json_true() : json_false());
 				json_object_set_new(media, "data-offered", participant->data_offered ? json_true() : json_false());
 				json_object_set_new(info, "media", media);
-				if(feed && (feed->ssrc[0] != 0 || feed->rid[0] != NULL)) {
+				if (feed && (feed->ssrc[0] != 0 || feed->rid[0] != NULL))
+				{
 					json_t *simulcast = json_object();
 					json_object_set_new(simulcast, "substream", json_integer(participant->sim_context.substream));
 					json_object_set_new(simulcast, "substream-target", json_integer(participant->sim_context.substream_target));
 					json_object_set_new(simulcast, "temporal-layer", json_integer(participant->sim_context.templayer));
 					json_object_set_new(simulcast, "temporal-layer-target", json_integer(participant->sim_context.templayer_target));
-					if(participant->sim_context.drop_trigger > 0)
+					if (participant->sim_context.drop_trigger > 0)
 						json_object_set_new(simulcast, "fallback", json_integer(participant->sim_context.drop_trigger));
 					json_object_set_new(info, "simulcast", simulcast);
 				}
-				if(participant->room && participant->room->do_svc) {
+				if (participant->room && participant->room->do_svc)
+				{
 					json_t *svc = json_object();
 					json_object_set_new(svc, "spatial-layer", json_integer(participant->spatial_layer));
 					json_object_set_new(svc, "target-spatial-layer", json_integer(participant->target_spatial_layer));
@@ -3172,10 +3322,10 @@ json_t *janus_videoroom_query_session(janus_plugin_session *handle) {
 					json_object_set_new(svc, "target-temporal-layer", json_integer(participant->target_temporal_layer));
 					json_object_set_new(info, "svc", svc);
 				}
-				if(participant->e2ee)
+				if (participant->e2ee)
 					json_object_set_new(info, "e2ee", json_true());
 			}
-			if(participant)
+			if (participant)
 				janus_refcount_decrease(&participant->ref);
 		}
 	}
@@ -3187,71 +3337,83 @@ json_t *janus_videoroom_query_session(janus_plugin_session *handle) {
 
 /**
  * @brief 检查能否访问房间
- * 
- * @param root 
- * @param check_modify 
- * @param check_join 
- * @param videoroom 
- * @param error_cause 
- * @param error_cause_size 
- * @return int 
+ *
+ * @param root
+ * @param check_modify
+ * @param check_join
+ * @param videoroom
+ * @param error_cause
+ * @param error_cause_size
+ * @return int
  */
-static int janus_videoroom_access_room(json_t *root, gboolean check_modify, gboolean check_join, janus_videoroom **videoroom, char *error_cause, int error_cause_size) {
+static int janus_videoroom_access_room(json_t *root, gboolean check_modify, gboolean check_join, janus_videoroom **videoroom, char *error_cause, int error_cause_size)
+{
 	/* rooms_mutex has to be locked 房间需要进行加锁 */
 	int error_code = 0;
 	json_t *room = json_object_get(root, "room");
 	guint64 room_id = 0;
 	char room_id_num[30], *room_id_str = NULL;
-	if(!string_ids) {
+	if (!string_ids)
+	{
 		room_id = json_integer_value(room);
-		g_snprintf(room_id_num, sizeof(room_id_num), "%"SCNu64, room_id);
+		g_snprintf(room_id_num, sizeof(room_id_num), "%" SCNu64, room_id);
 		room_id_str = room_id_num;
-	} else {
+	}
+	else
+	{
 		room_id_str = (char *)json_string_value(room);
 	}
 	*videoroom = g_hash_table_lookup(rooms,
-		string_ids ? (gpointer)room_id_str : (gpointer)&room_id);
-	if(*videoroom == NULL) {
+									 string_ids ? (gpointer)room_id_str : (gpointer)&room_id);
+	if (*videoroom == NULL)
+	{
 		JANUS_LOG(LOG_ERR, "No such room (%s)\n", room_id_str);
 		error_code = JANUS_VIDEOROOM_ERROR_NO_SUCH_ROOM;
-		if(error_cause)
+		if (error_cause)
 			g_snprintf(error_cause, error_cause_size, "No such room (%s)", room_id_str);
 		return error_code;
 	}
-	if(g_atomic_int_get(&((*videoroom)->destroyed))) {
+	if (g_atomic_int_get(&((*videoroom)->destroyed)))
+	{
 		JANUS_LOG(LOG_ERR, "No such room (%s)\n", room_id_str);
 		error_code = JANUS_VIDEOROOM_ERROR_NO_SUCH_ROOM;
-		if(error_cause)
+		if (error_cause)
 			g_snprintf(error_cause, error_cause_size, "No such room (%s)", room_id_str);
 		return error_code;
 	}
-	if(check_modify) {
+	if (check_modify)
+	{
 		char error_cause2[100];
 		JANUS_CHECK_SECRET((*videoroom)->room_secret, root, "secret", error_code, error_cause2,
-			JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT, JANUS_VIDEOROOM_ERROR_UNAUTHORIZED);
-		if(error_code != 0) {
+						   JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT, JANUS_VIDEOROOM_ERROR_UNAUTHORIZED);
+		if (error_code != 0)
+		{
 			g_strlcpy(error_cause, error_cause2, error_cause_size);
 			return error_code;
 		}
 	}
-	if(check_join) {
+	if (check_join)
+	{
 		char error_cause2[100];
-		/* Signed tokens are enforced, so they precede any pin validation 
+		/* Signed tokens are enforced, so they precede any pin validation
 		签名令牌是强制执行的，因此它们在任何 pin 验证之前*/
-		if(gateway->auth_is_signed() && (*videoroom)->signed_tokens) {
+		if (gateway->auth_is_signed() && (*videoroom)->signed_tokens)
+		{
 			json_t *token = json_object_get(root, "token");
 			char room_descriptor[100];
 			g_snprintf(room_descriptor, sizeof(room_descriptor), "room=%s", room_id_str);
-			if(!gateway->auth_signature_contains(&janus_videoroom_plugin, json_string_value(token), room_descriptor)) {
+			if (!gateway->auth_signature_contains(&janus_videoroom_plugin, json_string_value(token), room_descriptor))
+			{
 				error_code = JANUS_VIDEOROOM_ERROR_UNAUTHORIZED;
-				if(error_cause)
+				if (error_cause)
 					g_snprintf(error_cause, error_cause_size, "Unauthorized (wrong token)");
 				return error_code;
 			}
 		}
 		JANUS_CHECK_SECRET((*videoroom)->room_pin, root, "pin", error_code, error_cause2,
-			JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT, JANUS_VIDEOROOM_ERROR_UNAUTHORIZED);
-		if(error_code != 0) {
+						   JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT, JANUS_VIDEOROOM_ERROR_UNAUTHORIZED);
+		if (error_code != 0)
+		{
 			g_strlcpy(error_cause, error_cause2, error_cause_size);
 			return error_code;
 		}
@@ -3259,9 +3421,10 @@ static int janus_videoroom_access_room(json_t *root, gboolean check_modify, gboo
 	return 0;
 }
 
-/* Helper method to process synchronous requests 
+/* Helper method to process synchronous requests
 处理同步请求 */
-static json_t *janus_videoroom_process_synchronous_request(janus_videoroom_session *session, json_t *message) {
+static json_t *janus_videoroom_process_synchronous_request(janus_videoroom_session *session, json_t *message)
+{
 	json_t *request = json_object_get(message, "request");
 	const char *request_text = json_string_value(request);
 
@@ -3271,36 +3434,41 @@ static json_t *janus_videoroom_process_synchronous_request(janus_videoroom_sessi
 	json_t *root = message;
 	json_t *response = NULL;
 
-	if(!strcasecmp(request_text, "create")) {
+	if (!strcasecmp(request_text, "create"))
+	{
 		/* Create a new VideoRoom 创建一个新VideoRoom*/
 		JANUS_LOG(LOG_VERB, "Creating a new VideoRoom room\n");
 		JANUS_VALIDATE_JSON_OBJECT(root, create_parameters,
-			error_code, error_cause, TRUE,
-			JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT);
-		if(error_code != 0)
+								   error_code, error_cause, TRUE,
+								   JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT);
+		if (error_code != 0)
 			goto prepare_response;
-		if(!string_ids) {
+		if (!string_ids)
+		{
 			JANUS_VALIDATE_JSON_OBJECT(root, roomopt_parameters,
-				error_code, error_cause, TRUE,
-				JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT);
-		} else {
-			JANUS_VALIDATE_JSON_OBJECT(root, roomstropt_parameters,
-				error_code, error_cause, TRUE,
-				JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT);
+									   error_code, error_cause, TRUE,
+									   JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT);
 		}
-		if(error_code != 0)
+		else
+		{
+			JANUS_VALIDATE_JSON_OBJECT(root, roomstropt_parameters,
+									   error_code, error_cause, TRUE,
+									   JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT);
+		}
+		if (error_code != 0)
 			goto prepare_response;
-		if(admin_key != NULL) {
-			/* An admin key was specified: make sure it was provided, and that it's valid 
+		if (admin_key != NULL)
+		{
+			/* An admin key was specified: make sure it was provided, and that it's valid
 			指定了管理员密钥：确保已提供且有效 */
 			JANUS_VALIDATE_JSON_OBJECT(root, adminkey_parameters,
-				error_code, error_cause, TRUE,
-				JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT);
-			if(error_code != 0)
+									   error_code, error_cause, TRUE,
+									   JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT);
+			if (error_code != 0)
 				goto prepare_response;
 			JANUS_CHECK_SECRET(admin_key, root, "admin_key", error_code, error_cause,
-				JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT, JANUS_VIDEOROOM_ERROR_UNAUTHORIZED);
-			if(error_code != 0)
+							   JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT, JANUS_VIDEOROOM_ERROR_UNAUTHORIZED);
+			if (error_code != 0)
 				goto prepare_response;
 		}
 		json_t *desc = json_object_get(root, "description");
@@ -3316,18 +3484,23 @@ static json_t *janus_videoroom_process_synchronous_request(janus_videoroom_sessi
 		json_t *publishers = json_object_get(root, "publishers");
 		json_t *allowed = json_object_get(root, "allowed");
 		json_t *audiocodec = json_object_get(root, "audiocodec");
-		if(audiocodec) {
+		if (audiocodec)
+		{
 			/*检查音频编解码器是否符合要求*/
 			const char *audiocodec_value = json_string_value(audiocodec);
 			gchar **list = g_strsplit(audiocodec_value, ",", 6);
 			gchar *codec = list[0];
-			if(codec != NULL) {
-				int i=0;
-				while(codec != NULL) {
-					if(i == 5) {
+			if (codec != NULL)
+			{
+				int i = 0;
+				while (codec != NULL)
+				{
+					if (i == 5)
+					{
 						break;
 					}
-					if(strlen(codec) == 0 || JANUS_AUDIOCODEC_NONE == janus_audiocodec_from_name(codec)) {
+					if (strlen(codec) == 0 || JANUS_AUDIOCODEC_NONE == janus_audiocodec_from_name(codec))
+					{
 						JANUS_LOG(LOG_ERR, "Invalid element (audiocodec can only be or contain opus, isac32, isac16, pcmu, pcma or g722)\n");
 						error_code = JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT;
 						g_snprintf(error_cause, 512, "Invalid element (audiocodec can only be or contain opus, isac32, isac16, pcmu, pcma or g722)");
@@ -3340,18 +3513,23 @@ static json_t *janus_videoroom_process_synchronous_request(janus_videoroom_sessi
 			g_clear_pointer(&list, g_strfreev);
 		}
 		json_t *videocodec = json_object_get(root, "videocodec");
-		if(videocodec) {
+		if (videocodec)
+		{
 			/*检查视频编解码器是否符合要求*/
 			const char *videocodec_value = json_string_value(videocodec);
 			gchar **list = g_strsplit(videocodec_value, ",", 6);
 			gchar *codec = list[0];
-			if(codec != NULL) {
-				int i=0;
-				while(codec != NULL) {
-					if(i == 5) {
+			if (codec != NULL)
+			{
+				int i = 0;
+				while (codec != NULL)
+				{
+					if (i == 5)
+					{
 						break;
 					}
-					if(strlen(codec) == 0 || JANUS_VIDEOCODEC_NONE == janus_videocodec_from_name(codec)) {
+					if (strlen(codec) == 0 || JANUS_VIDEOCODEC_NONE == janus_videocodec_from_name(codec))
+					{
 						JANUS_LOG(LOG_ERR, "Invalid element (videocodec can only be or contain vp8, vp9, h264, av1 or h265)\n");
 						error_code = JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT;
 						g_snprintf(error_cause, 512, "Invalid element (videocodec can only be or contain vp8, vp9, av1, h264 or h265)");
@@ -3380,21 +3558,26 @@ static json_t *janus_videoroom_process_synchronous_request(janus_videoroom_sessi
 		json_t *rec_dir = json_object_get(root, "rec_dir");
 		json_t *lock_record = json_object_get(root, "lock_record");
 		json_t *permanent = json_object_get(root, "permanent");
-		if(allowed) {
-			/* Make sure the "allowed" array only contains strings 
+		if (allowed)
+		{
+			/* Make sure the "allowed" array only contains strings
 			确保“允许”数组只包含字符串 */
 			gboolean ok = TRUE;
-			if(json_array_size(allowed) > 0) {
+			if (json_array_size(allowed) > 0)
+			{
 				size_t i = 0;
-				for(i=0; i<json_array_size(allowed); i++) {
+				for (i = 0; i < json_array_size(allowed); i++)
+				{
 					json_t *a = json_array_get(allowed, i);
-					if(!a || !json_is_string(a)) {
+					if (!a || !json_is_string(a))
+					{
 						ok = FALSE;
 						break;
 					}
 				}
 			}
-			if(!ok) {
+			if (!ok)
+			{
 				JANUS_LOG(LOG_ERR, "Invalid element in the allowed array (not a string)\n");
 				error_code = JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT;
 				g_snprintf(error_cause, 512, "Invalid element in the allowed array (not a string)");
@@ -3403,7 +3586,8 @@ static json_t *janus_videoroom_process_synchronous_request(janus_videoroom_sessi
 		}
 		gboolean save = permanent ? json_is_true(permanent) : FALSE;
 		/*是否需要保存该房间到配置文件中*/
-		if(save && config == NULL) {
+		if (save && config == NULL)
+		{
 			/*如果需要保存但是又找不到配置文件*/
 			JANUS_LOG(LOG_ERR, "No configuration file, can't create permanent room\n");
 			error_code = JANUS_VIDEOROOM_ERROR_UNKNOWN_ERROR;
@@ -3413,20 +3597,26 @@ static json_t *janus_videoroom_process_synchronous_request(janus_videoroom_sessi
 		guint64 room_id = 0;
 		char room_id_num[30], *room_id_str = NULL;
 		json_t *room = json_object_get(root, "room");
-		if(!string_ids) {
+		if (!string_ids)
+		{
 			room_id = json_integer_value(room);
-			g_snprintf(room_id_num, sizeof(room_id_num), "%"SCNu64, room_id);
+			g_snprintf(room_id_num, sizeof(room_id_num), "%" SCNu64, room_id);
 			room_id_str = room_id_num;
-		} else {
+		}
+		else
+		{
 			room_id_str = (char *)json_string_value(room);
 		}
-		if(room_id == 0 && room_id_str == NULL) {
+		if (room_id == 0 && room_id_str == NULL)
+		{
 			JANUS_LOG(LOG_WARN, "Desired room ID is empty, which is not allowed... picking random ID instead\n");
 		}
 		janus_mutex_lock(&rooms_mutex);
-		if(room_id > 0 || room_id_str != NULL) {
+		if (room_id > 0 || room_id_str != NULL)
+		{
 			/* Let's make sure the room doesn't exist already 让我们确保该roomId没有被使用 */
-			if(g_hash_table_lookup(rooms, string_ids ? (gpointer)room_id_str : (gpointer)&room_id) != NULL) {
+			if (g_hash_table_lookup(rooms, string_ids ? (gpointer)room_id_str : (gpointer)&room_id) != NULL)
+			{
 				/* It does... 房间号已经被使用*/
 				janus_mutex_unlock(&rooms_mutex);
 				error_code = JANUS_VIDEOROOM_ERROR_ROOM_EXISTS;
@@ -3439,20 +3629,27 @@ static json_t *janus_videoroom_process_synchronous_request(janus_videoroom_sessi
 		janus_videoroom *videoroom = g_malloc0(sizeof(janus_videoroom));
 		/* Generate a random ID 如果房间id为空则生成随机id*/
 		gboolean room_id_allocated = FALSE;
-		if(!string_ids && room_id == 0) {
-			while(room_id == 0) {
+		if (!string_ids && room_id == 0)
+		{
+			while (room_id == 0)
+			{
 				room_id = janus_random_uint64();
-				if(g_hash_table_lookup(rooms, &room_id) != NULL) {
+				if (g_hash_table_lookup(rooms, &room_id) != NULL)
+				{
 					/* Room ID already taken, try another one 检查生成的随机id是否也被使用*/
 					room_id = 0;
 				}
 			}
-			g_snprintf(room_id_num, sizeof(room_id_num), "%"SCNu64, room_id);
+			g_snprintf(room_id_num, sizeof(room_id_num), "%" SCNu64, room_id);
 			room_id_str = room_id_num;
-		} else if(string_ids && room_id_str == NULL) {
-			while(room_id_str == NULL) {
+		}
+		else if (string_ids && room_id_str == NULL)
+		{
+			while (room_id_str == NULL)
+			{
 				room_id_str = janus_random_uuid();
-				if(g_hash_table_lookup(rooms, room_id_str) != NULL) {
+				if (g_hash_table_lookup(rooms, room_id_str) != NULL)
+				{
 					/* Room ID already taken, try another one 检查生成的随机id是否也被使用*/
 					g_clear_pointer(&room_id_str, g_free);
 				}
@@ -3461,14 +3658,17 @@ static json_t *janus_videoroom_process_synchronous_request(janus_videoroom_sessi
 		}
 		videoroom->room_id = room_id;
 		videoroom->room_id_str = room_id_str ? g_strdup(room_id_str) : NULL;
-		if(room_id_allocated)
-		/*如果最后是通过生成随机id作为房间id，那么释放指定的id所占用的空间*/
+		if (room_id_allocated)
+			/*如果最后是通过生成随机id作为房间id，那么释放指定的id所占用的空间*/
 			g_free(room_id_str);
 		char *description = NULL;
 		/*使用desc参数或者Room + 房间id 来作为房间的名称 */
-		if(desc != NULL && strlen(json_string_value(desc)) > 0) {
+		if (desc != NULL && strlen(json_string_value(desc)) > 0)
+		{
 			description = g_strdup(json_string_value(desc));
-		} else {
+		}
+		else
+		{
 			char roomname[255];
 			g_snprintf(roomname, 255, "Room %s", videoroom->room_id_str);
 			description = g_strdup(roomname);
@@ -3477,37 +3677,41 @@ static json_t *janus_videoroom_process_synchronous_request(janus_videoroom_sessi
 		videoroom->is_private = is_private ? json_is_true(is_private) : FALSE;
 		videoroom->require_pvtid = req_pvtid ? json_is_true(req_pvtid) : FALSE;
 		/*设置房间是否需要签名token，但是如果Janus core不使用签名token，那么这里也不需要使用*/
-		if(signed_tokens && json_is_true(signed_tokens)) {
-			if(!gateway->auth_is_signed()) {
+		if (signed_tokens && json_is_true(signed_tokens))
+		{
+			if (!gateway->auth_is_signed())
+			{
 				JANUS_LOG(LOG_WARN, "Can't enforce signed tokens for this room, signed-mode not in use in the core\n");
-			} else {
+			}
+			else
+			{
 				videoroom->signed_tokens = TRUE;
 			}
 		}
 		videoroom->require_e2ee = req_e2ee ? json_is_true(req_e2ee) : FALSE;
 		/*房间是否有操作秘钥*/
-		if(secret)
+		if (secret)
 			videoroom->room_secret = g_strdup(json_string_value(secret));
 		/*房间是否有加入秘钥*/
-		if(pin)
+		if (pin)
 			videoroom->room_pin = g_strdup(json_string_value(pin));
-		videoroom->max_publishers = 3;	/* FIXME How should we choose a default? 如果没有指定房间发布者数量，默认3*/
-		if(publishers)
+		videoroom->max_publishers = 3; /* FIXME How should we choose a default? 如果没有指定房间发布者数量，默认3*/
+		if (publishers)
 			videoroom->max_publishers = json_integer_value(publishers);
-		if(videoroom->max_publishers < 0)
-			videoroom->max_publishers = 3;	/* FIXME How should we choose a default? 如果没有指定房间发布者数量，默认3*/
+		if (videoroom->max_publishers < 0)
+			videoroom->max_publishers = 3; /* FIXME How should we choose a default? 如果没有指定房间发布者数量，默认3*/
 		videoroom->bitrate = 0;
 		/*是否提供了房间最大比特率*/
-		if(bitrate)
+		if (bitrate)
 			videoroom->bitrate = json_integer_value(bitrate);
-		/*如果比特率大于0小于64k，最小取64k*/	
-		if(videoroom->bitrate > 0 && videoroom->bitrate < 64000)
-			videoroom->bitrate = 64000;	/* Don't go below 64k */
-		/*上述限制（全局比特率限制）是否不可逾越*/	
+		/*如果比特率大于0小于64k，最小取64k*/
+		if (videoroom->bitrate > 0 && videoroom->bitrate < 64000)
+			videoroom->bitrate = 64000; /* Don't go below 64k */
+		/*上述限制（全局比特率限制）是否不可逾越*/
 		videoroom->bitrate_cap = bitrate_cap ? json_is_true(bitrate_cap) : FALSE;
 		/* 常规通过 FIR 请求关键帧 频率（0=禁用）*/
 		videoroom->fir_freq = 0;
-		if(fir_freq)
+		if (fir_freq)
 			videoroom->fir_freq = json_integer_value(fir_freq);
 		/* By default, we force Opus as the only audio codec 默认情况下我们使用Opus作为音频编解码器*/
 		videoroom->acodec[0] = JANUS_AUDIOCODEC_OPUS;
@@ -3516,18 +3720,22 @@ static json_t *janus_videoroom_process_synchronous_request(janus_videoroom_sessi
 		videoroom->acodec[3] = JANUS_AUDIOCODEC_NONE;
 		videoroom->acodec[4] = JANUS_AUDIOCODEC_NONE;
 		/* Check if we're forcing a different single codec, or allowing more than one 检查我们是强制使用不同的单一编解码器，还是允许多个编解码器*/
-		if(audiocodec) {
+		if (audiocodec)
+		{
 			const char *audiocodec_value = json_string_value(audiocodec);
 			gchar **list = g_strsplit(audiocodec_value, ",", 6);
 			gchar *codec = list[0];
-			if(codec != NULL) {
-				int i=0;
-				while(codec != NULL) {
-					if(i == 5) {
+			if (codec != NULL)
+			{
+				int i = 0;
+				while (codec != NULL)
+				{
+					if (i == 5)
+					{
 						JANUS_LOG(LOG_WARN, "Ignoring extra audio codecs: %s\n", codec);
 						break;
 					}
-					if(strlen(codec) > 0)
+					if (strlen(codec) > 0)
 						videoroom->acodec[i] = janus_audiocodec_from_name(codec);
 					i++;
 					codec = list[i];
@@ -3542,18 +3750,22 @@ static json_t *janus_videoroom_process_synchronous_request(janus_videoroom_sessi
 		videoroom->vcodec[3] = JANUS_VIDEOCODEC_NONE;
 		videoroom->vcodec[4] = JANUS_VIDEOCODEC_NONE;
 		/* Check if we're forcing a different single codec, or allowing more than one 检查我们是强制使用不同的单一编解码器，还是允许多个编解码器*/
-		if(videocodec) {
+		if (videocodec)
+		{
 			const char *videocodec_value = json_string_value(videocodec);
 			gchar **list = g_strsplit(videocodec_value, ",", 6);
 			gchar *codec = list[0];
-			if(codec != NULL) {
-				int i=0;
-				while(codec != NULL) {
-					if(i == 5) {
+			if (codec != NULL)
+			{
+				int i = 0;
+				while (codec != NULL)
+				{
+					if (i == 5)
+					{
 						JANUS_LOG(LOG_WARN, "Ignoring extra video codecs: %s\n", codec);
 						break;
 					}
-					if(strlen(codec) > 0)
+					if (strlen(codec) > 0)
 						videoroom->vcodec[i] = janus_videocodec_from_name(codec);
 					i++;
 					codec = list[i];
@@ -3563,56 +3775,66 @@ static json_t *janus_videoroom_process_synchronous_request(janus_videoroom_sessi
 		}
 		const char *vp9_profile = json_string_value(vp9profile);
 		/*VP9 编解码器配置文件*/
-		if(vp9_profile && (videoroom->vcodec[0] == JANUS_VIDEOCODEC_VP9 ||
-				videoroom->vcodec[1] == JANUS_VIDEOCODEC_VP9 ||
-				videoroom->vcodec[2] == JANUS_VIDEOCODEC_VP9 ||
-				videoroom->vcodec[3] == JANUS_VIDEOCODEC_VP9 ||
-				videoroom->vcodec[4] == JANUS_VIDEOCODEC_VP9)) {
+		if (vp9_profile && (videoroom->vcodec[0] == JANUS_VIDEOCODEC_VP9 ||
+							videoroom->vcodec[1] == JANUS_VIDEOCODEC_VP9 ||
+							videoroom->vcodec[2] == JANUS_VIDEOCODEC_VP9 ||
+							videoroom->vcodec[3] == JANUS_VIDEOCODEC_VP9 ||
+							videoroom->vcodec[4] == JANUS_VIDEOCODEC_VP9))
+		{
 			videoroom->vp9_profile = g_strdup(vp9_profile);
 		}
 		/*h264 编解码器配置文件*/
 		const char *h264_profile = json_string_value(h264profile);
-		if(h264_profile && (videoroom->vcodec[0] == JANUS_VIDEOCODEC_H264 ||
-				videoroom->vcodec[1] == JANUS_VIDEOCODEC_H264 ||
-				videoroom->vcodec[2] == JANUS_VIDEOCODEC_H264 ||
-				videoroom->vcodec[3] == JANUS_VIDEOCODEC_H264 ||
-				videoroom->vcodec[4] == JANUS_VIDEOCODEC_H264)) {
+		if (h264_profile && (videoroom->vcodec[0] == JANUS_VIDEOCODEC_H264 ||
+							 videoroom->vcodec[1] == JANUS_VIDEOCODEC_H264 ||
+							 videoroom->vcodec[2] == JANUS_VIDEOCODEC_H264 ||
+							 videoroom->vcodec[3] == JANUS_VIDEOCODEC_H264 ||
+							 videoroom->vcodec[4] == JANUS_VIDEOCODEC_H264))
+		{
 			videoroom->h264_profile = g_strdup(h264_profile);
 		}
 		/*是否必须协商带 inband FEC（注：仅适用于 Opus）*/
 		videoroom->do_opusfec = TRUE;
-		if(fec) {
+		if (fec)
+		{
 			videoroom->do_opusfec = json_is_true(fec);
-			if(videoroom->acodec[0] != JANUS_AUDIOCODEC_OPUS &&
-					videoroom->acodec[1] != JANUS_AUDIOCODEC_OPUS &&
-					videoroom->acodec[2] != JANUS_AUDIOCODEC_OPUS &&
-					videoroom->acodec[3] != JANUS_AUDIOCODEC_OPUS &&
-					videoroom->acodec[4] != JANUS_AUDIOCODEC_OPUS) {
+			if (videoroom->acodec[0] != JANUS_AUDIOCODEC_OPUS &&
+				videoroom->acodec[1] != JANUS_AUDIOCODEC_OPUS &&
+				videoroom->acodec[2] != JANUS_AUDIOCODEC_OPUS &&
+				videoroom->acodec[3] != JANUS_AUDIOCODEC_OPUS &&
+				videoroom->acodec[4] != JANUS_AUDIOCODEC_OPUS)
+			{
 				videoroom->do_opusfec = FALSE;
 				JANUS_LOG(LOG_WARN, "Inband FEC is only supported for rooms that allow Opus: disabling it...\n");
 			}
 		}
 		/*是否必须协商 DTX（注：仅适用于 Opus）*/
-		if(dtx) {
+		if (dtx)
+		{
 			videoroom->do_opusdtx = json_is_true(dtx);
-			if(videoroom->acodec[0] != JANUS_AUDIOCODEC_OPUS &&
-					videoroom->acodec[1] != JANUS_AUDIOCODEC_OPUS &&
-					videoroom->acodec[2] != JANUS_AUDIOCODEC_OPUS &&
-					videoroom->acodec[3] != JANUS_AUDIOCODEC_OPUS &&
-					videoroom->acodec[4] != JANUS_AUDIOCODEC_OPUS) {
+			if (videoroom->acodec[0] != JANUS_AUDIOCODEC_OPUS &&
+				videoroom->acodec[1] != JANUS_AUDIOCODEC_OPUS &&
+				videoroom->acodec[2] != JANUS_AUDIOCODEC_OPUS &&
+				videoroom->acodec[3] != JANUS_AUDIOCODEC_OPUS &&
+				videoroom->acodec[4] != JANUS_AUDIOCODEC_OPUS)
+			{
 				videoroom->do_opusdtx = FALSE;
 				JANUS_LOG(LOG_WARN, "DTX is only supported for rooms that allow Opus: disabling it...\n");
 			}
 		}
 		/*视频是否必须 SVC（注：目前仅适用于 VP9）*/
-		if(svc && json_is_true(svc)) {
-			if(videoroom->vcodec[0] == JANUS_VIDEOCODEC_VP9 &&
-					videoroom->vcodec[1] == JANUS_VIDEOCODEC_NONE &&
-					videoroom->vcodec[2] == JANUS_VIDEOCODEC_NONE &&
-					videoroom->vcodec[3] == JANUS_VIDEOCODEC_NONE &&
-					videoroom->vcodec[4] == JANUS_VIDEOCODEC_NONE) {
+		if (svc && json_is_true(svc))
+		{
+			if (videoroom->vcodec[0] == JANUS_VIDEOCODEC_VP9 &&
+				videoroom->vcodec[1] == JANUS_VIDEOCODEC_NONE &&
+				videoroom->vcodec[2] == JANUS_VIDEOCODEC_NONE &&
+				videoroom->vcodec[3] == JANUS_VIDEOCODEC_NONE &&
+				videoroom->vcodec[4] == JANUS_VIDEOCODEC_NONE)
+			{
 				videoroom->do_svc = TRUE;
-			} else {
+			}
+			else
+			{
 				JANUS_LOG(LOG_WARN, "SVC is only supported, in an experimental way, for VP9 only rooms: disabling it...\n");
 			}
 		}
@@ -3620,19 +3842,26 @@ static json_t *janus_videoroom_process_synchronous_request(janus_videoroom_sessi
 		videoroom->audiolevel_ext = audiolevel_ext ? json_is_true(audiolevel_ext) : TRUE;
 		/*是否向其他用户发出有关音频级别的事件*/
 		videoroom->audiolevel_event = audiolevel_event ? json_is_true(audiolevel_event) : FALSE;
-		if(videoroom->audiolevel_event) {
+		if (videoroom->audiolevel_event)
+		{
 			/* 用于检查的音频级别的数据包数量*/
 			videoroom->audio_active_packets = 100;
-			if(json_integer_value(audio_active_packets) > 0) {
+			if (json_integer_value(audio_active_packets) > 0)
+			{
 				videoroom->audio_active_packets = json_integer_value(audio_active_packets);
-			} else {
+			}
+			else
+			{
 				JANUS_LOG(LOG_WARN, "Invalid audio_active_packets value provided, using default: %d\n", videoroom->audio_active_packets);
 			}
 			/*平均音频级别*/
 			videoroom->audio_level_average = 25;
-			if(json_integer_value(audio_level_average) > 0) {
+			if (json_integer_value(audio_level_average) > 0)
+			{
 				videoroom->audio_level_average = json_integer_value(audio_level_average);
-			} else {
+			}
+			else
+			{
 				JANUS_LOG(LOG_WARN, "Invalid audio_level_average value provided, using default: %d\n", videoroom->audio_level_average);
 			}
 		}
@@ -3647,15 +3876,18 @@ static json_t *janus_videoroom_process_synchronous_request(janus_videoroom_sessi
 		   默认情况下，只是加入房间 VideoRoom 插件不会通知参与者,它仅在参与者实际开始发布媒体时通知。 */
 		videoroom->notify_joining = notify_joining ? json_is_true(notify_joining) : FALSE;
 		/*是否应该录制*/
-		if(record) {
+		if (record)
+		{
 			videoroom->record = json_is_true(record);
 		}
 		/*保存录制记录的地方*/
-		if(rec_dir) {
+		if (rec_dir)
+		{
 			videoroom->rec_dir = g_strdup(json_string_value(rec_dir));
 		}
 		/*是否只有提供房间密码才能更改录制状态*/
-		if(lock_record) {
+		if (lock_record)
+		{
 			videoroom->lock_record = json_is_true(lock_record);
 		}
 		/*初始化房间状态，引用情况，引用为0时所执行的销毁方法 */
@@ -3664,19 +3896,22 @@ static json_t *janus_videoroom_process_synchronous_request(janus_videoroom_sessi
 		janus_refcount_init(&videoroom->ref, janus_videoroom_room_free);
 		/*初始化房间参与者hashtable*/
 		videoroom->participants = g_hash_table_new_full(string_ids ? g_str_hash : g_int64_hash, string_ids ? g_str_equal : g_int64_equal,
-			(GDestroyNotify)g_free, (GDestroyNotify)janus_videoroom_publisher_dereference);
+														(GDestroyNotify)g_free, (GDestroyNotify)janus_videoroom_publisher_dereference);
 		/*初始化房间私有id hashtable*/
 		videoroom->private_ids = g_hash_table_new(NULL, NULL);
 		/*初始化房间允许加入的参与者hashtable*/
 		videoroom->allowed = g_hash_table_new_full(g_str_hash, g_str_equal, (GDestroyNotify)g_free, NULL);
-		if(allowed != NULL) {
-			/* Populate the "allowed" list as an ACL for people trying to join 
+		if (allowed != NULL)
+		{
+			/* Populate the "allowed" list as an ACL for people trying to join
 			把请求参数填进“allowed”列表 */
-			if(json_array_size(allowed) > 0) {
+			if (json_array_size(allowed) > 0)
+			{
 				size_t i = 0;
-				for(i=0; i<json_array_size(allowed); i++) {
+				for (i = 0; i < json_array_size(allowed); i++)
+				{
 					const char *token = json_string_value(json_array_get(allowed, i));
-					if(!g_hash_table_lookup(videoroom->allowed, token))
+					if (!g_hash_table_lookup(videoroom->allowed, token))
 						g_hash_table_insert(videoroom->allowed, g_strdup(token), GINT_TO_POINTER(TRUE));
 				}
 			}
@@ -3687,19 +3922,22 @@ static json_t *janus_videoroom_process_synchronous_request(janus_videoroom_sessi
 		char audio_codecs[100], video_codecs[100];
 		janus_videoroom_codecstr(videoroom, audio_codecs, video_codecs, sizeof(audio_codecs), "|");
 		JANUS_LOG(LOG_VERB, "Created VideoRoom: %s (%s, %s, %s/%s codecs, secret: %s, pin: %s, pvtid: %s)\n",
-			videoroom->room_id_str, videoroom->room_name,
-			videoroom->is_private ? "private" : "public",
-			audio_codecs, video_codecs,
-			videoroom->room_secret ? videoroom->room_secret : "no secret",
-			videoroom->room_pin ? videoroom->room_pin : "no pin",
-			videoroom->require_pvtid ? "required" : "optional");
-		if(videoroom->record) {
+				  videoroom->room_id_str, videoroom->room_name,
+				  videoroom->is_private ? "private" : "public",
+				  audio_codecs, video_codecs,
+				  videoroom->room_secret ? videoroom->room_secret : "no secret",
+				  videoroom->room_pin ? videoroom->room_pin : "no pin",
+				  videoroom->require_pvtid ? "required" : "optional");
+		if (videoroom->record)
+		{
 			JANUS_LOG(LOG_VERB, "  -- Room is going to be recorded in %s\n", videoroom->rec_dir ? videoroom->rec_dir : "the current folder");
 		}
-		if(videoroom->require_e2ee) {
+		if (videoroom->require_e2ee)
+		{
 			JANUS_LOG(LOG_VERB, "  -- All publishers MUST use end-to-end encryption\n");
 		}
-		if(save) {
+		if (save)
+		{
 			/* This room is permanent: save to the configuration file too 这个房间是永久的：也保存到配置文件中
 			 * FIXME: We should check if anything fails... */
 			JANUS_LOG(LOG_VERB, "Saving room %s permanently in config file\n", videoroom->room_id_str);
@@ -3710,22 +3948,23 @@ static json_t *janus_videoroom_process_synchronous_request(janus_videoroom_sessi
 			janus_config_category *c = janus_config_get_create(config, NULL, janus_config_type_category, cat);
 			/* Now for the values */
 			janus_config_add(config, c, janus_config_item_create("description", videoroom->room_name));
-			if(videoroom->is_private)
+			if (videoroom->is_private)
 				janus_config_add(config, c, janus_config_item_create("is_private", "yes"));
-			if(videoroom->require_pvtid)
+			if (videoroom->require_pvtid)
 				janus_config_add(config, c, janus_config_item_create("require_pvtid", "yes"));
-			if(videoroom->signed_tokens)
+			if (videoroom->signed_tokens)
 				janus_config_add(config, c, janus_config_item_create("signed_tokens", "yes"));
-			if(videoroom->require_e2ee)
+			if (videoroom->require_e2ee)
 				janus_config_add(config, c, janus_config_item_create("require_e2ee", "yes"));
-			g_snprintf(value, BUFSIZ, "%"SCNu32, videoroom->bitrate);
+			g_snprintf(value, BUFSIZ, "%" SCNu32, videoroom->bitrate);
 			janus_config_add(config, c, janus_config_item_create("bitrate", value));
-			if(videoroom->bitrate_cap)
+			if (videoroom->bitrate_cap)
 				janus_config_add(config, c, janus_config_item_create("bitrate_cap", "yes"));
 			g_snprintf(value, BUFSIZ, "%d", videoroom->max_publishers);
 			janus_config_add(config, c, janus_config_item_create("publishers", value));
-			if(videoroom->fir_freq) {
-				g_snprintf(value, BUFSIZ, "%"SCNu16, videoroom->fir_freq);
+			if (videoroom->fir_freq)
+			{
+				g_snprintf(value, BUFSIZ, "%" SCNu16, videoroom->fir_freq);
 				janus_config_add(config, c, janus_config_item_create("fir_freq", value));
 			}
 			char video_codecs[100];
@@ -3733,64 +3972,70 @@ static json_t *janus_videoroom_process_synchronous_request(janus_videoroom_sessi
 			janus_videoroom_codecstr(videoroom, audio_codecs, video_codecs, sizeof(audio_codecs), ",");
 			janus_config_add(config, c, janus_config_item_create("audiocodec", audio_codecs));
 			janus_config_add(config, c, janus_config_item_create("videocodec", video_codecs));
-			if(videoroom->vp9_profile)
+			if (videoroom->vp9_profile)
 				janus_config_add(config, c, janus_config_item_create("vp9_profile", videoroom->vp9_profile));
-			if(videoroom->h264_profile)
+			if (videoroom->h264_profile)
 				janus_config_add(config, c, janus_config_item_create("h264_profile", videoroom->h264_profile));
-			if(videoroom->do_opusfec)
+			if (videoroom->do_opusfec)
 				janus_config_add(config, c, janus_config_item_create("opus_fec", "yes"));
-			if(videoroom->do_opusdtx)
+			if (videoroom->do_opusdtx)
 				janus_config_add(config, c, janus_config_item_create("opus_dtx", "yes"));
-			if(videoroom->do_svc)
+			if (videoroom->do_svc)
 				janus_config_add(config, c, janus_config_item_create("video_svc", "yes"));
-			if(videoroom->room_secret)
+			if (videoroom->room_secret)
 				janus_config_add(config, c, janus_config_item_create("secret", videoroom->room_secret));
-			if(videoroom->room_pin)
+			if (videoroom->room_pin)
 				janus_config_add(config, c, janus_config_item_create("pin", videoroom->room_pin));
-			if(videoroom->audiolevel_ext) {
+			if (videoroom->audiolevel_ext)
+			{
 				janus_config_add(config, c, janus_config_item_create("audiolevel_ext", "yes"));
-				if(videoroom->audiolevel_event)
+				if (videoroom->audiolevel_event)
 					janus_config_add(config, c, janus_config_item_create("audiolevel_event", "yes"));
-				if(videoroom->audio_active_packets > 0) {
+				if (videoroom->audio_active_packets > 0)
+				{
 					g_snprintf(value, BUFSIZ, "%d", videoroom->audio_active_packets);
 					janus_config_add(config, c, janus_config_item_create("audio_active_packets", value));
 				}
-				if(videoroom->audio_level_average > 0) {
+				if (videoroom->audio_level_average > 0)
+				{
 					g_snprintf(value, BUFSIZ, "%d", videoroom->audio_level_average);
 					janus_config_add(config, c, janus_config_item_create("audio_level_average", value));
 				}
-			} else {
+			}
+			else
+			{
 				janus_config_add(config, c, janus_config_item_create("audiolevel_ext", "no"));
 			}
 			janus_config_add(config, c, janus_config_item_create("videoorient_ext", videoroom->videoorient_ext ? "yes" : "no"));
 			janus_config_add(config, c, janus_config_item_create("playoutdelay_ext", videoroom->playoutdelay_ext ? "yes" : "no"));
 			janus_config_add(config, c, janus_config_item_create("transport_wide_cc_ext", videoroom->transport_wide_cc_ext ? "yes" : "no"));
-			if(videoroom->notify_joining)
+			if (videoroom->notify_joining)
 				janus_config_add(config, c, janus_config_item_create("notify_joining", "yes"));
-			if(videoroom->record)
+			if (videoroom->record)
 				janus_config_add(config, c, janus_config_item_create("record", "yes"));
-			if(videoroom->rec_dir)
+			if (videoroom->rec_dir)
 				janus_config_add(config, c, janus_config_item_create("rec_dir", videoroom->rec_dir));
-			if(videoroom->lock_record)
+			if (videoroom->lock_record)
 				janus_config_add(config, c, janus_config_item_create("lock_record", "yes"));
 			/* Save modified configuration 保存修改配置文件*/
-			if(janus_config_save(config, config_folder, JANUS_VIDEOROOM_PACKAGE) < 0)
-		        /*如果保存失败了，这将通知用户房间不是永久的*/
-				save = FALSE;	/* This will notify the user the room is not permanent */
+			if (janus_config_save(config, config_folder, JANUS_VIDEOROOM_PACKAGE) < 0)
+				/*如果保存失败了，这将通知用户房间不是永久的*/
+				save = FALSE; /* This will notify the user the room is not permanent */
 			janus_mutex_unlock(&config_mutex);
 		}
-        /*把创建好的房间加入到hashtable*/
+		/*把创建好的房间加入到hashtable*/
 		g_hash_table_insert(rooms,
-			string_ids ? (gpointer)g_strdup(videoroom->room_id_str) : (gpointer)janus_uint64_dup(videoroom->room_id),
-			videoroom);
+							string_ids ? (gpointer)g_strdup(videoroom->room_id_str) : (gpointer)janus_uint64_dup(videoroom->room_id),
+							videoroom);
 		/* Show updated rooms list 展示更新房间列表*/
 		GHashTableIter iter;
 		gpointer value;
 		g_hash_table_iter_init(&iter, rooms);
-		while (g_hash_table_iter_next(&iter, NULL, &value)) {
+		while (g_hash_table_iter_next(&iter, NULL, &value))
+		{
 			janus_videoroom *vr = value;
-			JANUS_LOG(LOG_VERB, "  ::: [%s][%s] %"SCNu32", max %d publishers, FIR frequency of %d seconds\n",
-				vr->room_id_str, vr->room_name, vr->bitrate, vr->max_publishers, vr->fir_freq);
+			JANUS_LOG(LOG_VERB, "  ::: [%s][%s] %" SCNu32 ", max %d publishers, FIR frequency of %d seconds\n",
+					  vr->room_id_str, vr->room_name, vr->bitrate, vr->max_publishers, vr->fir_freq);
 		}
 		janus_mutex_unlock(&rooms_mutex);
 		/* Send info back 创建房间成功，返回结果 */
@@ -3799,31 +4044,37 @@ static json_t *janus_videoroom_process_synchronous_request(janus_videoroom_sessi
 		json_object_set_new(response, "room", string_ids ? json_string(videoroom->room_id_str) : json_integer(videoroom->room_id));
 		json_object_set_new(response, "permanent", save ? json_true() : json_false());
 		/* Also notify event handlers 如果开启广播，生成广播通知*/
-		if(notify_events && gateway->events_is_enabled()) {
+		if (notify_events && gateway->events_is_enabled())
+		{
 			json_t *info = json_object();
 			json_object_set_new(info, "event", json_string("created"));
 			json_object_set_new(info, "room", string_ids ? json_string(videoroom->room_id_str) : json_integer(videoroom->room_id));
 			gateway->notify_event(&janus_videoroom_plugin, session ? session->handle : NULL, info);
 		}
 		goto prepare_response;
-	} else if(!strcasecmp(request_text, "edit")) {
+	}
+	else if (!strcasecmp(request_text, "edit"))
+	{
 		/* Edit the properties for an existing VideoRoom 编辑现有 VideoRoom 的属性 */
 		JANUS_LOG(LOG_VERB, "Attempt to edit the properties of an existing VideoRoom room\n");
-		if(!string_ids) {
+		if (!string_ids)
+		{
 			JANUS_VALIDATE_JSON_OBJECT(root, room_parameters,
-				error_code, error_cause, TRUE,
-				JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT);
-		} else {
-			JANUS_VALIDATE_JSON_OBJECT(root, roomstr_parameters,
-				error_code, error_cause, TRUE,
-				JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT);
+									   error_code, error_cause, TRUE,
+									   JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT);
 		}
-		if(error_code != 0)
+		else
+		{
+			JANUS_VALIDATE_JSON_OBJECT(root, roomstr_parameters,
+									   error_code, error_cause, TRUE,
+									   JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT);
+		}
+		if (error_code != 0)
 			goto prepare_response;
 		JANUS_VALIDATE_JSON_OBJECT(root, edit_parameters,
-			error_code, error_cause, TRUE,
-			JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT);
-		if(error_code != 0)
+								   error_code, error_cause, TRUE,
+								   JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT);
+		if (error_code != 0)
 			goto prepare_response;
 		/* We only allow for a limited set of properties to be edited 我们只允许有限的特征可以被修改 */
 		json_t *desc = json_object_get(root, "new_description");
@@ -3837,7 +4088,8 @@ static json_t *janus_videoroom_process_synchronous_request(janus_videoroom_sessi
 		json_t *lock_record = json_object_get(root, "new_lock_record");
 		json_t *permanent = json_object_get(root, "permanent");
 		gboolean save = permanent ? json_is_true(permanent) : FALSE;
-		if(save && config == NULL) {
+		if (save && config == NULL)
+		{
 			JANUS_LOG(LOG_ERR, "No configuration file, can't edit room permanently\n");
 			error_code = JANUS_VIDEOROOM_ERROR_UNKNOWN_ERROR;
 			g_snprintf(error_cause, 512, "No configuration file, can't edit room permanently");
@@ -3847,45 +4099,51 @@ static json_t *janus_videoroom_process_synchronous_request(janus_videoroom_sessi
 		janus_videoroom *videoroom = NULL;
 		/*检查能否访问房间，有无权限对房间进行操作*/
 		error_code = janus_videoroom_access_room(root, TRUE, FALSE, &videoroom, error_cause, sizeof(error_cause));
-		if(error_code != 0) {
+		if (error_code != 0)
+		{
 			janus_mutex_unlock(&rooms_mutex);
 			goto prepare_response;
 		}
 		/* Edit the room properties that were provided 编辑提供的房间属性 */
-		if(desc != NULL && strlen(json_string_value(desc)) > 0) {
+		if (desc != NULL && strlen(json_string_value(desc)) > 0)
+		{
 			char *old_description = videoroom->room_name;
 			char *new_description = g_strdup(json_string_value(desc));
 			videoroom->room_name = new_description;
 			g_free(old_description);
 		}
-		if(is_private)
+		if (is_private)
 			videoroom->is_private = json_is_true(is_private);
-		if(req_pvtid)
+		if (req_pvtid)
 			videoroom->require_pvtid = json_is_true(req_pvtid);
-		if(publishers)
+		if (publishers)
 			videoroom->max_publishers = json_integer_value(publishers);
-		if(bitrate) {
+		if (bitrate)
+		{
 			videoroom->bitrate = json_integer_value(bitrate);
-			if(videoroom->bitrate > 0 && videoroom->bitrate < 64000)
-				videoroom->bitrate = 64000;	/* Don't go below 64k */
+			if (videoroom->bitrate > 0 && videoroom->bitrate < 64000)
+				videoroom->bitrate = 64000; /* Don't go below 64k */
 		}
-		if(fir_freq)
+		if (fir_freq)
 			videoroom->fir_freq = json_integer_value(fir_freq);
-		if(secret && strlen(json_string_value(secret)) > 0) {
+		if (secret && strlen(json_string_value(secret)) > 0)
+		{
 			char *old_secret = videoroom->room_secret;
 			char *new_secret = g_strdup(json_string_value(secret));
 			videoroom->room_secret = new_secret;
 			g_free(old_secret);
 		}
-		if(pin && strlen(json_string_value(pin)) > 0) {
+		if (pin && strlen(json_string_value(pin)) > 0)
+		{
 			char *old_pin = videoroom->room_pin;
 			char *new_pin = g_strdup(json_string_value(pin));
 			videoroom->room_pin = new_pin;
 			g_free(old_pin);
 		}
-		if(lock_record)
+		if (lock_record)
 			videoroom->lock_record = json_is_true(lock_record);
-		if(save) {
+		if (save)
+		{
 			/* This room is permanent: save to the configuration file too 这个房间是永久的：也保存到配置文件中
 			 * FIXME: We should check if anything fails... */
 			JANUS_LOG(LOG_VERB, "Modifying room %s permanently in config file\n", videoroom->room_id_str);
@@ -3898,22 +4156,23 @@ static json_t *janus_videoroom_process_synchronous_request(janus_videoroom_sessi
 			/* Now write the room details again 再次写入房间信息*/
 			janus_config_category *c = janus_config_get_create(config, NULL, janus_config_type_category, cat);
 			janus_config_add(config, c, janus_config_item_create("description", videoroom->room_name));
-			if(videoroom->is_private)
+			if (videoroom->is_private)
 				janus_config_add(config, c, janus_config_item_create("is_private", "yes"));
-			if(videoroom->require_pvtid)
+			if (videoroom->require_pvtid)
 				janus_config_add(config, c, janus_config_item_create("require_pvtid", "yes"));
-			if(videoroom->signed_tokens)
+			if (videoroom->signed_tokens)
 				janus_config_add(config, c, janus_config_item_create("signed_tokens", "yes"));
-			if(videoroom->require_e2ee)
+			if (videoroom->require_e2ee)
 				janus_config_add(config, c, janus_config_item_create("require_e2ee", "yes"));
-			g_snprintf(value, BUFSIZ, "%"SCNu32, videoroom->bitrate);
+			g_snprintf(value, BUFSIZ, "%" SCNu32, videoroom->bitrate);
 			janus_config_add(config, c, janus_config_item_create("bitrate", value));
-			if(videoroom->bitrate_cap)
+			if (videoroom->bitrate_cap)
 				janus_config_add(config, c, janus_config_item_create("bitrate_cap", "yes"));
 			g_snprintf(value, BUFSIZ, "%d", videoroom->max_publishers);
 			janus_config_add(config, c, janus_config_item_create("publishers", value));
-			if(videoroom->fir_freq) {
-				g_snprintf(value, BUFSIZ, "%"SCNu16, videoroom->fir_freq);
+			if (videoroom->fir_freq)
+			{
+				g_snprintf(value, BUFSIZ, "%" SCNu16, videoroom->fir_freq);
 				janus_config_add(config, c, janus_config_item_create("fir_freq", value));
 			}
 			char audio_codecs[100];
@@ -3921,49 +4180,54 @@ static json_t *janus_videoroom_process_synchronous_request(janus_videoroom_sessi
 			janus_videoroom_codecstr(videoroom, audio_codecs, video_codecs, sizeof(audio_codecs), ",");
 			janus_config_add(config, c, janus_config_item_create("audiocodec", audio_codecs));
 			janus_config_add(config, c, janus_config_item_create("videocodec", video_codecs));
-			if(videoroom->vp9_profile)
+			if (videoroom->vp9_profile)
 				janus_config_add(config, c, janus_config_item_create("vp9_profile", videoroom->vp9_profile));
-			if(videoroom->h264_profile)
+			if (videoroom->h264_profile)
 				janus_config_add(config, c, janus_config_item_create("h264_profile", videoroom->h264_profile));
-			if(videoroom->do_opusfec)
+			if (videoroom->do_opusfec)
 				janus_config_add(config, c, janus_config_item_create("opus_fec", "yes"));
-			if(videoroom->do_opusdtx)
+			if (videoroom->do_opusdtx)
 				janus_config_add(config, c, janus_config_item_create("opus_dtx", "yes"));
-			if(videoroom->do_svc)
+			if (videoroom->do_svc)
 				janus_config_add(config, c, janus_config_item_create("video_svc", "yes"));
-			if(videoroom->room_secret)
+			if (videoroom->room_secret)
 				janus_config_add(config, c, janus_config_item_create("secret", videoroom->room_secret));
-			if(videoroom->room_pin)
+			if (videoroom->room_pin)
 				janus_config_add(config, c, janus_config_item_create("pin", videoroom->room_pin));
-			if(videoroom->audiolevel_ext) {
+			if (videoroom->audiolevel_ext)
+			{
 				janus_config_add(config, c, janus_config_item_create("audiolevel_ext", "yes"));
-				if(videoroom->audiolevel_event)
+				if (videoroom->audiolevel_event)
 					janus_config_add(config, c, janus_config_item_create("audiolevel_event", "yes"));
-				if(videoroom->audio_active_packets > 0) {
+				if (videoroom->audio_active_packets > 0)
+				{
 					g_snprintf(value, BUFSIZ, "%d", videoroom->audio_active_packets);
 					janus_config_add(config, c, janus_config_item_create("audio_active_packets", value));
 				}
-				if(videoroom->audio_level_average > 0) {
+				if (videoroom->audio_level_average > 0)
+				{
 					g_snprintf(value, BUFSIZ, "%d", videoroom->audio_level_average);
 					janus_config_add(config, c, janus_config_item_create("audio_level_average", value));
 				}
-			} else {
+			}
+			else
+			{
 				janus_config_add(config, c, janus_config_item_create("audiolevel_ext", "no"));
 			}
 			janus_config_add(config, c, janus_config_item_create("videoorient_ext", videoroom->videoorient_ext ? "yes" : "no"));
 			janus_config_add(config, c, janus_config_item_create("playoutdelay_ext", videoroom->playoutdelay_ext ? "yes" : "no"));
 			janus_config_add(config, c, janus_config_item_create("transport_wide_cc_ext", videoroom->transport_wide_cc_ext ? "yes" : "no"));
-			if(videoroom->notify_joining)
+			if (videoroom->notify_joining)
 				janus_config_add(config, c, janus_config_item_create("notify_joining", "yes"));
-			if(videoroom->record)
+			if (videoroom->record)
 				janus_config_add(config, c, janus_config_item_create("record", "yes"));
-			if(videoroom->rec_dir)
+			if (videoroom->rec_dir)
 				janus_config_add(config, c, janus_config_item_create("rec_dir", videoroom->rec_dir));
-			if(videoroom->lock_record)
+			if (videoroom->lock_record)
 				janus_config_add(config, c, janus_config_item_create("lock_record", "yes"));
 			/* Save modified configuration 保存修改房间信息*/
-			if(janus_config_save(config, config_folder, JANUS_VIDEOROOM_PACKAGE) < 0)
-				save = FALSE;	/*如果保存失败了，这将通知用户房间不是永久的 This will notify the user the room changes are not permanent */
+			if (janus_config_save(config, config_folder, JANUS_VIDEOROOM_PACKAGE) < 0)
+				save = FALSE; /*如果保存失败了，这将通知用户房间不是永久的 This will notify the user the room changes are not permanent */
 			janus_mutex_unlock(&config_mutex);
 		}
 		janus_mutex_unlock(&rooms_mutex);
@@ -3973,37 +4237,44 @@ static json_t *janus_videoroom_process_synchronous_request(janus_videoroom_sessi
 		json_object_set_new(response, "room", string_ids ? json_string(videoroom->room_id_str) : json_integer(videoroom->room_id));
 		json_object_set_new(response, "permanent", save ? json_true() : json_false());
 		/* Also notify event handlers */
-		if(notify_events && gateway->events_is_enabled()) {
+		if (notify_events && gateway->events_is_enabled())
+		{
 			json_t *info = json_object();
 			json_object_set_new(info, "event", json_string("edited"));
 			json_object_set_new(info, "room", string_ids ? json_string(videoroom->room_id_str) : json_integer(videoroom->room_id));
 			gateway->notify_event(&janus_videoroom_plugin, session ? session->handle : NULL, info);
 		}
 		goto prepare_response;
-	} else if(!strcasecmp(request_text, "destroy")) {
+	}
+	else if (!strcasecmp(request_text, "destroy"))
+	{
 		/*进行房间销毁*/
 		JANUS_LOG(LOG_VERB, "Attempt to destroy an existing VideoRoom room\n");
-		if(!string_ids) {
+		if (!string_ids)
+		{
 			JANUS_VALIDATE_JSON_OBJECT(root, room_parameters,
-				error_code, error_cause, TRUE,
-				JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT);
-		} else {
-			JANUS_VALIDATE_JSON_OBJECT(root, roomstr_parameters,
-				error_code, error_cause, TRUE,
-				JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT);
+									   error_code, error_cause, TRUE,
+									   JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT);
 		}
-		if(error_code != 0)
+		else
+		{
+			JANUS_VALIDATE_JSON_OBJECT(root, roomstr_parameters,
+									   error_code, error_cause, TRUE,
+									   JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT);
+		}
+		if (error_code != 0)
 			goto prepare_response;
 		JANUS_VALIDATE_JSON_OBJECT(root, destroy_parameters,
-			error_code, error_cause, TRUE,
-			JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT);
-		if(error_code != 0)
+								   error_code, error_cause, TRUE,
+								   JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT);
+		if (error_code != 0)
 			goto prepare_response;
 		json_t *room = json_object_get(root, "room");
 		json_t *permanent = json_object_get(root, "permanent");
 		gboolean save = permanent ? json_is_true(permanent) : FALSE;
 		/*销毁之前是否将房间保留到配置文件*/
-		if(save && config == NULL) {
+		if (save && config == NULL)
+		{
 			JANUS_LOG(LOG_ERR, "No configuration file, can't destroy room permanently\n");
 			error_code = JANUS_VIDEOROOM_ERROR_UNKNOWN_ERROR;
 			g_snprintf(error_cause, 512, "No configuration file, can't destroy room permanently");
@@ -4011,25 +4282,29 @@ static json_t *janus_videoroom_process_synchronous_request(janus_videoroom_sessi
 		}
 		guint64 room_id = 0;
 		char room_id_num[30], *room_id_str = NULL;
-		if(!string_ids) {
+		if (!string_ids)
+		{
 			room_id = json_integer_value(room);
-			g_snprintf(room_id_num, sizeof(room_id_num), "%"SCNu64, room_id);
+			g_snprintf(room_id_num, sizeof(room_id_num), "%" SCNu64, room_id);
 			room_id_str = room_id_num;
-		} else {
+		}
+		else
+		{
 			room_id_str = (char *)json_string_value(room);
 		}
 		janus_mutex_lock(&rooms_mutex);
 		janus_videoroom *videoroom = NULL;
 		/*检查我们能否有能力对房间进行销毁*/
 		error_code = janus_videoroom_access_room(root, TRUE, FALSE, &videoroom, error_cause, sizeof(error_cause));
-		if(error_code != 0) {
+		if (error_code != 0)
+		{
 			janus_mutex_unlock(&rooms_mutex);
 			goto prepare_response;
 		}
 		/* Remove room, but add a reference until we're done 删除房间，但添加引用，直到我们完成再释放引用*/
 		janus_refcount_increase(&videoroom->ref);
 		g_hash_table_remove(rooms, string_ids ? (gpointer)room_id_str : (gpointer)&room_id);
-		/* Notify all participants that the fun is over, and that they'll be kicked 
+		/* Notify all participants that the fun is over, and that they'll be kicked
 		通知所有参与者房间结束，他们将被踢*/
 		JANUS_LOG(LOG_VERB, "Notifying all participants\n");
 		json_t *destroyed = json_object();
@@ -4039,9 +4314,11 @@ static json_t *janus_videoroom_process_synchronous_request(janus_videoroom_sessi
 		gpointer value;
 		janus_mutex_lock(&videoroom->mutex);
 		g_hash_table_iter_init(&iter, videoroom->participants);
-		while (g_hash_table_iter_next(&iter, NULL, &value)) {
+		while (g_hash_table_iter_next(&iter, NULL, &value))
+		{
 			janus_videoroom_publisher *p = value;
-			if(p && !g_atomic_int_get(&p->destroyed) && p->session && p->room) {
+			if (p && !g_atomic_int_get(&p->destroyed) && p->session && p->room)
+			{
 				g_clear_pointer(&p->room, janus_videoroom_room_dereference);
 				/* Notify the user we're going to destroy the room... 通知用户我们要销毁房间 */
 				int ret = gateway->push_event(p->session->handle, &janus_videoroom_plugin, NULL, destroyed, NULL);
@@ -4053,14 +4330,16 @@ static json_t *janus_videoroom_process_synchronous_request(janus_videoroom_sessi
 		json_decref(destroyed);
 		janus_mutex_unlock(&videoroom->mutex);
 		/* Also notify event handlers 广播通知*/
-		if(notify_events && gateway->events_is_enabled()) {
+		if (notify_events && gateway->events_is_enabled())
+		{
 			json_t *info = json_object();
 			json_object_set_new(info, "event", json_string("destroyed"));
 			json_object_set_new(info, "room", string_ids ? json_string(room_id_str) : json_integer(room_id));
 			gateway->notify_event(&janus_videoroom_plugin, session ? session->handle : NULL, info);
 		}
 		janus_mutex_unlock(&rooms_mutex);
-		if(save) {
+		if (save)
+		{
 			/* This change is permanent: save to the configuration file too 保存房间到配置文件中
 			 * FIXME: We should check if anything fails... */
 			JANUS_LOG(LOG_VERB, "Destroying room %s permanently in config file\n", room_id_str);
@@ -4070,8 +4349,8 @@ static json_t *janus_videoroom_process_synchronous_request(janus_videoroom_sessi
 			g_snprintf(cat, BUFSIZ, "room-%s", room_id_str);
 			janus_config_remove(config, NULL, cat);
 			/* Save modified configuration 保存修改配置文件*/
-			if(janus_config_save(config, config_folder, JANUS_VIDEOROOM_PACKAGE) < 0)
-				save = FALSE;	/*如果保存失败了，这将通知用户房间不是永久的 This will notify the user the room changes are not permanent */
+			if (janus_config_save(config, config_folder, JANUS_VIDEOROOM_PACKAGE) < 0)
+				save = FALSE; /*如果保存失败了，这将通知用户房间不是永久的 This will notify the user the room changes are not permanent */
 			janus_mutex_unlock(&config_mutex);
 		}
 		janus_refcount_decrease(&videoroom->ref);
@@ -4081,20 +4360,27 @@ static json_t *janus_videoroom_process_synchronous_request(janus_videoroom_sessi
 		json_object_set_new(response, "room", string_ids ? json_string(room_id_str) : json_integer(room_id));
 		json_object_set_new(response, "permanent", save ? json_true() : json_false());
 		goto prepare_response;
-	} else if(!strcasecmp(request_text, "list")) {
-		/* List all rooms (but private ones) and their details (except for the secret, of course...) 
+	}
+	else if (!strcasecmp(request_text, "list"))
+	{
+		/* List all rooms (but private ones) and their details (except for the secret, of course...)
 		列出所有房间及其详细信息（但私人房间不会被展示，除非提供了admin_key）*/
 		JANUS_LOG(LOG_VERB, "Getting the list of VideoRoom rooms\n");
 		gboolean lock_room_list = TRUE;
-		if(admin_key != NULL) {
+		if (admin_key != NULL)
+		{
 			json_t *admin_key_json = json_object_get(root, "admin_key");
 			/* Verify admin_key if it was provided 检查是否提供了admin_key */
-			if(admin_key_json != NULL && json_is_string(admin_key_json) && strlen(json_string_value(admin_key_json)) > 0) {
+			if (admin_key_json != NULL && json_is_string(admin_key_json) && strlen(json_string_value(admin_key_json)) > 0)
+			{
 				JANUS_CHECK_SECRET(admin_key, root, "admin_key", error_code, error_cause,
-					JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT, JANUS_VIDEOROOM_ERROR_UNAUTHORIZED);
-				if(error_code != 0) {
+								   JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT, JANUS_VIDEOROOM_ERROR_UNAUTHORIZED);
+				if (error_code != 0)
+				{
 					goto prepare_response;
-				} else {
+				}
+				else
+				{
 					lock_room_list = FALSE;
 				}
 			}
@@ -4104,18 +4390,21 @@ static json_t *janus_videoroom_process_synchronous_request(janus_videoroom_sessi
 		GHashTableIter iter;
 		gpointer value;
 		g_hash_table_iter_init(&iter, rooms);
-		while(g_hash_table_iter_next(&iter, NULL, &value)) {
+		while (g_hash_table_iter_next(&iter, NULL, &value))
+		{
 			janus_videoroom *room = value;
-			if(!room)
+			if (!room)
 				continue;
 			janus_refcount_increase(&room->ref);
-			if(room->is_private && lock_room_list) {
+			if (room->is_private && lock_room_list)
+			{
 				/* Skip private room if no valid admin_key was provided 如果没有提供有效的 admin_key，则跳过私人房间*/
 				JANUS_LOG(LOG_VERB, "Skipping private room '%s'\n", room->room_name);
 				janus_refcount_decrease(&room->ref);
 				continue;
 			}
-			if(!g_atomic_int_get(&room->destroyed)) {
+			if (!g_atomic_int_get(&room->destroyed))
+			{
 				/*不展示标记销毁的房间*/
 				json_t *rl = json_object();
 				json_object_set_new(rl, "room", string_ids ? json_string(room->room_id_str) : json_integer(room->room_id));
@@ -4124,7 +4413,7 @@ static json_t *janus_videoroom_process_synchronous_request(janus_videoroom_sessi
 				json_object_set_new(rl, "is_private", room->is_private ? json_true() : json_false());
 				json_object_set_new(rl, "max_publishers", json_integer(room->max_publishers));
 				json_object_set_new(rl, "bitrate", json_integer(room->bitrate));
-				if(room->bitrate_cap)
+				if (room->bitrate_cap)
 					json_object_set_new(rl, "bitrate_cap", json_true());
 				json_object_set_new(rl, "fir_freq", json_integer(room->fir_freq));
 				json_object_set_new(rl, "require_pvtid", room->require_pvtid ? json_true() : json_false());
@@ -4135,11 +4424,11 @@ static json_t *janus_videoroom_process_synchronous_request(janus_videoroom_sessi
 				janus_videoroom_codecstr(room, audio_codecs, video_codecs, sizeof(audio_codecs), ",");
 				json_object_set_new(rl, "audiocodec", json_string(audio_codecs));
 				json_object_set_new(rl, "videocodec", json_string(video_codecs));
-				if(room->do_opusfec)
+				if (room->do_opusfec)
 					json_object_set_new(rl, "opus_fec", json_true());
-				if(room->do_opusdtx)
+				if (room->do_opusdtx)
 					json_object_set_new(rl, "opus_dtx", json_true());
-				if(room->do_svc)
+				if (room->do_svc)
 					json_object_set_new(rl, "video_svc", json_true());
 				json_object_set_new(rl, "record", room->record ? json_true() : json_false());
 				json_object_set_new(rl, "rec_dir", json_string(room->rec_dir));
@@ -4147,7 +4436,8 @@ static json_t *janus_videoroom_process_synchronous_request(janus_videoroom_sessi
 				json_object_set_new(rl, "num_participants", json_integer(g_hash_table_size(room->participants)));
 				json_object_set_new(rl, "audiolevel_ext", room->audiolevel_ext ? json_true() : json_false());
 				json_object_set_new(rl, "audiolevel_event", room->audiolevel_event ? json_true() : json_false());
-				if(room->audiolevel_event) {
+				if (room->audiolevel_event)
+				{
 					json_object_set_new(rl, "audio_active_packets", json_integer(room->audio_active_packets));
 					json_object_set_new(rl, "audio_level_average", json_integer(room->audio_level_average));
 				}
@@ -4164,48 +4454,57 @@ static json_t *janus_videoroom_process_synchronous_request(janus_videoroom_sessi
 		json_object_set_new(response, "videoroom", json_string("success"));
 		json_object_set_new(response, "list", list);
 		goto prepare_response;
-	} else if(!strcasecmp(request_text, "rtp_forward")) {
+	}
+	else if (!strcasecmp(request_text, "rtp_forward"))
+	{
 		/*处理rtp_forward请求*/
 		/*判断root是否一个有效的rtp_forward_parameters结构的JSON数据*/
 		JANUS_VALIDATE_JSON_OBJECT(root, rtp_forward_parameters,
-			error_code, error_cause, TRUE,
-			JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT);
-		if(error_code != 0)
+								   error_code, error_cause, TRUE,
+								   JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT);
+		if (error_code != 0)
 			goto prepare_response;
-		if(!string_ids) {
+		if (!string_ids)
+		{
 			JANUS_VALIDATE_JSON_OBJECT(root, room_parameters,
-				error_code, error_cause, TRUE,
-				JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT);
-		} else {
+									   error_code, error_cause, TRUE,
+									   JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT);
+		}
+		else
+		{
 			JANUS_VALIDATE_JSON_OBJECT(root, roomstr_parameters,
-				error_code, error_cause, TRUE,
-				JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT);
+									   error_code, error_cause, TRUE,
+									   JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT);
 		}
-		if(error_code != 0)
+		if (error_code != 0)
 			goto prepare_response;
-		if(!string_ids) {
+		if (!string_ids)
+		{
 			JANUS_VALIDATE_JSON_OBJECT(root, pid_parameters,
-				error_code, error_cause, TRUE,
-				JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT);
-		} else {
-			JANUS_VALIDATE_JSON_OBJECT(root, pidstr_parameters,
-				error_code, error_cause, TRUE,
-				JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT);
+									   error_code, error_cause, TRUE,
+									   JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT);
 		}
-		if(error_code != 0)
+		else
+		{
+			JANUS_VALIDATE_JSON_OBJECT(root, pidstr_parameters,
+									   error_code, error_cause, TRUE,
+									   JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT);
+		}
+		if (error_code != 0)
 			goto prepare_response;
 
-        /*转发rtp是否需要提供admin_key*/
-		if(lock_rtpfwd && admin_key != NULL) {
+		/*转发rtp是否需要提供admin_key*/
+		if (lock_rtpfwd && admin_key != NULL)
+		{
 			/* An admin key was specified: make sure it was provided, and that it's valid 指定了管理员密钥：确保已提供且有效 */
 			JANUS_VALIDATE_JSON_OBJECT(root, adminkey_parameters,
-				error_code, error_cause, TRUE,
-				JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT);
-			if(error_code != 0)
+									   error_code, error_cause, TRUE,
+									   JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT);
+			if (error_code != 0)
 				goto prepare_response;
 			JANUS_CHECK_SECRET(admin_key, root, "admin_key", error_code, error_cause,
-				JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT, JANUS_VIDEOROOM_ERROR_UNAUTHORIZED);
-			if(error_code != 0)
+							   JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT, JANUS_VIDEOROOM_ERROR_UNAUTHORIZED);
+			if (error_code != 0)
 				goto prepare_response;
 		}
 		json_t *room = json_object_get(root, "room");
@@ -4219,55 +4518,60 @@ static json_t *janus_videoroom_process_synchronous_request(janus_videoroom_sessi
 		const char *srtp_crypto = NULL;
 		/* There may be multiple target video ports (e.g., publisher simulcasting) 可能有多个目标视频端口（例如，发布者联播）*/
 		json_t *vid_port = json_object_get(root, "video_port");
-		if(vid_port) {
+		if (vid_port)
+		{
 			video_port[0] = json_integer_value(vid_port);
 			json_t *pt = json_object_get(root, "video_pt");
-			if(pt)
+			if (pt)
 				video_pt[0] = json_integer_value(pt);
 			json_t *ssrc = json_object_get(root, "video_ssrc");
-			if(ssrc)
+			if (ssrc)
 				video_ssrc[0] = json_integer_value(ssrc);
 		}
 		vid_port = json_object_get(root, "video_port_2");
-		if(vid_port) {
+		if (vid_port)
+		{
 			video_port[1] = json_integer_value(vid_port);
 			json_t *pt = json_object_get(root, "video_pt_2");
-			if(pt)
+			if (pt)
 				video_pt[1] = json_integer_value(pt);
 			json_t *ssrc = json_object_get(root, "video_ssrc_2");
-			if(ssrc)
+			if (ssrc)
 				video_ssrc[1] = json_integer_value(ssrc);
 		}
 		vid_port = json_object_get(root, "video_port_3");
-		if(vid_port) {
+		if (vid_port)
+		{
 			video_port[2] = json_integer_value(vid_port);
 			json_t *pt = json_object_get(root, "video_pt_3");
-			if(pt)
+			if (pt)
 				video_pt[2] = json_integer_value(pt);
 			json_t *ssrc = json_object_get(root, "video_ssrc_3");
-			if(ssrc)
+			if (ssrc)
 				video_ssrc[2] = json_integer_value(ssrc);
 		}
 		json_t *vid_rtcp_port = json_object_get(root, "video_rtcp_port");
-		if(vid_rtcp_port)
+		if (vid_rtcp_port)
 			video_rtcp_port = json_integer_value(vid_rtcp_port);
 		/* Audio target */
 		json_t *au_port = json_object_get(root, "audio_port");
-		if(au_port) {
+		if (au_port)
+		{
 			audio_port = json_integer_value(au_port);
 			json_t *pt = json_object_get(root, "audio_pt");
-			if(pt)
+			if (pt)
 				audio_pt = json_integer_value(pt);
 			json_t *ssrc = json_object_get(root, "audio_ssrc");
-			if(ssrc)
+			if (ssrc)
 				audio_ssrc = json_integer_value(ssrc);
 		}
 		json_t *au_rtcp_port = json_object_get(root, "audio_rtcp_port");
-		if(au_rtcp_port)
+		if (au_rtcp_port)
 			audio_rtcp_port = json_integer_value(au_rtcp_port);
 		/* Data target */
 		json_t *d_port = json_object_get(root, "data_port");
-		if(d_port) {
+		if (d_port)
+		{
 			data_port = json_integer_value(d_port);
 		}
 		json_t *json_host = json_object_get(root, "host");
@@ -4275,12 +4579,18 @@ static json_t *janus_videoroom_process_synchronous_request(janus_videoroom_sessi
 		json_t *json_host_family = json_object_get(root, "host_family");
 		const char *host_family = json_string_value(json_host_family);
 		int family = 0;
-		if(host_family) {
-			if(!strcasecmp(host_family, "ipv4")) {
+		if (host_family)
+		{
+			if (!strcasecmp(host_family, "ipv4"))
+			{
 				family = AF_INET;
-			} else if(!strcasecmp(host_family, "ipv6")) {
+			}
+			else if (!strcasecmp(host_family, "ipv6"))
+			{
 				family = AF_INET6;
-			} else {
+			}
+			else
+			{
 				JANUS_LOG(LOG_ERR, "Unsupported protocol family (%s)\n", host_family);
 				error_code = JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT;
 				g_snprintf(error_cause, 512, "Unsupported protocol family (%s)", host_family);
@@ -4289,9 +4599,10 @@ static json_t *janus_videoroom_process_synchronous_request(janus_videoroom_sessi
 		}
 		/* Do we need to forward multiple simulcast streams to a single endpoint? 我们是否需要将多个联播流转发到单个端点？*/
 		gboolean simulcast = FALSE;
-		if(json_object_get(root, "simulcast") != NULL)
+		if (json_object_get(root, "simulcast") != NULL)
 			simulcast = json_is_true(json_object_get(root, "simulcast"));
-		if(simulcast) {
+		if (simulcast)
+		{
 			/* We do, disable the other video ports if they were requested 如果需要，我们会禁用其他视频端口 */
 			video_port[1] = -1;
 			video_port[2] = -1;
@@ -4299,9 +4610,11 @@ static json_t *janus_videoroom_process_synchronous_request(janus_videoroom_sessi
 		/* Besides, we may need to SRTP-encrypt this stream 此外，我们可能需要对这个流进行 SRTP 加密 */
 		json_t *s_suite = json_object_get(root, "srtp_suite");
 		json_t *s_crypto = json_object_get(root, "srtp_crypto");
-		if(s_suite && s_crypto) {
+		if (s_suite && s_crypto)
+		{
 			srtp_suite = json_integer_value(s_suite);
-			if(srtp_suite != 32 && srtp_suite != 80) {
+			if (srtp_suite != 32 && srtp_suite != 80)
+			{
 				JANUS_LOG(LOG_ERR, "Invalid SRTP suite (%d)\n", srtp_suite);
 				error_code = JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT;
 				g_snprintf(error_cause, 512, "Invalid SRTP suite (%d)", srtp_suite);
@@ -4312,21 +4625,27 @@ static json_t *janus_videoroom_process_synchronous_request(janus_videoroom_sessi
 		/*获取需要转发的房间id（源头）*/
 		guint64 room_id = 0;
 		char room_id_num[30], *room_id_str = NULL;
-		if(!string_ids) {
+		if (!string_ids)
+		{
 			room_id = json_integer_value(room);
-			g_snprintf(room_id_num, sizeof(room_id_num), "%"SCNu64, room_id);
+			g_snprintf(room_id_num, sizeof(room_id_num), "%" SCNu64, room_id);
 			room_id_str = room_id_num;
-		} else {
+		}
+		else
+		{
 			room_id_str = (char *)json_string_value(room);
 		}
 		/*获取需要转发的发布者id（源头）*/
 		guint64 publisher_id = 0;
 		char publisher_id_num[30], *publisher_id_str = NULL;
-		if(!string_ids) {
+		if (!string_ids)
+		{
 			publisher_id = json_integer_value(pub_id);
-			g_snprintf(publisher_id_num, sizeof(publisher_id_num), "%"SCNu64, publisher_id);
+			g_snprintf(publisher_id_num, sizeof(publisher_id_num), "%" SCNu64, publisher_id);
 			publisher_id_str = publisher_id_num;
-		} else {
+		}
+		else
+		{
 			publisher_id_str = (char *)json_string_value(pub_id);
 		}
 		const char *host = json_string_value(json_host), *resolved_host = NULL;
@@ -4336,16 +4655,19 @@ static json_t *janus_videoroom_process_synchronous_request(janus_videoroom_sessi
 		janus_network_address_string_buffer addr_buf;
 		struct addrinfo hints;
 		memset(&hints, 0, sizeof(hints));
-		if(family != 0)
+		if (family != 0)
 			hints.ai_family = family;
 		/*获取地址信息*/
-		if(getaddrinfo(host, NULL, family != 0 ? &hints : NULL, &res) == 0) {
+		if (getaddrinfo(host, NULL, family != 0 ? &hints : NULL, &res) == 0)
+		{
 			start = res;
-			while(res != NULL) {
+			while (res != NULL)
+			{
 				/*将 struct sockaddr 转换为 janus_network_address*/
-				if(janus_network_address_from_sockaddr(res->ai_addr, &addr) == 0 &&
-				/*将给定的网络地址转换为 人类可读网络地址*/
-						janus_network_address_to_string_buffer(&addr, &addr_buf) == 0) {
+				if (janus_network_address_from_sockaddr(res->ai_addr, &addr) == 0 &&
+					/*将给定的网络地址转换为 人类可读网络地址*/
+					janus_network_address_to_string_buffer(&addr, &addr_buf) == 0)
+				{
 					/* Resolved 解析 从给定的缓冲区中提取网络地址*/
 					resolved_host = janus_network_address_string_from_buffer(&addr_buf);
 					freeaddrinfo(start);
@@ -4355,9 +4677,10 @@ static json_t *janus_videoroom_process_synchronous_request(janus_videoroom_sessi
 				res = res->ai_next;
 			}
 		}
-		if(resolved_host == NULL) {
+		if (resolved_host == NULL)
+		{
 			/*如果提取不到有效的网络地址*/
-			if(start)
+			if (start)
 				freeaddrinfo(start);
 			JANUS_LOG(LOG_ERR, "Could not resolve address (%s)...\n", host);
 			error_code = JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT;
@@ -4369,7 +4692,8 @@ static json_t *janus_videoroom_process_synchronous_request(janus_videoroom_sessi
 		janus_videoroom *videoroom = NULL;
 		/*如果有能力访问房间*/
 		error_code = janus_videoroom_access_room(root, TRUE, FALSE, &videoroom, error_cause, sizeof(error_cause));
-		if(error_code != 0) {
+		if (error_code != 0)
+		{
 			janus_mutex_unlock(&rooms_mutex);
 			goto prepare_response;
 		}
@@ -4378,8 +4702,9 @@ static json_t *janus_videoroom_process_synchronous_request(janus_videoroom_sessi
 		janus_mutex_lock(&videoroom->mutex);
 		/*通过publisher_id，找到需要转发的发布者 */
 		janus_videoroom_publisher *publisher = g_hash_table_lookup(videoroom->participants,
-			string_ids ? (gpointer)publisher_id_str : (gpointer)&publisher_id);
-		if(publisher == NULL) {
+																   string_ids ? (gpointer)publisher_id_str : (gpointer)&publisher_id);
+		if (publisher == NULL)
+		{
 			/*如果找不到该发布者*/
 			janus_mutex_unlock(&videoroom->mutex);
 			janus_refcount_decrease(&videoroom->ref);
@@ -4388,12 +4713,14 @@ static json_t *janus_videoroom_process_synchronous_request(janus_videoroom_sessi
 			g_snprintf(error_cause, 512, "No such feed (%s)", publisher_id_str);
 			goto prepare_response;
 		}
-		janus_refcount_increase(&publisher->ref);	/* This is just to handle the request for now 这只是为了处理现在的请求*/
-		if(publisher->udp_sock <= 0) {
+		janus_refcount_increase(&publisher->ref); /* This is just to handle the request for now 这只是为了处理现在的请求*/
+		if (publisher->udp_sock <= 0)
+		{
 			/*如果没有设置 用于转发 rtp 数据包的 udp 套接字, 则新建一个套接字 */
 			publisher->udp_sock = socket(AF_INET6, SOCK_DGRAM, IPPROTO_UDP);
 			int v6only = 0;
-			if(publisher->udp_sock <= 0 || setsockopt(publisher->udp_sock, IPPROTO_IPV6, IPV6_V6ONLY, &v6only, sizeof(v6only)) != 0) {
+			if (publisher->udp_sock <= 0 || setsockopt(publisher->udp_sock, IPPROTO_IPV6, IPV6_V6ONLY, &v6only, sizeof(v6only)) != 0)
+			{
 				/*如果新建套接字失败*/
 				janus_refcount_decrease(&publisher->ref);
 				janus_mutex_unlock(&videoroom->mutex);
@@ -4408,31 +4735,38 @@ static json_t *janus_videoroom_process_synchronous_request(janus_videoroom_sessi
 		guint32 video_handle[3] = {0, 0, 0};
 		guint32 data_handle = 0;
 		/*分别为音频，多个视频（如果有simulcast），数据流，创建一个rtp转发器*/
-		if(audio_port > 0) {
+		if (audio_port > 0)
+		{
 			audio_handle = janus_videoroom_rtp_forwarder_add_helper(publisher, host, audio_port, audio_rtcp_port, audio_pt, audio_ssrc, FALSE, srtp_suite, srtp_crypto, 0, FALSE, FALSE);
 		}
-		if(video_port[0] > 0) {
+		if (video_port[0] > 0)
+		{
 			video_handle[0] = janus_videoroom_rtp_forwarder_add_helper(publisher, host, video_port[0], video_rtcp_port, video_pt[0], video_ssrc[0], simulcast, srtp_suite, srtp_crypto, 0, TRUE, FALSE);
 		}
-		if(video_port[1] > 0) {
+		if (video_port[1] > 0)
+		{
 			video_handle[1] = janus_videoroom_rtp_forwarder_add_helper(publisher, host, video_port[1], 0, video_pt[1], video_ssrc[1], FALSE, srtp_suite, srtp_crypto, 1, TRUE, FALSE);
 		}
-		if(video_port[2] > 0) {
+		if (video_port[2] > 0)
+		{
 			video_handle[2] = janus_videoroom_rtp_forwarder_add_helper(publisher, host, video_port[2], 0, video_pt[2], video_ssrc[2], FALSE, srtp_suite, srtp_crypto, 2, TRUE, FALSE);
 		}
-		if(data_port > 0) {
+		if (data_port > 0)
+		{
 			data_handle = janus_videoroom_rtp_forwarder_add_helper(publisher, host, data_port, 0, 0, 0, FALSE, 0, NULL, 0, FALSE, TRUE);
 		}
 		janus_mutex_unlock(&videoroom->mutex);
 		response = json_object();
 		json_t *rtp_stream = json_object();
-		if(audio_handle > 0) {
+		if (audio_handle > 0)
+		{
 			json_object_set_new(rtp_stream, "audio_stream_id", json_integer(audio_handle));
 			json_object_set_new(rtp_stream, "audio", json_integer(audio_port));
-			if(audio_rtcp_port > 0)
+			if (audio_rtcp_port > 0)
 				json_object_set_new(rtp_stream, "audio_rtcp", json_integer(audio_rtcp_port));
 			/* Also notify event handlers */
-			if(notify_events && gateway->events_is_enabled()) {
+			if (notify_events && gateway->events_is_enabled())
+			{
 				json_t *info = json_object();
 				json_object_set_new(info, "event", json_string("rtp_forward"));
 				json_object_set_new(info, "room", string_ids ? json_string(room_id_str) : json_integer(room_id));
@@ -4445,23 +4779,26 @@ static json_t *janus_videoroom_process_synchronous_request(janus_videoroom_sessi
 				gateway->notify_event(&janus_videoroom_plugin, NULL, info);
 			}
 		}
-		if(video_handle[0] > 0 || video_handle[1] > 0 || video_handle[2] > 0) {
+		if (video_handle[0] > 0 || video_handle[1] > 0 || video_handle[2] > 0)
+		{
 			janus_videoroom_reqpli(publisher, "New RTP forward publisher");
 			/* Done */
-			if(video_handle[0] > 0) {
+			if (video_handle[0] > 0)
+			{
 				json_object_set_new(rtp_stream, "video_stream_id", json_integer(video_handle[0]));
 				json_object_set_new(rtp_stream, "video", json_integer(video_port[0]));
-				if(video_rtcp_port > 0)
+				if (video_rtcp_port > 0)
 					json_object_set_new(rtp_stream, "video_rtcp", json_integer(video_rtcp_port));
 				/* Also notify event handlers */
-				if(notify_events && gateway->events_is_enabled()) {
+				if (notify_events && gateway->events_is_enabled())
+				{
 					json_t *info = json_object();
 					json_object_set_new(info, "event", json_string("rtp_forward"));
 					json_object_set_new(info, "room", string_ids ? json_string(room_id_str) : json_integer(room_id));
 					json_object_set_new(info, "publisher_id", string_ids ? json_string(publisher_id_str) : json_integer(publisher_id));
 					json_object_set_new(info, "media", json_string("video"));
 					json_object_set_new(info, "codec", json_string(janus_videocodec_name(publisher->vcodec)));
-					if(video_handle[1] > 0 || video_handle[2] > 0)
+					if (video_handle[1] > 0 || video_handle[2] > 0)
 						json_object_set_new(info, "video_substream", json_integer(0));
 					json_object_set_new(info, "stream_id", json_integer(video_handle[0]));
 					json_object_set_new(info, "host", json_string(host));
@@ -4469,11 +4806,13 @@ static json_t *janus_videoroom_process_synchronous_request(janus_videoroom_sessi
 					gateway->notify_event(&janus_videoroom_plugin, NULL, info);
 				}
 			}
-			if(video_handle[1] > 0) {
+			if (video_handle[1] > 0)
+			{
 				json_object_set_new(rtp_stream, "video_stream_id_2", json_integer(video_handle[1]));
 				json_object_set_new(rtp_stream, "video_2", json_integer(video_port[1]));
 				/* Also notify event handlers */
-				if(notify_events && gateway->events_is_enabled()) {
+				if (notify_events && gateway->events_is_enabled())
+				{
 					json_t *info = json_object();
 					json_object_set_new(info, "event", json_string("rtp_forward"));
 					json_object_set_new(info, "room", string_ids ? json_string(room_id_str) : json_integer(room_id));
@@ -4487,11 +4826,13 @@ static json_t *janus_videoroom_process_synchronous_request(janus_videoroom_sessi
 					gateway->notify_event(&janus_videoroom_plugin, NULL, info);
 				}
 			}
-			if(video_handle[2] > 0) {
+			if (video_handle[2] > 0)
+			{
 				json_object_set_new(rtp_stream, "video_stream_id_3", json_integer(video_handle[2]));
 				json_object_set_new(rtp_stream, "video_3", json_integer(video_port[2]));
 				/* Also notify event handlers */
-				if(notify_events && gateway->events_is_enabled()) {
+				if (notify_events && gateway->events_is_enabled())
+				{
 					json_t *info = json_object();
 					json_object_set_new(info, "event", json_string("rtp_forward"));
 					json_object_set_new(info, "room", string_ids ? json_string(room_id_str) : json_integer(room_id));
@@ -4506,11 +4847,13 @@ static json_t *janus_videoroom_process_synchronous_request(janus_videoroom_sessi
 				}
 			}
 		}
-		if(data_handle > 0) {
+		if (data_handle > 0)
+		{
 			json_object_set_new(rtp_stream, "data_stream_id", json_integer(data_handle));
 			json_object_set_new(rtp_stream, "data", json_integer(data_port));
 			/* Also notify event handlers */
-			if(notify_events && gateway->events_is_enabled()) {
+			if (notify_events && gateway->events_is_enabled())
+			{
 				json_t *info = json_object();
 				json_object_set_new(info, "event", json_string("rtp_forward"));
 				json_object_set_new(info, "room", string_ids ? json_string(room_id_str) : json_integer(room_id));
@@ -4532,45 +4875,54 @@ static json_t *janus_videoroom_process_synchronous_request(janus_videoroom_sessi
 		json_object_set_new(response, "room", string_ids ? json_string(room_id_str) : json_integer(room_id));
 		json_object_set_new(response, "videoroom", json_string("rtp_forward"));
 		goto prepare_response;
-	} else if(!strcasecmp(request_text, "stop_rtp_forward")) {
+	}
+	else if (!strcasecmp(request_text, "stop_rtp_forward"))
+	{
 		/*处理stop_rtp_forward*/
-		if(!string_ids) {
+		if (!string_ids)
+		{
 			JANUS_VALIDATE_JSON_OBJECT(root, room_parameters,
-				error_code, error_cause, TRUE,
-				JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT);
-		} else {
+									   error_code, error_cause, TRUE,
+									   JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT);
+		}
+		else
+		{
 			JANUS_VALIDATE_JSON_OBJECT(root, roomstr_parameters,
-				error_code, error_cause, TRUE,
-				JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT);
+									   error_code, error_cause, TRUE,
+									   JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT);
 		}
-		if(error_code != 0)
+		if (error_code != 0)
 			goto prepare_response;
-		if(!string_ids) {
+		if (!string_ids)
+		{
 			JANUS_VALIDATE_JSON_OBJECT(root, pid_parameters,
-				error_code, error_cause, TRUE,
-				JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT);
-		} else {
-			JANUS_VALIDATE_JSON_OBJECT(root, pidstr_parameters,
-				error_code, error_cause, TRUE,
-				JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT);
+									   error_code, error_cause, TRUE,
+									   JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT);
 		}
-		if(error_code != 0)
+		else
+		{
+			JANUS_VALIDATE_JSON_OBJECT(root, pidstr_parameters,
+									   error_code, error_cause, TRUE,
+									   JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT);
+		}
+		if (error_code != 0)
 			goto prepare_response;
 		JANUS_VALIDATE_JSON_OBJECT(root, stop_rtp_forward_parameters,
-			error_code, error_cause, TRUE,
-			JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT);
-		if(error_code != 0)
+								   error_code, error_cause, TRUE,
+								   JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT);
+		if (error_code != 0)
 			goto prepare_response;
-		if(lock_rtpfwd && admin_key != NULL) {
+		if (lock_rtpfwd && admin_key != NULL)
+		{
 			/* An admin key was specified: make sure it was provided, and that it's valid 指定了管理员密钥：确保已提供且有效*/
 			JANUS_VALIDATE_JSON_OBJECT(root, adminkey_parameters,
-				error_code, error_cause, TRUE,
-				JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT);
-			if(error_code != 0)
+									   error_code, error_cause, TRUE,
+									   JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT);
+			if (error_code != 0)
 				goto prepare_response;
 			JANUS_CHECK_SECRET(admin_key, root, "admin_key", error_code, error_cause,
-				JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT, JANUS_VIDEOROOM_ERROR_UNAUTHORIZED);
-			if(error_code != 0)
+							   JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT, JANUS_VIDEOROOM_ERROR_UNAUTHORIZED);
+			if (error_code != 0)
 				goto prepare_response;
 		}
 		json_t *room = json_object_get(root, "room");
@@ -4579,27 +4931,34 @@ static json_t *janus_videoroom_process_synchronous_request(janus_videoroom_sessi
 
 		guint64 room_id = 0;
 		char room_id_num[30], *room_id_str = NULL;
-		if(!string_ids) {
+		if (!string_ids)
+		{
 			room_id = json_integer_value(room);
-			g_snprintf(room_id_num, sizeof(room_id_num), "%"SCNu64, room_id);
+			g_snprintf(room_id_num, sizeof(room_id_num), "%" SCNu64, room_id);
 			room_id_str = room_id_num;
-		} else {
+		}
+		else
+		{
 			room_id_str = (char *)json_string_value(room);
 		}
 		guint64 publisher_id = 0;
 		char publisher_id_num[30], *publisher_id_str = NULL;
-		if(!string_ids) {
+		if (!string_ids)
+		{
 			publisher_id = json_integer_value(pub_id);
-			g_snprintf(publisher_id_num, sizeof(publisher_id_num), "%"SCNu64, publisher_id);
+			g_snprintf(publisher_id_num, sizeof(publisher_id_num), "%" SCNu64, publisher_id);
 			publisher_id_str = publisher_id_num;
-		} else {
+		}
+		else
+		{
 			publisher_id_str = (char *)json_string_value(pub_id);
 		}
 		guint32 stream_id = json_integer_value(id);
 		janus_mutex_lock(&rooms_mutex);
 		janus_videoroom *videoroom = NULL;
 		error_code = janus_videoroom_access_room(root, TRUE, FALSE, &videoroom, error_cause, sizeof(error_cause));
-		if(error_code != 0) {
+		if (error_code != 0)
+		{
 			janus_mutex_unlock(&rooms_mutex);
 			goto prepare_response;
 		}
@@ -4607,8 +4966,9 @@ static json_t *janus_videoroom_process_synchronous_request(janus_videoroom_sessi
 		janus_mutex_unlock(&rooms_mutex);
 		janus_mutex_lock(&videoroom->mutex);
 		janus_videoroom_publisher *publisher = g_hash_table_lookup(videoroom->participants,
-			string_ids ? (gpointer)publisher_id_str : (gpointer)&publisher_id);
-		if(publisher == NULL) {
+																   string_ids ? (gpointer)publisher_id_str : (gpointer)&publisher_id);
+		if (publisher == NULL)
+		{
 			janus_mutex_unlock(&videoroom->mutex);
 			janus_refcount_decrease(&videoroom->ref);
 			JANUS_LOG(LOG_ERR, "No such publisher (%s)\n", publisher_id_str);
@@ -4616,16 +4976,17 @@ static json_t *janus_videoroom_process_synchronous_request(janus_videoroom_sessi
 			g_snprintf(error_cause, 512, "No such feed (%s)", publisher_id_str);
 			goto prepare_response;
 		}
-		janus_refcount_increase(&publisher->ref);	/* Just to handle the message now */
+		janus_refcount_increase(&publisher->ref); /* Just to handle the message now */
 		janus_mutex_lock(&publisher->rtp_forwarders_mutex);
-		if(!g_hash_table_remove(publisher->rtp_forwarders, GUINT_TO_POINTER(stream_id))) {
+		if (!g_hash_table_remove(publisher->rtp_forwarders, GUINT_TO_POINTER(stream_id)))
+		{
 			janus_mutex_unlock(&publisher->rtp_forwarders_mutex);
 			janus_refcount_decrease(&publisher->ref);
 			janus_mutex_unlock(&videoroom->mutex);
 			janus_refcount_decrease(&videoroom->ref);
-			JANUS_LOG(LOG_ERR, "No such stream (%"SCNu32")\n", stream_id);
+			JANUS_LOG(LOG_ERR, "No such stream (%" SCNu32 ")\n", stream_id);
 			error_code = JANUS_VIDEOROOM_ERROR_NO_SUCH_FEED;
-			g_snprintf(error_cause, 512, "No such stream (%"SCNu32")", stream_id);
+			g_snprintf(error_cause, 512, "No such stream (%" SCNu32 ")", stream_id);
 			goto prepare_response;
 		}
 		janus_mutex_unlock(&publisher->rtp_forwarders_mutex);
@@ -4638,7 +4999,8 @@ static json_t *janus_videoroom_process_synchronous_request(janus_videoroom_sessi
 		json_object_set_new(response, "publisher_id", string_ids ? json_string(publisher_id_str) : json_integer(publisher_id));
 		json_object_set_new(response, "stream_id", json_integer(stream_id));
 		/* Also notify event handlers */
-		if(notify_events && gateway->events_is_enabled()) {
+		if (notify_events && gateway->events_is_enabled())
+		{
 			json_t *info = json_object();
 			json_object_set_new(info, "event", json_string("stop_rtp_forward"));
 			json_object_set_new(info, "room", string_ids ? json_string(room_id_str) : json_integer(room_id));
@@ -4647,27 +5009,35 @@ static json_t *janus_videoroom_process_synchronous_request(janus_videoroom_sessi
 			gateway->notify_event(&janus_videoroom_plugin, NULL, info);
 		}
 		goto prepare_response;
-	} else if(!strcasecmp(request_text, "exists")) {
+	}
+	else if (!strcasecmp(request_text, "exists"))
+	{
 		/* Check whether a given room exists or not, returns true/false 检查给定房间是否存在，返回true/false*/
-		if(!string_ids) {
+		if (!string_ids)
+		{
 			JANUS_VALIDATE_JSON_OBJECT(root, room_parameters,
-				error_code, error_cause, TRUE,
-				JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT);
-		} else {
-			JANUS_VALIDATE_JSON_OBJECT(root, roomstr_parameters,
-				error_code, error_cause, TRUE,
-				JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT);
+									   error_code, error_cause, TRUE,
+									   JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT);
 		}
-		if(error_code != 0)
+		else
+		{
+			JANUS_VALIDATE_JSON_OBJECT(root, roomstr_parameters,
+									   error_code, error_cause, TRUE,
+									   JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT);
+		}
+		if (error_code != 0)
 			goto prepare_response;
 		json_t *room = json_object_get(root, "room");
 		guint64 room_id = 0;
 		char room_id_num[30], *room_id_str = NULL;
-		if(!string_ids) {
+		if (!string_ids)
+		{
 			room_id = json_integer_value(room);
-			g_snprintf(room_id_num, sizeof(room_id_num), "%"SCNu64, room_id);
+			g_snprintf(room_id_num, sizeof(room_id_num), "%" SCNu64, room_id);
 			room_id_str = room_id_num;
-		} else {
+		}
+		else
+		{
 			room_id_str = (char *)json_string_value(room);
 		}
 		janus_mutex_lock(&rooms_mutex);
@@ -4678,31 +5048,37 @@ static json_t *janus_videoroom_process_synchronous_request(janus_videoroom_sessi
 		json_object_set_new(response, "room", string_ids ? json_string(room_id_str) : json_integer(room_id));
 		json_object_set_new(response, "exists", room_exists ? json_true() : json_false());
 		goto prepare_response;
-	} else if(!strcasecmp(request_text, "allowed")) {
+	}
+	else if (!strcasecmp(request_text, "allowed"))
+	{
 		/*尝试编辑现有 VideoRoom 房间中允许的参与者列表*/
 		JANUS_LOG(LOG_VERB, "Attempt to edit the list of allowed participants in an existing VideoRoom room\n");
-		if(!string_ids) {
+		if (!string_ids)
+		{
 			JANUS_VALIDATE_JSON_OBJECT(root, room_parameters,
-				error_code, error_cause, TRUE,
-				JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT);
-		} else {
-			JANUS_VALIDATE_JSON_OBJECT(root, roomstr_parameters,
-				error_code, error_cause, TRUE,
-				JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT);
+									   error_code, error_cause, TRUE,
+									   JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT);
 		}
-		if(error_code != 0)
+		else
+		{
+			JANUS_VALIDATE_JSON_OBJECT(root, roomstr_parameters,
+									   error_code, error_cause, TRUE,
+									   JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT);
+		}
+		if (error_code != 0)
 			goto prepare_response;
 		JANUS_VALIDATE_JSON_OBJECT(root, allowed_parameters,
-			error_code, error_cause, TRUE,
-			JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT);
-		if(error_code != 0)
+								   error_code, error_cause, TRUE,
+								   JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT);
+		if (error_code != 0)
 			goto prepare_response;
 		json_t *action = json_object_get(root, "action");
 		json_t *room = json_object_get(root, "room");
 		json_t *allowed = json_object_get(root, "allowed");
 		const char *action_text = json_string_value(action);
-		if(strcasecmp(action_text, "enable") && strcasecmp(action_text, "disable") &&
-				strcasecmp(action_text, "add") && strcasecmp(action_text, "remove")) {
+		if (strcasecmp(action_text, "enable") && strcasecmp(action_text, "disable") &&
+			strcasecmp(action_text, "add") && strcasecmp(action_text, "remove"))
+		{
 			JANUS_LOG(LOG_ERR, "Unsupported action '%s' (allowed)\n", action_text);
 			error_code = JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT;
 			g_snprintf(error_cause, 512, "Unsupported action '%s' (allowed)", action_text);
@@ -4710,17 +5086,21 @@ static json_t *janus_videoroom_process_synchronous_request(janus_videoroom_sessi
 		}
 		guint64 room_id = 0;
 		char room_id_num[30], *room_id_str = NULL;
-		if(!string_ids) {
+		if (!string_ids)
+		{
 			room_id = json_integer_value(room);
-			g_snprintf(room_id_num, sizeof(room_id_num), "%"SCNu64, room_id);
+			g_snprintf(room_id_num, sizeof(room_id_num), "%" SCNu64, room_id);
 			room_id_str = room_id_num;
-		} else {
+		}
+		else
+		{
 			room_id_str = (char *)json_string_value(room);
 		}
 		janus_mutex_lock(&rooms_mutex);
 		janus_videoroom *videoroom = NULL;
 		error_code = janus_videoroom_access_room(root, TRUE, FALSE, &videoroom, error_cause, sizeof(error_cause));
-		if(error_code != 0) {
+		if (error_code != 0)
+		{
 			janus_mutex_unlock(&rooms_mutex);
 			goto prepare_response;
 		}
@@ -4729,34 +5109,45 @@ static json_t *janus_videoroom_process_synchronous_request(janus_videoroom_sessi
 		janus_mutex_lock(&videoroom->mutex);
 		/* A secret may be required for this action 此操作可能需要一个秘钥 */
 		JANUS_CHECK_SECRET(videoroom->room_secret, root, "secret", error_code, error_cause,
-			JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT, JANUS_VIDEOROOM_ERROR_UNAUTHORIZED);
-		if(error_code != 0) {
+						   JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT, JANUS_VIDEOROOM_ERROR_UNAUTHORIZED);
+		if (error_code != 0)
+		{
 			janus_mutex_unlock(&videoroom->mutex);
 			janus_refcount_decrease(&videoroom->ref);
 			goto prepare_response;
 		}
-		if(!strcasecmp(action_text, "enable")) {
+		if (!strcasecmp(action_text, "enable"))
+		{
 			JANUS_LOG(LOG_VERB, "Enabling the check on allowed authorization tokens for room %s\n", room_id_str);
 			videoroom->check_allowed = TRUE;
-		} else if(!strcasecmp(action_text, "disable")) {
+		}
+		else if (!strcasecmp(action_text, "disable"))
+		{
 			JANUS_LOG(LOG_VERB, "Disabling the check on allowed authorization tokens for room %s (free entry)\n", room_id_str);
 			videoroom->check_allowed = FALSE;
-		} else {
+		}
+		else
+		{
 			gboolean add = !strcasecmp(action_text, "add");
-			if(allowed) {
+			if (allowed)
+			{
 				/* Make sure the "allowed" array only contains strings */
 				gboolean ok = TRUE;
-				if(json_array_size(allowed) > 0) {
+				if (json_array_size(allowed) > 0)
+				{
 					size_t i = 0;
-					for(i=0; i<json_array_size(allowed); i++) {
+					for (i = 0; i < json_array_size(allowed); i++)
+					{
 						json_t *a = json_array_get(allowed, i);
-						if(!a || !json_is_string(a)) {
+						if (!a || !json_is_string(a))
+						{
 							ok = FALSE;
 							break;
 						}
 					}
 				}
-				if(!ok) {
+				if (!ok)
+				{
 					janus_mutex_unlock(&videoroom->mutex);
 					JANUS_LOG(LOG_ERR, "Invalid element in the allowed array (not a string)\n");
 					error_code = JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT;
@@ -4765,13 +5156,17 @@ static json_t *janus_videoroom_process_synchronous_request(janus_videoroom_sessi
 					goto prepare_response;
 				}
 				size_t i = 0;
-				for(i=0; i<json_array_size(allowed); i++) {
+				for (i = 0; i < json_array_size(allowed); i++)
+				{
 					const char *token = json_string_value(json_array_get(allowed, i));
-					if(add) {
+					if (add)
+					{
 						/*不存在则添加*/
-						if(!g_hash_table_lookup(videoroom->allowed, token))
+						if (!g_hash_table_lookup(videoroom->allowed, token))
 							g_hash_table_insert(videoroom->allowed, g_strdup(token), GINT_TO_POINTER(TRUE));
-					} else {
+					}
+					else
+					{
 						/*如果不是添加则移除*/
 						g_hash_table_remove(videoroom->allowed, token);
 					}
@@ -4783,12 +5178,15 @@ static json_t *janus_videoroom_process_synchronous_request(janus_videoroom_sessi
 		json_object_set_new(response, "videoroom", json_string("success"));
 		json_object_set_new(response, "room", string_ids ? json_string(videoroom->room_id_str) : json_integer(videoroom->room_id));
 		json_t *list = json_array();
-		if(strcasecmp(action_text, "disable")) {
-			if(g_hash_table_size(videoroom->allowed) > 0) {
+		if (strcasecmp(action_text, "disable"))
+		{
+			if (g_hash_table_size(videoroom->allowed) > 0)
+			{
 				GHashTableIter iter;
 				gpointer key;
 				g_hash_table_iter_init(&iter, videoroom->allowed);
-				while(g_hash_table_iter_next(&iter, &key, NULL)) {
+				while (g_hash_table_iter_next(&iter, &key, NULL))
+				{
 					char *token = key;
 					json_array_append_new(list, json_string(token));
 				}
@@ -4800,49 +5198,61 @@ static json_t *janus_videoroom_process_synchronous_request(janus_videoroom_sessi
 		janus_refcount_decrease(&videoroom->ref);
 		JANUS_LOG(LOG_VERB, "VideoRoom room allowed list updated\n");
 		goto prepare_response;
-	} else if(!strcasecmp(request_text, "kick")) {
+	}
+	else if (!strcasecmp(request_text, "kick"))
+	{
 		/* 尝试从现有的 VideoRoom 房间踢出参与者 */
 		JANUS_LOG(LOG_VERB, "Attempt to kick a participant from an existing VideoRoom room\n");
-		if(!string_ids) {
+		if (!string_ids)
+		{
 			JANUS_VALIDATE_JSON_OBJECT(root, room_parameters,
-				error_code, error_cause, TRUE,
-				JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT);
-		} else {
+									   error_code, error_cause, TRUE,
+									   JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT);
+		}
+		else
+		{
 			JANUS_VALIDATE_JSON_OBJECT(root, roomstr_parameters,
-				error_code, error_cause, TRUE,
-				JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT);
+									   error_code, error_cause, TRUE,
+									   JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT);
 		}
-		if(!string_ids) {
+		if (!string_ids)
+		{
 			JANUS_VALIDATE_JSON_OBJECT(root, id_parameters,
-				error_code, error_cause, TRUE,
-				JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT);
-		} else {
-			JANUS_VALIDATE_JSON_OBJECT(root, idstr_parameters,
-				error_code, error_cause, TRUE,
-				JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT);
+									   error_code, error_cause, TRUE,
+									   JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT);
 		}
-		if(error_code != 0)
+		else
+		{
+			JANUS_VALIDATE_JSON_OBJECT(root, idstr_parameters,
+									   error_code, error_cause, TRUE,
+									   JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT);
+		}
+		if (error_code != 0)
 			goto prepare_response;
 		JANUS_VALIDATE_JSON_OBJECT(root, kick_parameters,
-			error_code, error_cause, TRUE,
-			JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT);
-		if(error_code != 0)
+								   error_code, error_cause, TRUE,
+								   JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT);
+		if (error_code != 0)
 			goto prepare_response;
 		json_t *room = json_object_get(root, "room");
 		json_t *id = json_object_get(root, "id");
 		guint64 room_id = 0;
 		char room_id_num[30], *room_id_str = NULL;
-		if(!string_ids) {
+		if (!string_ids)
+		{
 			room_id = json_integer_value(room);
-			g_snprintf(room_id_num, sizeof(room_id_num), "%"SCNu64, room_id);
+			g_snprintf(room_id_num, sizeof(room_id_num), "%" SCNu64, room_id);
 			room_id_str = room_id_num;
-		} else {
+		}
+		else
+		{
 			room_id_str = (char *)json_string_value(room);
 		}
 		janus_mutex_lock(&rooms_mutex);
 		janus_videoroom *videoroom = NULL;
 		error_code = janus_videoroom_access_room(root, TRUE, FALSE, &videoroom, error_cause, sizeof(error_cause));
-		if(error_code != 0) {
+		if (error_code != 0)
+		{
 			janus_mutex_unlock(&rooms_mutex);
 			goto prepare_response;
 		}
@@ -4851,25 +5261,30 @@ static json_t *janus_videoroom_process_synchronous_request(janus_videoroom_sessi
 		janus_mutex_lock(&videoroom->mutex);
 		/* A secret may be required for this action */
 		JANUS_CHECK_SECRET(videoroom->room_secret, root, "secret", error_code, error_cause,
-			JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT, JANUS_VIDEOROOM_ERROR_UNAUTHORIZED);
-		if(error_code != 0) {
+						   JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT, JANUS_VIDEOROOM_ERROR_UNAUTHORIZED);
+		if (error_code != 0)
+		{
 			janus_mutex_unlock(&videoroom->mutex);
 			janus_refcount_decrease(&videoroom->ref);
 			goto prepare_response;
 		}
 		guint64 user_id = 0;
 		char user_id_num[30], *user_id_str = NULL;
-		if(!string_ids) {
+		if (!string_ids)
+		{
 			user_id = json_integer_value(id);
-			g_snprintf(user_id_num, sizeof(user_id_num), "%"SCNu64, user_id);
+			g_snprintf(user_id_num, sizeof(user_id_num), "%" SCNu64, user_id);
 			user_id_str = user_id_num;
-		} else {
+		}
+		else
+		{
 			user_id_str = (char *)json_string_value(id);
 		}
 		/* 找到这个要被踢的倒霉蛋 */
 		janus_videoroom_publisher *participant = g_hash_table_lookup(videoroom->participants,
-			string_ids ? (gpointer)user_id_str : (gpointer)&user_id);
-		if(participant == NULL) {
+																	 string_ids ? (gpointer)user_id_str : (gpointer)&user_id);
+		if (participant == NULL)
+		{
 			janus_mutex_unlock(&videoroom->mutex);
 			janus_refcount_decrease(&videoroom->ref);
 			JANUS_LOG(LOG_ERR, "No such user %s in room %s\n", user_id_str, room_id_str);
@@ -4878,7 +5293,8 @@ static json_t *janus_videoroom_process_synchronous_request(janus_videoroom_sessi
 			goto prepare_response;
 		}
 		janus_refcount_increase(&participant->ref);
-		if(participant->kicked) {
+		if (participant->kicked)
+		{
 			/* Already kicked 如果已经被踢了 */
 			janus_mutex_unlock(&videoroom->mutex);
 			janus_refcount_decrease(&videoroom->ref);
@@ -4906,19 +5322,22 @@ static json_t *janus_videoroom_process_synchronous_request(janus_videoroom_sessi
 		janus_mutex_unlock(&videoroom->mutex);
 		/* If this room requires valid private_id values, we can kick subscriptions too */
 		/* 销毁此发布者创建的订阅（此发布者正在观看的对象）*/
-		if(videoroom->require_pvtid && participant->subscriptions != NULL) {
+		if (videoroom->require_pvtid && participant->subscriptions != NULL)
+		{
 			/* Iterate on the subscriptions we know this user has 迭代我们知道该用户拥有的订阅 */
 			janus_mutex_lock(&participant->own_subscriptions_mutex);
 			GSList *s = participant->subscriptions;
-			while(s) {
+			while (s)
+			{
 				janus_videoroom_subscriber *subscriber = (janus_videoroom_subscriber *)s->data;
-				if(subscriber) {
+				if (subscriber)
+				{
 					subscriber->kicked = TRUE;
 					subscriber->audio = FALSE;
 					subscriber->video = FALSE;
 					subscriber->data = FALSE;
 					/* FIXME We should also close the PeerConnection, but we risk race conditions if we do it here,
-					 * so for now we mark the subscriber as kicked and prevent it from getting any media after this 
+					 * so for now we mark the subscriber as kicked and prevent it from getting any media after this
 					 我们还应该关闭 PeerConnection，但是如果我们在这里这样做，我们会冒竞争条件的风险，所以现在我们将订阅者标记为已踢，并阻止它在此之后获取任何媒体*/
 				}
 				s = s->next;
@@ -4927,10 +5346,10 @@ static json_t *janus_videoroom_process_synchronous_request(janus_videoroom_sessi
 		}
 		/* This publisher is leaving, tell everybody 告诉所有人该发布者已经离开 */
 		janus_videoroom_leave_or_unpublish(participant, TRUE, TRUE);
-		/* Tell the core to tear down the PeerConnection, hangup_media will do the rest 
+		/* Tell the core to tear down the PeerConnection, hangup_media will do the rest
 		告诉核心移除 PeerConnection，hangup_media 会做剩下的事情*/
-		if(participant && !g_atomic_int_get(&participant->destroyed) && participant->session)
-		    /*要求核心关闭 WebRTC PeerConnection的回调*/
+		if (participant && !g_atomic_int_get(&participant->destroyed) && participant->session)
+			/*要求核心关闭 WebRTC PeerConnection的回调*/
 			gateway->close_pc(participant->session->handle);
 		JANUS_LOG(LOG_INFO, "Kicked user %s from room %s\n", user_id_str, room_id_str);
 		/* Prepare response 准备回复*/
@@ -4940,49 +5359,61 @@ static json_t *janus_videoroom_process_synchronous_request(janus_videoroom_sessi
 		janus_refcount_decrease(&videoroom->ref);
 		janus_refcount_decrease(&participant->ref);
 		goto prepare_response;
-	} else if(!strcasecmp(request_text, "moderate")) {
+	}
+	else if (!strcasecmp(request_text, "moderate"))
+	{
 		/*尝试以房间主持人的身份调节参与者 音视频方面参数*/
 		JANUS_LOG(LOG_VERB, "Attempt to moderate a participant as a moderator in an existing VideoRoom room\n");
-		if(!string_ids) {
+		if (!string_ids)
+		{
 			JANUS_VALIDATE_JSON_OBJECT(root, room_parameters,
-				error_code, error_cause, TRUE,
-				JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT);
-		} else {
+									   error_code, error_cause, TRUE,
+									   JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT);
+		}
+		else
+		{
 			JANUS_VALIDATE_JSON_OBJECT(root, roomstr_parameters,
-				error_code, error_cause, TRUE,
-				JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT);
+									   error_code, error_cause, TRUE,
+									   JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT);
 		}
-		if(!string_ids) {
+		if (!string_ids)
+		{
 			JANUS_VALIDATE_JSON_OBJECT(root, id_parameters,
-				error_code, error_cause, TRUE,
-				JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT);
-		} else {
-			JANUS_VALIDATE_JSON_OBJECT(root, idstr_parameters,
-				error_code, error_cause, TRUE,
-				JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT);
+									   error_code, error_cause, TRUE,
+									   JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT);
 		}
-		if(error_code != 0)
+		else
+		{
+			JANUS_VALIDATE_JSON_OBJECT(root, idstr_parameters,
+									   error_code, error_cause, TRUE,
+									   JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT);
+		}
+		if (error_code != 0)
 			goto prepare_response;
 		JANUS_VALIDATE_JSON_OBJECT(root, moderate_parameters,
-			error_code, error_cause, TRUE,
-			JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT);
-		if(error_code != 0)
+								   error_code, error_cause, TRUE,
+								   JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT);
+		if (error_code != 0)
 			goto prepare_response;
 		json_t *room = json_object_get(root, "room");
 		json_t *id = json_object_get(root, "id");
 		guint64 room_id = 0;
 		char room_id_num[30], *room_id_str = NULL;
-		if(!string_ids) {
+		if (!string_ids)
+		{
 			room_id = json_integer_value(room);
-			g_snprintf(room_id_num, sizeof(room_id_num), "%"SCNu64, room_id);
+			g_snprintf(room_id_num, sizeof(room_id_num), "%" SCNu64, room_id);
 			room_id_str = room_id_num;
-		} else {
+		}
+		else
+		{
 			room_id_str = (char *)json_string_value(room);
 		}
 		janus_mutex_lock(&rooms_mutex);
 		janus_videoroom *videoroom = NULL;
 		error_code = janus_videoroom_access_room(root, TRUE, FALSE, &videoroom, error_cause, sizeof(error_cause));
-		if(error_code != 0) {
+		if (error_code != 0)
+		{
 			janus_mutex_unlock(&rooms_mutex);
 			goto prepare_response;
 		}
@@ -4991,24 +5422,29 @@ static json_t *janus_videoroom_process_synchronous_request(janus_videoroom_sessi
 		janus_mutex_lock(&videoroom->mutex);
 		/* A secret may be required for this action */
 		JANUS_CHECK_SECRET(videoroom->room_secret, root, "secret", error_code, error_cause,
-			JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT, JANUS_VIDEOROOM_ERROR_UNAUTHORIZED);
-		if(error_code != 0) {
+						   JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT, JANUS_VIDEOROOM_ERROR_UNAUTHORIZED);
+		if (error_code != 0)
+		{
 			janus_mutex_unlock(&videoroom->mutex);
 			janus_refcount_decrease(&videoroom->ref);
 			goto prepare_response;
 		}
 		guint64 user_id = 0;
 		char user_id_num[30], *user_id_str = NULL;
-		if(!string_ids) {
+		if (!string_ids)
+		{
 			user_id = json_integer_value(id);
-			g_snprintf(user_id_num, sizeof(user_id_num), "%"SCNu64, user_id);
+			g_snprintf(user_id_num, sizeof(user_id_num), "%" SCNu64, user_id);
 			user_id_str = user_id_num;
-		} else {
+		}
+		else
+		{
 			user_id_str = (char *)json_string_value(id);
 		}
 		janus_videoroom_publisher *participant = g_hash_table_lookup(videoroom->participants,
-			string_ids ? (gpointer)user_id_str : (gpointer)&user_id);
-		if(participant == NULL) {
+																	 string_ids ? (gpointer)user_id_str : (gpointer)&user_id);
+		if (participant == NULL)
+		{
 			janus_mutex_unlock(&videoroom->mutex);
 			janus_refcount_decrease(&videoroom->ref);
 			JANUS_LOG(LOG_ERR, "No such user %s in room %s\n", user_id_str, room_id_str);
@@ -5019,15 +5455,18 @@ static json_t *janus_videoroom_process_synchronous_request(janus_videoroom_sessi
 		janus_refcount_increase(&participant->ref);
 		/* Check if there's any media delivery to change 检查是否有任何媒体交付需要更改 */
 		json_t *audio = json_object_get(root, "mute_audio");
-		if(audio != NULL) {
+		if (audio != NULL)
+		{
 			gboolean audio_muted = json_is_true(audio);
-			if(participant->session && g_atomic_int_get(&participant->session->started) && !audio_muted && participant->audio_active && participant->audio_muted) {
+			if (participant->session && g_atomic_int_get(&participant->session->started) && !audio_muted && participant->audio_active && participant->audio_muted)
+			{
 				/* Audio was just resumed, try resetting the RTP headers for viewers 音频刚刚恢复，请尝试为观众重置 RTP 标头 */
 				janus_mutex_lock(&participant->subscribers_mutex);
 				GSList *ps = participant->subscribers;
-				while(ps) {
+				while (ps)
+				{
 					janus_videoroom_subscriber *l = (janus_videoroom_subscriber *)ps->data;
-					if(l)
+					if (l)
 						l->context.v_seq_reset = TRUE;
 					ps = ps->next;
 				}
@@ -5036,16 +5475,19 @@ static json_t *janus_videoroom_process_synchronous_request(janus_videoroom_sessi
 			participant->audio_muted = audio_muted;
 		}
 		json_t *video = json_object_get(root, "mute_video");
-		if(video != NULL) {
+		if (video != NULL)
+		{
 			gboolean video_muted = json_is_true(video);
-			if(participant->session && g_atomic_int_get(&participant->session->started) &&
-					!video_muted && participant->video_active && participant->video_muted) {
+			if (participant->session && g_atomic_int_get(&participant->session->started) &&
+				!video_muted && participant->video_active && participant->video_muted)
+			{
 				/* Video was just resumed, try resetting the RTP headers for viewers 视频刚刚恢复，请尝试为观众重置 RTP 标头 */
 				janus_mutex_lock(&participant->subscribers_mutex);
 				GSList *ps = participant->subscribers;
-				while(ps) {
+				while (ps)
+				{
 					janus_videoroom_subscriber *l = (janus_videoroom_subscriber *)ps->data;
-					if(l)
+					if (l)
 						l->context.v_seq_reset = TRUE;
 					ps = ps->next;
 				}
@@ -5054,35 +5496,38 @@ static json_t *janus_videoroom_process_synchronous_request(janus_videoroom_sessi
 			participant->video_muted = video_muted;
 		}
 		json_t *data = json_object_get(root, "mute_data");
-		if(data != NULL) {
+		if (data != NULL)
+		{
 			participant->data_muted = json_is_true(data);
 		}
 		/* If anything changed, prepare an event for this 如果有任何变化，请为此准备一个事件通知*/
-		if(audio || video || data) {
+		if (audio || video || data)
+		{
 			json_t *event = json_object();
 			json_object_set_new(event, "videoroom", json_string("event"));
 			json_object_set_new(event, "room", string_ids ? json_string(participant->room_id_str) : json_integer(participant->room_id));
 			json_object_set_new(event, "id", string_ids ? json_string(participant->user_id_str) : json_integer(participant->user_id));
-			if(audio)
+			if (audio)
 				json_object_set_new(event, "audio-moderation", participant->audio_muted ? json_string("muted") : json_string("unmuted"));
-			if(video)
+			if (video)
 				json_object_set_new(event, "video-moderation", participant->video_muted ? json_string("muted") : json_string("unmuted"));
-			if(data)
+			if (data)
 				json_object_set_new(event, "data-moderation", participant->data_muted ? json_string("muted") : json_string("unmuted"));
 			/* Notify the speaker this event is related to as well */
 			janus_videoroom_notify_participants(participant, event, TRUE);
 			json_decref(event);
 			/* Also notify event handlers */
-			if(notify_events && gateway->events_is_enabled()) {
+			if (notify_events && gateway->events_is_enabled())
+			{
 				json_t *info = json_object();
 				json_object_set_new(info, "videoroom", json_string("moderated"));
 				json_object_set_new(info, "room", string_ids ? json_string(videoroom->room_id_str) : json_integer(videoroom->room_id));
 				json_object_set_new(info, "id", string_ids ? json_string(participant->user_id_str) : json_integer(participant->user_id));
-				if(audio)
+				if (audio)
 					json_object_set_new(info, "audio", participant->audio_muted ? json_string("muted") : json_string("unmuted"));
-				if(video)
+				if (video)
 					json_object_set_new(info, "video", participant->video_muted ? json_string("muted") : json_string("unmuted"));
-				if(data)
+				if (data)
 					json_object_set_new(info, "data", participant->data_muted ? json_string("muted") : json_string("unmuted"));
 				gateway->notify_event(&janus_videoroom_plugin, NULL, info);
 			}
@@ -5095,34 +5540,43 @@ static json_t *janus_videoroom_process_synchronous_request(janus_videoroom_sessi
 		janus_refcount_decrease(&videoroom->ref);
 		janus_refcount_decrease(&participant->ref);
 		goto prepare_response;
-	} else if(!strcasecmp(request_text, "listparticipants")) {
-		/* List all participants in a room, specifying whether they're publishers or just attendees 
+	}
+	else if (!strcasecmp(request_text, "listparticipants"))
+	{
+		/* List all participants in a room, specifying whether they're publishers or just attendees
 		列出房间中的所有参与者，区分他们是发布者还是参与者*/
-		if(!string_ids) {
+		if (!string_ids)
+		{
 			JANUS_VALIDATE_JSON_OBJECT(root, room_parameters,
-				error_code, error_cause, TRUE,
-				JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT);
-		} else {
-			JANUS_VALIDATE_JSON_OBJECT(root, roomstr_parameters,
-				error_code, error_cause, TRUE,
-				JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT);
+									   error_code, error_cause, TRUE,
+									   JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT);
 		}
-		if(error_code != 0)
+		else
+		{
+			JANUS_VALIDATE_JSON_OBJECT(root, roomstr_parameters,
+									   error_code, error_cause, TRUE,
+									   JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT);
+		}
+		if (error_code != 0)
 			goto prepare_response;
 		json_t *room = json_object_get(root, "room");
 		guint64 room_id = 0;
 		char room_id_num[30], *room_id_str = NULL;
-		if(!string_ids) {
+		if (!string_ids)
+		{
 			room_id = json_integer_value(room);
-			g_snprintf(room_id_num, sizeof(room_id_num), "%"SCNu64, room_id);
+			g_snprintf(room_id_num, sizeof(room_id_num), "%" SCNu64, room_id);
 			room_id_str = room_id_num;
-		} else {
+		}
+		else
+		{
 			room_id_str = (char *)json_string_value(room);
 		}
 		janus_mutex_lock(&rooms_mutex);
 		janus_videoroom *videoroom = NULL;
 		error_code = janus_videoroom_access_room(root, FALSE, FALSE, &videoroom, error_cause, sizeof(error_cause));
-		if(error_code != 0) {
+		if (error_code != 0)
+		{
 			janus_mutex_unlock(&rooms_mutex);
 			goto prepare_response;
 		}
@@ -5134,15 +5588,17 @@ static json_t *janus_videoroom_process_synchronous_request(janus_videoroom_sessi
 		gpointer value;
 		janus_mutex_lock(&videoroom->mutex);
 		g_hash_table_iter_init(&iter, videoroom->participants);
-		while (!g_atomic_int_get(&videoroom->destroyed) && g_hash_table_iter_next(&iter, NULL, &value)) {
+		while (!g_atomic_int_get(&videoroom->destroyed) && g_hash_table_iter_next(&iter, NULL, &value))
+		{
 			janus_videoroom_publisher *p = value;
 			json_t *pl = json_object();
 			json_object_set_new(pl, "id", string_ids ? json_string(p->user_id_str) : json_integer(p->user_id));
-			if(p->display)
+			if (p->display)
 				json_object_set_new(pl, "display", json_string(p->display));
 			json_object_set_new(pl, "publisher", (p->sdp && g_atomic_int_get(&p->session->started)) ? json_true() : json_false());
-			if(p->sdp && g_atomic_int_get(&p->session->started)) {
-				if(p->audio_level_extmap_id > 0)
+			if (p->sdp && g_atomic_int_get(&p->session->started))
+			{
+				if (p->audio_level_extmap_id > 0)
 					json_object_set_new(pl, "talking", p->talking ? json_true() : json_false());
 			}
 			json_array_append_new(list, pl);
@@ -5154,33 +5610,42 @@ static json_t *janus_videoroom_process_synchronous_request(janus_videoroom_sessi
 		json_object_set_new(response, "room", string_ids ? json_string(room_id_str) : json_integer(room_id));
 		json_object_set_new(response, "participants", list);
 		goto prepare_response;
-	} else if(!strcasecmp(request_text, "listforwarders")) {
+	}
+	else if (!strcasecmp(request_text, "listforwarders"))
+	{
 		/* List all forwarders in a room 列出房间中的所有转发器 */
-		if(!string_ids) {
+		if (!string_ids)
+		{
 			JANUS_VALIDATE_JSON_OBJECT(root, room_parameters,
-				error_code, error_cause, TRUE,
-				JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT);
-		} else {
-			JANUS_VALIDATE_JSON_OBJECT(root, roomstr_parameters,
-				error_code, error_cause, TRUE,
-				JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT);
+									   error_code, error_cause, TRUE,
+									   JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT);
 		}
-		if(error_code != 0)
+		else
+		{
+			JANUS_VALIDATE_JSON_OBJECT(root, roomstr_parameters,
+									   error_code, error_cause, TRUE,
+									   JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT);
+		}
+		if (error_code != 0)
 			goto prepare_response;
 		json_t *room = json_object_get(root, "room");
 		guint64 room_id = 0;
 		char room_id_num[30], *room_id_str = NULL;
-		if(!string_ids) {
+		if (!string_ids)
+		{
 			room_id = json_integer_value(room);
-			g_snprintf(room_id_num, sizeof(room_id_num), "%"SCNu64, room_id);
+			g_snprintf(room_id_num, sizeof(room_id_num), "%" SCNu64, room_id);
 			room_id_str = room_id_num;
-		} else {
+		}
+		else
+		{
 			room_id_str = (char *)json_string_value(room);
 		}
 		janus_mutex_lock(&rooms_mutex);
 		janus_videoroom *videoroom = NULL;
 		error_code = janus_videoroom_access_room(root, TRUE, FALSE, &videoroom, error_cause, sizeof(error_cause));
-		if(error_code != 0) {
+		if (error_code != 0)
+		{
 			janus_mutex_unlock(&rooms_mutex);
 			goto prepare_response;
 		}
@@ -5192,62 +5657,71 @@ static json_t *janus_videoroom_process_synchronous_request(janus_videoroom_sessi
 		gpointer value;
 		janus_mutex_lock(&videoroom->mutex);
 		g_hash_table_iter_init(&iter, videoroom->participants);
-		while (!g_atomic_int_get(&videoroom->destroyed) && g_hash_table_iter_next(&iter, NULL, &value)) {
+		while (!g_atomic_int_get(&videoroom->destroyed) && g_hash_table_iter_next(&iter, NULL, &value))
+		{
 			janus_videoroom_publisher *p = value;
 			janus_mutex_lock(&p->rtp_forwarders_mutex);
-			if(g_hash_table_size(p->rtp_forwarders) == 0) {
+			if (g_hash_table_size(p->rtp_forwarders) == 0)
+			{
 				janus_mutex_unlock(&p->rtp_forwarders_mutex);
 				continue;
 			}
 			json_t *pl = json_object();
 			json_object_set_new(pl, "publisher_id", string_ids ? json_string(p->user_id_str) : json_integer(p->user_id));
-			if(p->display)
+			if (p->display)
 				json_object_set_new(pl, "display", json_string(p->display));
 			json_t *flist = json_array();
 			GHashTableIter iter_f;
 			gpointer key_f, value_f;
 			g_hash_table_iter_init(&iter_f, p->rtp_forwarders);
-			while(g_hash_table_iter_next(&iter_f, &key_f, &value_f)) {
+			while (g_hash_table_iter_next(&iter_f, &key_f, &value_f))
+			{
 				json_t *fl = json_object();
 				guint32 rpk = GPOINTER_TO_UINT(key_f);
 				janus_videoroom_rtp_forwarder *rpv = value_f;
 				char address[100];
-				if(rpv->serv_addr.sin_family == AF_INET) {
-					json_object_set_new(fl, "ip", json_string(
-						inet_ntop(AF_INET, &rpv->serv_addr.sin_addr, address, sizeof(address))));
-				} else {
-					json_object_set_new(fl, "ip", json_string(
-						inet_ntop(AF_INET6, &rpv->serv_addr6.sin6_addr, address, sizeof(address))));
+				if (rpv->serv_addr.sin_family == AF_INET)
+				{
+					json_object_set_new(fl, "ip", json_string(inet_ntop(AF_INET, &rpv->serv_addr.sin_addr, address, sizeof(address))));
 				}
-				if(rpv->is_data) {
+				else
+				{
+					json_object_set_new(fl, "ip", json_string(inet_ntop(AF_INET6, &rpv->serv_addr6.sin6_addr, address, sizeof(address))));
+				}
+				if (rpv->is_data)
+				{
 					json_object_set_new(fl, "data_stream_id", json_integer(rpk));
 					json_object_set_new(fl, "port", json_integer(ntohs(rpv->serv_addr.sin_port)));
-				} else if(rpv->is_video) {
+				}
+				else if (rpv->is_video)
+				{
 					json_object_set_new(fl, "video_stream_id", json_integer(rpk));
 					json_object_set_new(fl, "port", json_integer(ntohs(rpv->serv_addr.sin_port)));
-					if(rpv->local_rtcp_port > 0)
+					if (rpv->local_rtcp_port > 0)
 						json_object_set_new(fl, "local_rtcp_port", json_integer(rpv->local_rtcp_port));
-					if(rpv->remote_rtcp_port > 0)
+					if (rpv->remote_rtcp_port > 0)
 						json_object_set_new(fl, "remote_rtcp_port", json_integer(rpv->remote_rtcp_port));
-					if(rpv->payload_type)
+					if (rpv->payload_type)
 						json_object_set_new(fl, "pt", json_integer(rpv->payload_type));
-					if(rpv->ssrc)
+					if (rpv->ssrc)
 						json_object_set_new(fl, "ssrc", json_integer(rpv->ssrc));
-					if(rpv->substream)
+					if (rpv->substream)
 						json_object_set_new(fl, "substream", json_integer(rpv->substream));
-				} else {
+				}
+				else
+				{
 					json_object_set_new(fl, "audio_stream_id", json_integer(rpk));
 					json_object_set_new(fl, "port", json_integer(ntohs(rpv->serv_addr.sin_port)));
-					if(rpv->local_rtcp_port > 0)
+					if (rpv->local_rtcp_port > 0)
 						json_object_set_new(fl, "local_rtcp_port", json_integer(rpv->local_rtcp_port));
-					if(rpv->remote_rtcp_port > 0)
+					if (rpv->remote_rtcp_port > 0)
 						json_object_set_new(fl, "remote_rtcp_port", json_integer(rpv->remote_rtcp_port));
-					if(rpv->payload_type)
+					if (rpv->payload_type)
 						json_object_set_new(fl, "pt", json_integer(rpv->payload_type));
-					if(rpv->ssrc)
+					if (rpv->ssrc)
 						json_object_set_new(fl, "ssrc", json_integer(rpv->ssrc));
 				}
-				if(rpv->is_srtp)
+				if (rpv->is_srtp)
 					json_object_set_new(fl, "srtp", json_true());
 				json_array_append_new(flist, fl);
 			}
@@ -5262,11 +5736,13 @@ static json_t *janus_videoroom_process_synchronous_request(janus_videoroom_sessi
 		json_object_set_new(response, "room", string_ids ? json_string(room_id_str) : json_integer(room_id));
 		json_object_set_new(response, "rtp_forwarders", list);
 		goto prepare_response;
-	} else if(!strcasecmp(request_text, "enable_recording")) {
+	}
+	else if (!strcasecmp(request_text, "enable_recording"))
+	{
 		JANUS_VALIDATE_JSON_OBJECT(root, record_parameters,
-			error_code, error_cause, TRUE,
-			JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT);
-		if(error_code != 0)
+								   error_code, error_cause, TRUE,
+								   JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT);
+		if (error_code != 0)
 			goto prepare_response;
 		json_t *record = json_object_get(root, "record");
 		gboolean recording_active = json_is_true(record);
@@ -5275,7 +5751,8 @@ static json_t *janus_videoroom_process_synchronous_request(janus_videoroom_sessi
 		janus_mutex_lock(&rooms_mutex);
 		janus_videoroom *videoroom = NULL;
 		error_code = janus_videoroom_access_room(root, TRUE, FALSE, &videoroom, error_cause, sizeof(error_cause));
-		if(error_code != 0) {
+		if (error_code != 0)
+		{
 			JANUS_LOG(LOG_ERR, "Failed to access videoroom\n");
 			janus_mutex_unlock(&rooms_mutex);
 			goto prepare_response;
@@ -5285,33 +5762,41 @@ static json_t *janus_videoroom_process_synchronous_request(janus_videoroom_sessi
 		janus_mutex_lock(&videoroom->mutex);
 		/* Set recording status 设置录制状态 */
 		gboolean room_prev_recording_active = recording_active;
-		if (room_prev_recording_active != videoroom->record) {
+		if (room_prev_recording_active != videoroom->record)
+		{
 			/* Room recording state has changed 房间录制状态改变*/
 			videoroom->record = room_prev_recording_active;
 			/* Iterate over all participants 迭代所有参与者*/
 			gpointer value;
 			GHashTableIter iter;
 			g_hash_table_iter_init(&iter, videoroom->participants);
-			while (g_hash_table_iter_next(&iter, NULL, &value)) {
+			while (g_hash_table_iter_next(&iter, NULL, &value))
+			{
 				janus_videoroom_publisher *participant = value;
-				if(participant && participant->session) {
+				if (participant && participant->session)
+				{
 					janus_mutex_lock(&participant->rec_mutex);
 					gboolean prev_recording_active = participant->recording_active;
 					participant->recording_active = recording_active;
-					JANUS_LOG(LOG_VERB, "Setting record property: %s (room %"SCNu64", user %"SCNu64")\n", participant->recording_active ? "true" : "false", participant->room_id, participant->user_id);
+					JANUS_LOG(LOG_VERB, "Setting record property: %s (room %" SCNu64 ", user %" SCNu64 ")\n", participant->recording_active ? "true" : "false", participant->room_id, participant->user_id);
 					/* Do we need to do something with the recordings right now? 我们现在需要对录制做点什么吗 */
-					if(participant->recording_active != prev_recording_active) {
+					if (participant->recording_active != prev_recording_active)
+					{
 						/* Something changed 录制状态发生改变*/
-						if(!participant->recording_active) {
+						if (!participant->recording_active)
+						{
 							/* Not recording (anymore?) 如果是关闭录制*/
 							janus_videoroom_recorder_close(participant);
-						} else if(participant->recording_active && participant->sdp) {
+						}
+						else if (participant->recording_active && participant->sdp)
+						{
 							/* We've started recording, send a PLI/FIR and go on 如果是开始录制，请求关键帧并开始录制*/
 							janus_videoroom_recorder_create(
 								participant, strstr(participant->sdp, "m=audio") != NULL,
 								strstr(participant->sdp, "m=video") != NULL,
 								strstr(participant->sdp, "m=application") != NULL);
-							if(strstr(participant->sdp, "m=video")) {
+							if (strstr(participant->sdp, "m=video"))
+							{
 								/* Send a FIR */
 								janus_videoroom_reqpli(participant, "Recording video");
 							}
@@ -5320,49 +5805,53 @@ static json_t *janus_videoroom_process_synchronous_request(janus_videoroom_sessi
 					janus_mutex_unlock(&participant->rec_mutex);
 				}
 			}
-        }
+		}
 		janus_mutex_unlock(&videoroom->mutex);
 		janus_refcount_decrease(&videoroom->ref);
 		response = json_object();
 		json_object_set_new(response, "videoroom", json_string("success"));
 		json_object_set_new(response, "record", json_boolean(recording_active));
 		goto prepare_response;
-	} else {
-		/* Not a request we recognize, don't do anything 
+	}
+	else
+	{
+		/* Not a request we recognize, don't do anything
 		不是我们认识的请求，不作任何事情 */
 		return NULL;
 	}
 
 prepare_response:
-		{
-			if(error_code == 0 && !response) {
-				error_code = JANUS_VIDEOROOM_ERROR_UNKNOWN_ERROR;
-				g_snprintf(error_cause, 512, "Invalid response");
-			}
-			if(error_code != 0) {
-				/* Prepare JSON error event 准备JSON错误回复*/
-				response = json_object();
-				json_object_set_new(response, "videoroom", json_string("event"));
-				json_object_set_new(response, "error_code", json_integer(error_code));
-				json_object_set_new(response, "error", json_string(error_cause));
-			}
-			return response;
-		}
-
+{
+	if (error_code == 0 && !response)
+	{
+		error_code = JANUS_VIDEOROOM_ERROR_UNKNOWN_ERROR;
+		g_snprintf(error_cause, 512, "Invalid response");
+	}
+	if (error_code != 0)
+	{
+		/* Prepare JSON error event 准备JSON错误回复*/
+		response = json_object();
+		json_object_set_new(response, "videoroom", json_string("event"));
+		json_object_set_new(response, "error_code", json_integer(error_code));
+		json_object_set_new(response, "error", json_string(error_cause));
+	}
+	return response;
+}
 }
 
 /**
  * @brief 处理信息
- * 
- * @param handle 
- * @param transaction 
- * @param message 
- * @param jsep 
- * @return struct janus_plugin_result* 
+ *
+ * @param handle
+ * @param transaction
+ * @param message
+ * @param jsep
+ * @return struct janus_plugin_result*
  */
-struct janus_plugin_result *janus_videoroom_handle_message(janus_plugin_session *handle, char *transaction, json_t *message, json_t *jsep) {
+struct janus_plugin_result *janus_videoroom_handle_message(janus_plugin_session *handle, char *transaction, json_t *message, json_t *jsep)
+{
 	/*检查程序是否已经被暂停，检查插件是否被初始化*/
-	if(g_atomic_int_get(&stopping) || !g_atomic_int_get(&initialized))
+	if (g_atomic_int_get(&stopping) || !g_atomic_int_get(&initialized))
 		return janus_plugin_result_new(JANUS_PLUGIN_ERROR, g_atomic_int_get(&stopping) ? "Shutting down" : "Plugin not initialized", NULL);
 
 	/* Pre-parse the message 预处理信息*/
@@ -5371,10 +5860,11 @@ struct janus_plugin_result *janus_videoroom_handle_message(janus_plugin_session 
 	json_t *root = message;
 	json_t *response = NULL;
 
-    /* 锁住sessions hashTable获取该handle的session */
+	/* 锁住sessions hashTable获取该handle的session */
 	janus_mutex_lock(&sessions_mutex);
 	janus_videoroom_session *session = janus_videoroom_lookup_session(handle);
-	if(!session) {
+	if (!session)
+	{
 		/*如果该handle的session不存在*/
 		janus_mutex_unlock(&sessions_mutex);
 		JANUS_LOG(LOG_ERR, "No session associated with this handle...\n");
@@ -5382,12 +5872,13 @@ struct janus_plugin_result *janus_videoroom_handle_message(janus_plugin_session 
 		g_snprintf(error_cause, 512, "%s", "No session associated with this handle...");
 		goto plugin_response;
 	}
-	/* Increase the reference counter for this session: we'll decrease it after we handle the message 
+	/* Increase the reference counter for this session: we'll decrease it after we handle the message
 	我们增加该session的引用次数，当我们完成处理message之后，会将其减少
 	*/
 	janus_refcount_increase(&session->ref);
 	janus_mutex_unlock(&sessions_mutex);
-	if(g_atomic_int_get(&session->destroyed)) {
+	if (g_atomic_int_get(&session->destroyed))
+	{
 		/*如果该session已被标注销毁*/
 		JANUS_LOG(LOG_ERR, "Session has already been marked as destroyed...\n");
 		error_code = JANUS_VIDEOROOM_ERROR_UNKNOWN_ERROR;
@@ -5395,14 +5886,16 @@ struct janus_plugin_result *janus_videoroom_handle_message(janus_plugin_session 
 		goto plugin_response;
 	}
 
-	if(message == NULL) {
+	if (message == NULL)
+	{
 		/*如果处理的信息为空*/
 		JANUS_LOG(LOG_ERR, "No message??\n");
 		error_code = JANUS_VIDEOROOM_ERROR_NO_MESSAGE;
 		g_snprintf(error_cause, 512, "%s", "No message??");
 		goto plugin_response;
 	}
-	if(!json_is_object(root)) {
+	if (!json_is_object(root))
+	{
 		/*如果message不是json结构*/
 		JANUS_LOG(LOG_ERR, "JSON error: not an object\n");
 		error_code = JANUS_VIDEOROOM_ERROR_INVALID_JSON;
@@ -5411,25 +5904,25 @@ struct janus_plugin_result *janus_videoroom_handle_message(janus_plugin_session 
 	}
 	/* Get the request first */
 	JANUS_VALIDATE_JSON_OBJECT(root, request_parameters,
-		error_code, error_cause, TRUE,
-		JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT);
-	if(error_code != 0)
+							   error_code, error_cause, TRUE,
+							   JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT);
+	if (error_code != 0)
 		goto plugin_response;
 	json_t *request = json_object_get(root, "request");
-	/* Some requests ('create', 'destroy', 'exists', 'list') can be handled synchronously 
+	/* Some requests ('create', 'destroy', 'exists', 'list') can be handled synchronously
 	有一些请求，例如('create', 'destroy', 'exists', 'list') 会被同步处理*/
 	const char *request_text = json_string_value(request);
 	/* We have a separate method to process synchronous requests, as those may
-	 * arrive from the Admin API as well, and so we handle them the same way 
+	 * arrive from the Admin API as well, and so we handle them the same way
 	 我们有一个单独的方法去处理同步请求，也可以接受来自admin api的请求*/
 	response = janus_videoroom_process_synchronous_request(session, root);
-	if(response != NULL) {
+	if (response != NULL)
+	{
 		/* We got a response, send it back 我们得到回复，返回该结果*/
 		goto plugin_response;
-	} else if(!strcasecmp(request_text, "join") || !strcasecmp(request_text, "joinandconfigure")
-			|| !strcasecmp(request_text, "configure") || !strcasecmp(request_text, "publish") || !strcasecmp(request_text, "unpublish")
-			|| !strcasecmp(request_text, "start") || !strcasecmp(request_text, "pause") || !strcasecmp(request_text, "switch")
-			|| !strcasecmp(request_text, "leave")) {
+	}
+	else if (!strcasecmp(request_text, "join") || !strcasecmp(request_text, "joinandconfigure") || !strcasecmp(request_text, "configure") || !strcasecmp(request_text, "publish") || !strcasecmp(request_text, "unpublish") || !strcasecmp(request_text, "start") || !strcasecmp(request_text, "pause") || !strcasecmp(request_text, "switch") || !strcasecmp(request_text, "leave"))
+	{
 		/* These messages are handled asynchronously 这些方法将会被异步处理 */
 		/*构建一个janus_videoroom_message结构体存储messgae的信息，把它丢到异步队列，等待处理*/
 		janus_videoroom_message *msg = g_malloc(sizeof(janus_videoroom_message));
@@ -5438,9 +5931,11 @@ struct janus_plugin_result *janus_videoroom_handle_message(janus_plugin_session 
 		msg->message = root;
 		msg->jsep = jsep;
 		g_async_queue_push(messages, msg);
-				
+
 		return janus_plugin_result_new(JANUS_PLUGIN_OK_WAIT, NULL, NULL);
-	} else {
+	}
+	else
+	{
 		/*其他不明请求*/
 		JANUS_LOG(LOG_VERB, "Unknown request '%s'\n", request_text);
 		error_code = JANUS_VIDEOROOM_ERROR_INVALID_REQUEST;
@@ -5448,91 +5943,99 @@ struct janus_plugin_result *janus_videoroom_handle_message(janus_plugin_session 
 	}
 
 plugin_response:
-		{
-			if(error_code == 0 && !response) {
-				error_code = JANUS_VIDEOROOM_ERROR_UNKNOWN_ERROR;
-				g_snprintf(error_cause, 512, "Invalid response");
-			}
-			if(error_code != 0) {
-				/* Prepare JSON error event */
-				json_t *event = json_object();
-				json_object_set_new(event, "videoroom", json_string("event"));
-				json_object_set_new(event, "error_code", json_integer(error_code));
-				json_object_set_new(event, "error", json_string(error_cause));
-				response = event;
-			}
-			if(root != NULL)
-				json_decref(root);
-			if(jsep != NULL)
-				json_decref(jsep);
-			g_free(transaction);
+{
+	if (error_code == 0 && !response)
+	{
+		error_code = JANUS_VIDEOROOM_ERROR_UNKNOWN_ERROR;
+		g_snprintf(error_cause, 512, "Invalid response");
+	}
+	if (error_code != 0)
+	{
+		/* Prepare JSON error event */
+		json_t *event = json_object();
+		json_object_set_new(event, "videoroom", json_string("event"));
+		json_object_set_new(event, "error_code", json_integer(error_code));
+		json_object_set_new(event, "error", json_string(error_cause));
+		response = event;
+	}
+	if (root != NULL)
+		json_decref(root);
+	if (jsep != NULL)
+		json_decref(jsep);
+	g_free(transaction);
 
-			if(session != NULL)
-				janus_refcount_decrease(&session->ref);
-			return janus_plugin_result_new(JANUS_PLUGIN_OK, NULL, response);
-		}
-
+	if (session != NULL)
+		janus_refcount_decrease(&session->ref);
+	return janus_plugin_result_new(JANUS_PLUGIN_OK, NULL, response);
+}
 }
 
 /**
  * @brief 处理admin消息
- * 
- * @param message 
- * @return json_t* 
+ *
+ * @param message
+ * @return json_t*
  */
-json_t *janus_videoroom_handle_admin_message(json_t *message) {
+json_t *janus_videoroom_handle_admin_message(json_t *message)
+{
 	/* Some requests (e.g., 'create' and 'destroy') can be handled via Admin API 一些请求（例如，'create' 和 'destroy'）可以通过 Admin API 处理 */
 	int error_code = 0;
 	char error_cause[512];
 	json_t *response = NULL;
 
 	JANUS_VALIDATE_JSON_OBJECT(message, request_parameters,
-		error_code, error_cause, TRUE,
-		JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT);
-	if(error_code != 0)
+							   error_code, error_cause, TRUE,
+							   JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT);
+	if (error_code != 0)
 		goto admin_response;
 	json_t *request = json_object_get(message, "request");
 	const char *request_text = json_string_value(request);
-	if((response = janus_videoroom_process_synchronous_request(NULL, message)) != NULL) {
+	if ((response = janus_videoroom_process_synchronous_request(NULL, message)) != NULL)
+	{
 		/* We got a response, send it back */
 		goto admin_response;
-	} else {
+	}
+	else
+	{
 		JANUS_LOG(LOG_VERB, "Unknown request '%s'\n", request_text);
 		error_code = JANUS_VIDEOROOM_ERROR_INVALID_REQUEST;
 		g_snprintf(error_cause, 512, "Unknown request '%s'", request_text);
 	}
 
 admin_response:
-		{
-			if(!response) {
-				/* Prepare JSON error event */
-				response = json_object();
-				json_object_set_new(response, "videoroom", json_string("event"));
-				json_object_set_new(response, "error_code", json_integer(error_code));
-				json_object_set_new(response, "error", json_string(error_cause));
-			}
-			return response;
-		}
-
+{
+	if (!response)
+	{
+		/* Prepare JSON error event */
+		response = json_object();
+		json_object_set_new(response, "videoroom", json_string("event"));
+		json_object_set_new(response, "error_code", json_integer(error_code));
+		json_object_set_new(response, "error", json_string(error_cause));
+	}
+	return response;
+}
 }
 
 /**
  * @brief videoroom 设置媒体
- * 
- * @param handle 
+ *
+ * @param handle
  */
-void janus_videoroom_setup_media(janus_plugin_session *handle) {
+void janus_videoroom_setup_media(janus_plugin_session *handle)
+{
 	JANUS_LOG(LOG_INFO, "[%s-%p] WebRTC media is now available\n", JANUS_VIDEOROOM_PACKAGE, handle);
-	if(g_atomic_int_get(&stopping) || !g_atomic_int_get(&initialized))
+	if (g_atomic_int_get(&stopping) || !g_atomic_int_get(&initialized))
 		return;
 	janus_mutex_lock(&sessions_mutex);
 	janus_videoroom_session *session = janus_videoroom_lookup_session(handle);
-	if(!session) {
+	if (!session)
+	{
 		janus_mutex_unlock(&sessions_mutex);
 		JANUS_LOG(LOG_ERR, "No session associated with this handle...\n");
 		return;
 	}
-	if(g_atomic_int_get(&session->destroyed)) {
+	if (g_atomic_int_get(&session->destroyed))
+	{
 		janus_mutex_unlock(&sessions_mutex);
 		return;
 	}
@@ -5542,32 +6045,34 @@ void janus_videoroom_setup_media(janus_plugin_session *handle) {
 
 	/* Media relaying can start now 媒体转发现在可以开始 */
 	g_atomic_int_set(&session->started, 1);
-	if(session->participant) {
+	if (session->participant)
+	{
 		/* If this is a publisher, notify all subscribers about the fact they can
-		 * now subscribe; if this is a subscriber, instead, ask the publisher a FIR 
+		 * now subscribe; if this is a subscriber, instead, ask the publisher a FIR
 		 如果这是发布者，请通知所有订阅者他们现在可以订阅的了； 如果这是订阅者，请向发布者询问 FIR 关键帧*/
-		if(session->participant_type == janus_videoroom_p_type_publisher) {
+		if (session->participant_type == janus_videoroom_p_type_publisher)
+		{
 			/*如果是发布者dtls握手完成*/
 			janus_videoroom_publisher *participant = janus_videoroom_session_get_publisher(session);
 			/* Notify all other participants that there's a new boy in town 通知其他参与者 有参与者进行发布 */
 			json_t *list = json_array();
 			json_t *pl = json_object();
 			json_object_set_new(pl, "id", string_ids ? json_string(participant->user_id_str) : json_integer(participant->user_id));
-			if(participant->display)
+			if (participant->display)
 				json_object_set_new(pl, "display", json_string(participant->display));
-			if(participant->audio)
+			if (participant->audio)
 				json_object_set_new(pl, "audio_codec", json_string(janus_audiocodec_name(participant->acodec)));
-			if(participant->video)
+			if (participant->video)
 				json_object_set_new(pl, "video_codec", json_string(janus_videocodec_name(participant->vcodec)));
-			if(participant->audio_muted)
+			if (participant->audio_muted)
 				json_object_set_new(pl, "audio_moderated", json_true());
-			if(participant->video_muted)
+			if (participant->video_muted)
 				json_object_set_new(pl, "video_moderated", json_true());
-			if(participant->data_muted)
+			if (participant->data_muted)
 				json_object_set_new(pl, "data_moderated", json_true());
-			if(participant->ssrc[0] || participant->rid[0])
+			if (participant->ssrc[0] || participant->rid[0])
 				json_object_set_new(pl, "simulcast", json_true());
-			if(participant->audio_level_extmap_id > 0)
+			if (participant->audio_level_extmap_id > 0)
 				json_object_set_new(pl, "talking", participant->talking ? json_true() : json_false());
 			json_array_append_new(list, pl);
 			json_t *pub = json_object();
@@ -5575,7 +6080,8 @@ void janus_videoroom_setup_media(janus_plugin_session *handle) {
 			json_object_set_new(pub, "room", string_ids ? json_string(participant->room_id_str) : json_integer(participant->room_id));
 			json_object_set_new(pub, "publishers", list);
 			janus_videoroom *room = participant->room;
-			if(room && !g_atomic_int_get(&room->destroyed)) {
+			if (room && !g_atomic_int_get(&room->destroyed))
+			{
 				janus_refcount_increase(&room->ref);
 				janus_mutex_lock(&room->mutex);
 				/*通知参与者事件*/
@@ -5585,7 +6091,8 @@ void janus_videoroom_setup_media(janus_plugin_session *handle) {
 			}
 			json_decref(pub);
 			/* Also notify event handlers */
-			if(notify_events && gateway->events_is_enabled()) {
+			if (notify_events && gateway->events_is_enabled())
+			{
 				json_t *info = json_object();
 				json_object_set_new(info, "event", json_string("published"));
 				json_object_set_new(info, "room", string_ids ? json_string(participant->room_id_str) : json_integer(participant->room_id));
@@ -5595,16 +6102,21 @@ void janus_videoroom_setup_media(janus_plugin_session *handle) {
 				gateway->notify_event(&janus_videoroom_plugin, session->handle, info);
 			}
 			janus_refcount_decrease(&participant->ref);
-		} else if(session->participant_type == janus_videoroom_p_type_subscriber) {
+		}
+		else if (session->participant_type == janus_videoroom_p_type_subscriber)
+		{
 			/*如果是订阅者dtls握手完成*/
 			janus_videoroom_subscriber *s = janus_videoroom_session_get_subscriber(session);
-			if(s && s->feed) {
+			if (s && s->feed)
+			{
 				janus_videoroom_publisher *p = s->feed;
-				if(p && p->session) {
+				if (p && p->session)
+				{
 					/*请求关键帧开始播放*/
 					janus_videoroom_reqpli(p, "New subscriber available");
 					/* Also notify event handlers */
-					if(notify_events && gateway->events_is_enabled()) {
+					if (notify_events && gateway->events_is_enabled())
+					{
 						json_t *info = json_object();
 						json_object_set_new(info, "event", json_string("subscribed"));
 						json_object_set_new(info, "room", string_ids ? json_string(p->room_id_str) : json_integer(p->room_id));
@@ -5613,7 +6125,7 @@ void janus_videoroom_setup_media(janus_plugin_session *handle) {
 					}
 				}
 			}
-			if(s)
+			if (s)
 				janus_refcount_decrease(&s->ref);
 		}
 	}
@@ -5622,21 +6134,23 @@ void janus_videoroom_setup_media(janus_plugin_session *handle) {
 
 /**
  * @brief 处理对方的传入RTP包
- * 
- * @param handle 
- * @param pkt 
+ *
+ * @param handle
+ * @param pkt
  */
-void janus_videoroom_incoming_rtp(janus_plugin_session *handle, janus_plugin_rtp *pkt) {
-	if(handle == NULL || g_atomic_int_get(&handle->stopped) || g_atomic_int_get(&stopping) || !g_atomic_int_get(&initialized))
+void janus_videoroom_incoming_rtp(janus_plugin_session *handle, janus_plugin_rtp *pkt)
+{
+	if (handle == NULL || g_atomic_int_get(&handle->stopped) || g_atomic_int_get(&stopping) || !g_atomic_int_get(&initialized))
 		return;
 	janus_videoroom_session *session = (janus_videoroom_session *)handle->plugin_handle;
-	if(!session || g_atomic_int_get(&session->destroyed) || session->participant_type != janus_videoroom_p_type_publisher)
+	if (!session || g_atomic_int_get(&session->destroyed) || session->participant_type != janus_videoroom_p_type_publisher)
 		return;
 	/*获取session下的发布者*/
 	janus_videoroom_publisher *participant = janus_videoroom_session_get_publisher_nodebug(session);
-	if(participant == NULL)
+	if (participant == NULL)
 		return;
-	if(g_atomic_int_get(&participant->destroyed) || participant->kicked || participant->room == NULL) {
+	if (g_atomic_int_get(&participant->destroyed) || participant->kicked || participant->room == NULL)
+	{
 		janus_videoroom_publisher_dereference_nodebug(participant);
 		return;
 	}
@@ -5645,34 +6159,41 @@ void janus_videoroom_incoming_rtp(janus_plugin_session *handle, janus_plugin_rtp
 	gboolean video = pkt->video;
 	char *buf = pkt->buffer;
 	uint16_t len = pkt->length;
-	/* In case this is an audio packet and we're doing talk detection, check the audio level extension 
+	/* In case this is an audio packet and we're doing talk detection, check the audio level extension
 	如果这是一个音频数据包并且我们正在进行通话检测，请检查音频级别扩展*/
-	if(!video && videoroom->audiolevel_event && participant->audio_active && !participant->audio_muted) {
+	if (!video && videoroom->audiolevel_event && participant->audio_active && !participant->audio_muted)
+	{
 		int level = pkt->extensions.audio_level;
-		if(level != -1) {
+		if (level != -1)
+		{
 			participant->audio_dBov_sum += level;
 			participant->audio_active_packets++;
 			participant->audio_dBov_level = level;
 			int audio_active_packets = participant->user_audio_active_packets ? participant->user_audio_active_packets : videoroom->audio_active_packets;
 			int audio_level_average = participant->user_audio_level_average ? participant->user_audio_level_average : videoroom->audio_level_average;
-			if(participant->audio_active_packets > 0 && participant->audio_active_packets == audio_active_packets) {
+			if (participant->audio_active_packets > 0 && participant->audio_active_packets == audio_active_packets)
+			{
 				gboolean notify_talk_event = FALSE;
-				float audio_dBov_avg = (float)participant->audio_dBov_sum/(float)participant->audio_active_packets;
-				if(audio_dBov_avg < audio_level_average) {
+				float audio_dBov_avg = (float)participant->audio_dBov_sum / (float)participant->audio_active_packets;
+				if (audio_dBov_avg < audio_level_average)
+				{
 					/* Participant talking, should we notify all participants? 参与者在说话，我们是否通知其他人？*/
-					if(!participant->talking)
+					if (!participant->talking)
 						notify_talk_event = TRUE;
 					participant->talking = TRUE;
-				} else {
+				}
+				else
+				{
 					/* Participant not talking anymore, should we notify all participants? 参与者没有在说话，我们是否通知其他人？*/
-					if(participant->talking)
+					if (participant->talking)
 						notify_talk_event = TRUE;
 					participant->talking = FALSE;
 				}
 				participant->audio_active_packets = 0;
 				participant->audio_dBov_sum = 0;
 				/* Only notify in case of state changes 只有状态改变的时候通知*/
-				if(notify_talk_event) {
+				if (notify_talk_event)
+				{
 					janus_mutex_lock(&videoroom->mutex);
 					json_t *event = json_object();
 					json_object_set_new(event, "videoroom", json_string(participant->talking ? "talking" : "stopped-talking"));
@@ -5684,7 +6205,8 @@ void janus_videoroom_incoming_rtp(janus_plugin_session *handle, janus_plugin_rtp
 					json_decref(event);
 					janus_mutex_unlock(&videoroom->mutex);
 					/* Also notify event handlers */
-					if(notify_events && gateway->events_is_enabled()) {
+					if (notify_events && gateway->events_is_enabled())
+					{
 						json_t *info = json_object();
 						json_object_set_new(info, "videoroom", json_string(participant->talking ? "talking" : "stopped-talking"));
 						json_object_set_new(info, "room", string_ids ? json_string(videoroom->room_id_str) : json_integer(videoroom->room_id));
@@ -5697,30 +6219,39 @@ void janus_videoroom_incoming_rtp(janus_plugin_session *handle, janus_plugin_rtp
 		}
 	}
 
-	if((!video && participant->audio_active && !participant->audio_muted) || (video && participant->video_active && !participant->video_muted)) {
-	    //音频或者视频
+	if ((!video && participant->audio_active && !participant->audio_muted) || (video && participant->video_active && !participant->video_muted))
+	{
+		//音频或者视频
 		janus_rtp_header *rtp = (janus_rtp_header *)buf;
 		int sc = video ? 0 : -1;
 		/* Check if we're simulcasting, and if so, keep track of the "layer" 检查我们是否正在联播，如果是，请跟踪“层” */
-		if(video && (participant->ssrc[0] != 0 || participant->rid[0] != NULL)) {
+		if (video && (participant->ssrc[0] != 0 || participant->rid[0] != NULL))
+		{
 			uint32_t ssrc = ntohl(rtp->ssrc);
-			if(ssrc == participant->ssrc[0])
+			if (ssrc == participant->ssrc[0])
 				sc = 0;
-			else if(ssrc == participant->ssrc[1])
+			else if (ssrc == participant->ssrc[1])
 				sc = 1;
-			else if(ssrc == participant->ssrc[2])
+			else if (ssrc == participant->ssrc[2])
 				sc = 2;
-			else if(participant->rid_extmap_id > 0) {
+			else if (participant->rid_extmap_id > 0)
+			{
 				/* We may not know the SSRC yet, try the rid RTP extension 我们可能还不知道 SSRC，试试 rid RTP 扩展 */
 				char sdes_item[16];
-				if(janus_rtp_header_extension_parse_rid(buf, len, participant->rid_extmap_id, sdes_item, sizeof(sdes_item)) == 0) {
-					if(participant->rid[0] != NULL && !strcmp(participant->rid[0], sdes_item)) {
+				if (janus_rtp_header_extension_parse_rid(buf, len, participant->rid_extmap_id, sdes_item, sizeof(sdes_item)) == 0)
+				{
+					if (participant->rid[0] != NULL && !strcmp(participant->rid[0], sdes_item))
+					{
 						participant->ssrc[0] = ssrc;
 						sc = 0;
-					} else if(participant->rid[1] != NULL && !strcmp(participant->rid[1], sdes_item)) {
+					}
+					else if (participant->rid[1] != NULL && !strcmp(participant->rid[1], sdes_item))
+					{
 						participant->ssrc[1] = ssrc;
 						sc = 1;
-					} else if(participant->rid[2] != NULL && !strcmp(participant->rid[2], sdes_item)) {
+					}
+					else if (participant->rid[2] != NULL && !strcmp(participant->rid[2], sdes_item))
+					{
 						participant->ssrc[2] = ssrc;
 						sc = 2;
 					}
@@ -5731,11 +6262,13 @@ void janus_videoroom_incoming_rtp(janus_plugin_session *handle, janus_plugin_rtp
 		将 RTP 转发到与此发布者关联的 rtp_forwarders 的适当端口
 		 */
 		janus_mutex_lock(&participant->rtp_forwarders_mutex);
-		if(participant->srtp_contexts && g_hash_table_size(participant->srtp_contexts) > 0) {
+		if (participant->srtp_contexts && g_hash_table_size(participant->srtp_contexts) > 0)
+		{
 			GHashTableIter iter;
 			gpointer value;
 			g_hash_table_iter_init(&iter, participant->srtp_contexts);
-			while(g_hash_table_iter_next(&iter, NULL, &value)) {
+			while (g_hash_table_iter_next(&iter, NULL, &value))
+			{
 				janus_videoroom_srtp_context *srtp_ctx = (janus_videoroom_srtp_context *)value;
 				srtp_ctx->slen = 0;
 			}
@@ -5744,79 +6277,91 @@ void janus_videoroom_incoming_rtp(janus_plugin_session *handle, janus_plugin_rtp
 		gpointer value;
 		g_hash_table_iter_init(&iter, participant->rtp_forwarders);
 		/* 遍历用 于转发 rtp 数据包的 udp 套接字*/
-		while(participant->udp_sock > 0 && g_hash_table_iter_next(&iter, NULL, &value)) {
+		while (participant->udp_sock > 0 && g_hash_table_iter_next(&iter, NULL, &value))
+		{
 			janus_videoroom_rtp_forwarder *rtp_forward = (janus_videoroom_rtp_forwarder *)value;
-			if(rtp_forward->is_data || (video && !rtp_forward->is_video) || (!video && rtp_forward->is_video))
+			if (rtp_forward->is_data || (video && !rtp_forward->is_video) || (!video && rtp_forward->is_video))
 				continue;
-			/* Backup the RTP header info, as we may rewrite part of it 
+			/* Backup the RTP header info, as we may rewrite part of it
 			备份 RTP 头信息，因为我们可能会重写它的一部分 */
 			uint32_t seq_number = ntohs(rtp->seq_number);
 			uint32_t timestamp = ntohl(rtp->timestamp);
 			int pt = rtp->type;
 			uint32_t ssrc = ntohl(rtp->ssrc);
-			/* First of all, check if we're simulcasting and if we need to forward or ignore this frame 
+			/* First of all, check if we're simulcasting and if we need to forward or ignore this frame
 			首先，检查我们是否在联播，是否需要转发或忽略此帧*/
-			if(video && !rtp_forward->simulcast && rtp_forward->substream != sc) {
+			if (video && !rtp_forward->simulcast && rtp_forward->substream != sc)
+			{
 				continue;
-			} else if(video && rtp_forward->simulcast) {
-				/* This is video and we're simulcasting, check if we need to forward this frame 
+			}
+			else if (video && rtp_forward->simulcast)
+			{
+				/* This is video and we're simulcasting, check if we need to forward this frame
 				这是视频，正在联播，请检查是否需要转发此帧*/
-				if(!janus_rtp_simulcasting_context_process_rtp(&rtp_forward->sim_context,
-						buf, len, participant->ssrc, participant->rid, participant->vcodec, &rtp_forward->context))
+				if (!janus_rtp_simulcasting_context_process_rtp(&rtp_forward->sim_context,
+																buf, len, participant->ssrc, participant->rid, participant->vcodec, &rtp_forward->context))
 					continue;
 				janus_rtp_header_update(rtp, &rtp_forward->context, TRUE, 0);
-				/* By default we use a fixed SSRC (it may be overwritten later) 
+				/* By default we use a fixed SSRC (it may be overwritten later)
 				默认情况下，我们使用固定的 SSRC（以后可能会被覆盖） */
 				rtp->ssrc = htonl(participant->user_id & 0xffffffff);
 			}
-			/* Check if payload type and/or SSRC need to be overwritten for this forwarder 
+			/* Check if payload type and/or SSRC need to be overwritten for this forwarder
 			检查是否需要为此转发器覆盖 有效负载类型 和/或 SSRC */
-			if(rtp_forward->payload_type > 0)
+			if (rtp_forward->payload_type > 0)
 				rtp->type = rtp_forward->payload_type;
-			if(rtp_forward->ssrc > 0)
+			if (rtp_forward->ssrc > 0)
 				rtp->ssrc = htonl(rtp_forward->ssrc);
-			/* Check if this is an RTP or SRTP forwarder 
+			/* Check if this is an RTP or SRTP forwarder
 			检查这是 RTP 还是 SRTP 转发器 */
-			if(!rtp_forward->is_srtp) {
+			if (!rtp_forward->is_srtp)
+			{
 				/* Plain RTP 普通RTP转发 */
-				struct sockaddr *address = (rtp_forward->serv_addr.sin_family == AF_INET ?
-					(struct sockaddr *)&rtp_forward->serv_addr : (struct sockaddr *)&rtp_forward->serv_addr6);
+				struct sockaddr *address = (rtp_forward->serv_addr.sin_family == AF_INET ? (struct sockaddr *)&rtp_forward->serv_addr : (struct sockaddr *)&rtp_forward->serv_addr6);
 				size_t addrlen = (rtp_forward->serv_addr.sin_family == AF_INET ? sizeof(rtp_forward->serv_addr) : sizeof(rtp_forward->serv_addr6));
-				if(sendto(participant->udp_sock, buf, len, 0, address, addrlen) < 0) {
+				if (sendto(participant->udp_sock, buf, len, 0, address, addrlen) < 0)
+				{
 					/*发送失败*/
 					JANUS_LOG(LOG_HUGE, "Error forwarding RTP %s packet for %s... %s (len=%d)...\n",
-						(video ? "video" : "audio"), participant->display, g_strerror(errno), len);
+							  (video ? "video" : "audio"), participant->display, g_strerror(errno), len);
 				}
-			} else {
-				/* SRTP: check if we already encrypted the packet before 
+			}
+			else
+			{
+				/* SRTP: check if we already encrypted the packet before
 				SRTP：检查我们之前是否已经加密过数据包 */
-				if(rtp_forward->srtp_ctx->slen == 0) {
+				if (rtp_forward->srtp_ctx->slen == 0)
+				{
 					/*如果没有解密秘钥*/
 					memcpy(&rtp_forward->srtp_ctx->sbuf, buf, len);
 					int protected = len;
 					int res = srtp_protect(rtp_forward->srtp_ctx->ctx, &rtp_forward->srtp_ctx->sbuf, &protected);
-					if(res != srtp_err_status_ok) {
+					if (res != srtp_err_status_ok)
+					{
 						janus_rtp_header *header = (janus_rtp_header *)&rtp_forward->srtp_ctx->sbuf;
 						guint32 timestamp = ntohl(header->timestamp);
 						guint16 seq = ntohs(header->seq_number);
-						JANUS_LOG(LOG_ERR, "Error encrypting %s packet for %s... %s (len=%d-->%d, ts=%"SCNu32", seq=%"SCNu16")...\n",
-							(video ? "Video" : "Audio"), participant->display, janus_srtp_error_str(res), len, protected, timestamp, seq);
-					} else {
+						JANUS_LOG(LOG_ERR, "Error encrypting %s packet for %s... %s (len=%d-->%d, ts=%" SCNu32 ", seq=%" SCNu16 ")...\n",
+								  (video ? "Video" : "Audio"), participant->display, janus_srtp_error_str(res), len, protected, timestamp, seq);
+					}
+					else
+					{
 						rtp_forward->srtp_ctx->slen = protected;
 					}
 				}
-				if(rtp_forward->srtp_ctx->slen > 0) {
+				if (rtp_forward->srtp_ctx->slen > 0)
+				{
 					/*如果有解密秘钥*/
-					struct sockaddr *address = (rtp_forward->serv_addr.sin_family == AF_INET ?
-						(struct sockaddr *)&rtp_forward->serv_addr : (struct sockaddr *)&rtp_forward->serv_addr6);
+					struct sockaddr *address = (rtp_forward->serv_addr.sin_family == AF_INET ? (struct sockaddr *)&rtp_forward->serv_addr : (struct sockaddr *)&rtp_forward->serv_addr6);
 					size_t addrlen = (rtp_forward->serv_addr.sin_family == AF_INET ? sizeof(rtp_forward->serv_addr) : sizeof(rtp_forward->serv_addr6));
-					if(sendto(participant->udp_sock, rtp_forward->srtp_ctx->sbuf, rtp_forward->srtp_ctx->slen, 0, address, addrlen) < 0) {
+					if (sendto(participant->udp_sock, rtp_forward->srtp_ctx->sbuf, rtp_forward->srtp_ctx->slen, 0, address, addrlen) < 0)
+					{
 						JANUS_LOG(LOG_HUGE, "Error forwarding SRTP %s packet for %s... %s (len=%d)...\n",
-							(video ? "video" : "audio"), participant->display, g_strerror(errno), rtp_forward->srtp_ctx->slen);
+								  (video ? "video" : "audio"), participant->display, g_strerror(errno), rtp_forward->srtp_ctx->slen);
 					}
 				}
 			}
-			/* Restore original values of payload type and SSRC before going on 
+			/* Restore original values of payload type and SSRC before going on
 			在继续之前恢复有效负载类型和 SSRC 的原始值*/
 			rtp->type = pt;
 			rtp->ssrc = htonl(ssrc);
@@ -5827,18 +6372,21 @@ void janus_videoroom_incoming_rtp(janus_plugin_session *handle, janus_plugin_rtp
 		/* Set the payload type of the publisher 设置发布者的负载类型 */
 		rtp->type = video ? participant->video_pt : participant->audio_pt;
 		/* Save the frame if we're recording 保存关键帧 */
-		if(!video || (participant->ssrc[0] == 0 && participant->rid[0] == NULL)) {
+		if (!video || (participant->ssrc[0] == 0 && participant->rid[0] == NULL))
+		{
 			janus_recorder_save_frame(video ? participant->vrc : participant->arc, buf, len);
-		} else {
+		}
+		else
+		{
 			/* We're simulcasting, save the best video quality 我们正在联播，保存最好的视频质量 */
-			gboolean save = janus_rtp_simulcasting_context_process_rtp(&participant->rec_simctx,
-				buf, len, participant->ssrc, participant->rid, participant->vcodec, &participant->rec_ctx);
-			if(save) {
+			gboolean save = janus_rtp_simulcasting_context_process_rtp(&participant->rec_simctx, buf, len, participant->ssrc, participant->rid, participant->vcodec, &participant->rec_ctx);
+			if (save)
+			{
 				uint32_t seq_number = ntohs(rtp->seq_number);
 				uint32_t timestamp = ntohl(rtp->timestamp);
 				uint32_t ssrc = ntohl(rtp->ssrc);
 				janus_rtp_header_update(rtp, &participant->rec_ctx, TRUE, 0);
-				/* We use a fixed SSRC for the whole recording 
+				/* We use a fixed SSRC for the whole recording
 				我们使用固定的 SSRC 进行整个录制 */
 				rtp->ssrc = participant->ssrc[0];
 				janus_recorder_save_frame(participant->vrc, buf, len);
@@ -5857,97 +6405,118 @@ void janus_videoroom_incoming_rtp(janus_plugin_session *handle, janus_plugin_rtp
 		packet.is_rtp = TRUE;
 		packet.is_video = video;
 		packet.svc = FALSE;
-		if(video && videoroom->do_svc) {
-			/* We're doing SVC: let's parse this packet to see which layers are there 
+		if (video && videoroom->do_svc)
+		{
+			/* We're doing SVC: let's parse this packet to see which layers are there
 			SVC：让我们解析这个数据包，看看有哪些层*/
 			int plen = 0;
 			/*快速访问RTP payload 跳过包头和拓展*/
 			char *payload = janus_rtp_payload(buf, len, &plen);
-			if(payload == NULL) {
+			if (payload == NULL)
+			{
 				janus_videoroom_publisher_dereference_nodebug(participant);
 				return;
 			}
 			gboolean found = FALSE;
 			memset(&packet.svc_info, 0, sizeof(packet.svc_info));
-			if(janus_vp9_parse_svc(payload, plen, &found, &packet.svc_info) == 0) {
+			if (janus_vp9_parse_svc(payload, plen, &found, &packet.svc_info) == 0)
+			{
 				packet.svc = found;
 			}
 		}
 		packet.ssrc[0] = (sc != -1 ? participant->ssrc[0] : 0);
 		packet.ssrc[1] = (sc != -1 ? participant->ssrc[1] : 0);
 		packet.ssrc[2] = (sc != -1 ? participant->ssrc[2] : 0);
-		/* Backup the actual timestamp and sequence number set by the publisher, in case switching is involved 
+		/* Backup the actual timestamp and sequence number set by the publisher, in case switching is involved
 		备份发布者设置的实际时间戳和序列号，以防涉及切换 */
 		packet.timestamp = ntohl(packet.data->timestamp);
 		packet.seq_number = ntohs(packet.data->seq_number);
-		/* Go: some viewers may decide to drop the packet, but that's up to them 
+		/* Go: some viewers may decide to drop the packet, but that's up to them
 		一些观众可能会决定丢弃数据包，但这取决于他们*/
 		janus_mutex_lock_nodebug(&participant->subscribers_mutex);
 		g_slist_foreach(participant->subscribers, janus_videoroom_relay_rtp_packet, &packet);
 		janus_mutex_unlock_nodebug(&participant->subscribers_mutex);
 
-		/* Check if we need to send any REMB, FIR or PLI back to this publisher 
+		/* Check if we need to send any REMB, FIR or PLI back to this publisher
 		检查我们是否需要将任何 REMB、FIR 或 PLI 发送回此发布者 */
-		if(video && participant->video_active && !participant->video_muted) {
+		if (video && participant->video_active && !participant->video_muted)
+		{
 			/* Did we send a REMB already, or is it time to send one?
 			我们已经发送了 REMB，还是该发送一个？ */
 			gboolean send_remb = FALSE;
-			if(participant->remb_latest == 0 && participant->remb_startup > 0) {
+			if (participant->remb_latest == 0 && participant->remb_startup > 0)
+			{
 				//从来没有发送过REMB消息，而且每一秒增量大于0，用于在启动阶段逐渐提升可用比特率
 				/* Still in the starting phase, send the ramp-up REMB feedback
 				仍处于启动阶段，发送ramp-up REMB 反馈 */
 				send_remb = TRUE;
-			} else if(participant->remb_latest > 0 && janus_get_monotonic_time()-participant->remb_latest >= 5*G_USEC_PER_SEC) {
+			}
+			else if (participant->remb_latest > 0 && janus_get_monotonic_time() - participant->remb_latest >= 5 * G_USEC_PER_SEC)
+			{
 				/* 5 seconds have passed since the last REMB, send a new one
 				距离上一个 REMB 已经过去了几秒，发送一个新的 */
 				send_remb = TRUE;
 			}
 
-			if(send_remb && participant->bitrate) {
+			if (send_remb && participant->bitrate)
+			{
 				//如果目前需要我们发送REMB控制带宽，而且全局比特率限制不为0，那么我们可以发送REMB请求
 				/* We send a few incremental REMB messages at startup 我们在启动时发送一些 REMB 消息 */
 				uint32_t bitrate = participant->bitrate;
-				if(participant->remb_startup > 0) {
+				if (participant->remb_startup > 0)
+				{
 					//在participant->remb_startup为1时bitrate达到最大限度，一开始remb_startup越大，到达最大比特率的时间越久
-					bitrate = bitrate/participant->remb_startup;
+					bitrate = bitrate / participant->remb_startup;
 					participant->remb_startup--;
 				}
-				JANUS_LOG(LOG_VERB, "Sending REMB (%s, %"SCNu32")\n", participant->display, bitrate);
+				JANUS_LOG(LOG_VERB, "Sending REMB (%s, %" SCNu32 ")\n", participant->display, bitrate);
 				gateway->send_remb(handle, bitrate);
-				if(participant->remb_startup == 0)
-				    //如果已经调节到最大比特率，记录最后一次调节的时间
+				if (participant->remb_startup == 0)
+					//如果已经调节到最大比特率，记录最后一次调节的时间
 					participant->remb_latest = janus_get_monotonic_time();
 			}
 			/* Generate FIR/PLI too, if needed 生产FIR/PLI 请求关键帧，如果需要*/
-			if(video && participant->video_active && !participant->video_muted && (videoroom->fir_freq > 0)) {
+			if (video && participant->video_active && !participant->video_muted && (videoroom->fir_freq > 0))
+			{
 				/* We generate RTCP every tot seconds/frames 我们每 t 秒/帧生成 RTCP */
 				gint64 now = janus_get_monotonic_time();
 				/* First check if this is a keyframe, though: if so, we reset the timer
 				首先检查这是否是关键帧：如果是，我们重置计时器 */
 				int plen = 0;
 				char *payload = janus_rtp_payload(buf, len, &plen);
-				if(payload == NULL) {
+				if (payload == NULL)
+				{
 					janus_videoroom_publisher_dereference_nodebug(participant);
 					return;
 				}
-				if(participant->vcodec == JANUS_VIDEOCODEC_VP8) {
-					if(janus_vp8_is_keyframe(payload, plen))
-						participant->fir_latest = now;
-				} else if(participant->vcodec == JANUS_VIDEOCODEC_VP9) {
-					if(janus_vp9_is_keyframe(payload, plen))
-						participant->fir_latest = now;
-				} else if(participant->vcodec == JANUS_VIDEOCODEC_H264) {
-					if(janus_h264_is_keyframe(payload, plen))
-						participant->fir_latest = now;
-				} else if(participant->vcodec == JANUS_VIDEOCODEC_AV1) {
-					if(janus_av1_is_keyframe(payload, plen))
-						participant->fir_latest = now;
-				} else if(participant->vcodec == JANUS_VIDEOCODEC_H265) {
-					if(janus_h265_is_keyframe(payload, plen))
+				if (participant->vcodec == JANUS_VIDEOCODEC_VP8)
+				{
+					if (janus_vp8_is_keyframe(payload, plen))
 						participant->fir_latest = now;
 				}
-				//fir_freq 常规通过 FIR 请求关键帧的频率（0=禁用）单位秒
-				if((now-participant->fir_latest) >= ((gint64)videoroom->fir_freq*G_USEC_PER_SEC)) {
+				else if (participant->vcodec == JANUS_VIDEOCODEC_VP9)
+				{
+					if (janus_vp9_is_keyframe(payload, plen))
+						participant->fir_latest = now;
+				}
+				else if (participant->vcodec == JANUS_VIDEOCODEC_H264)
+				{
+					if (janus_h264_is_keyframe(payload, plen))
+						participant->fir_latest = now;
+				}
+				else if (participant->vcodec == JANUS_VIDEOCODEC_AV1)
+				{
+					if (janus_av1_is_keyframe(payload, plen))
+						participant->fir_latest = now;
+				}
+				else if (participant->vcodec == JANUS_VIDEOCODEC_H265)
+				{
+					if (janus_h265_is_keyframe(payload, plen))
+						participant->fir_latest = now;
+				}
+				// fir_freq 常规通过 FIR 请求关键帧的频率（0=禁用）单位秒
+				if ((now - participant->fir_latest) >= ((gint64)videoroom->fir_freq * G_USEC_PER_SEC))
+				{
 					/* FIXME We send a FIR every tot seconds FIXME 我们每 t 秒发送一次 FIR */
 					//通过pli 请求关键帧
 					janus_videoroom_reqpli(participant, "Regular keyframe request");
@@ -5960,38 +6529,45 @@ void janus_videoroom_incoming_rtp(janus_plugin_session *handle, janus_plugin_rtp
 
 /**
  * @brief 处理对方的传入RTCP包
- * 
- * @param handle 
- * @param packet 
+ *
+ * @param handle
+ * @param packet
  */
-void janus_videoroom_incoming_rtcp(janus_plugin_session *handle, janus_plugin_rtcp *packet) {
-	if(g_atomic_int_get(&stopping) || !g_atomic_int_get(&initialized))
+void janus_videoroom_incoming_rtcp(janus_plugin_session *handle, janus_plugin_rtcp *packet)
+{
+	if (g_atomic_int_get(&stopping) || !g_atomic_int_get(&initialized))
 		return;
 	janus_videoroom_session *session = (janus_videoroom_session *)handle->plugin_handle;
-	if(!session) {
+	if (!session)
+	{
 		JANUS_LOG(LOG_ERR, "No session associated with this handle...\n");
 		return;
 	}
-	if(g_atomic_int_get(&session->destroyed))
+	if (g_atomic_int_get(&session->destroyed))
 		return;
 	char *buf = packet->buffer;
 	uint16_t len = packet->length;
-	if(session->participant_type == janus_videoroom_p_type_subscriber) {
-		/* A subscriber sent some RTCP, check what it is and if we need to forward it to the publisher 
+	if (session->participant_type == janus_videoroom_p_type_subscriber)
+	{
+		/* A subscriber sent some RTCP, check what it is and if we need to forward it to the publisher
 		订阅者发送了一些 RTCP，检查它是什么以及我们是否需要将其转发给发布者 */
 		janus_videoroom_subscriber *s = janus_videoroom_session_get_subscriber_nodebug(session);
-		if(s == NULL)
+		if (s == NULL)
 			return;
-		if(g_atomic_int_get(&s->destroyed) || !s->video) {
+		if (g_atomic_int_get(&s->destroyed) || !s->video)
+		{
 			janus_refcount_decrease_nodebug(&s->ref);
-			return;	/* The only feedback we handle is video related anyway... 无论如何，我们处理的唯一反馈是与视频相关的 */
+			return; /* The only feedback we handle is video related anyway... 无论如何，我们处理的唯一反馈是与视频相关的 */
 		}
-		if(janus_rtcp_has_fir(buf, len) || janus_rtcp_has_pli(buf, len)) {
-			/* We got a FIR or PLI, forward a PLI it to the publisher 
+		if (janus_rtcp_has_fir(buf, len) || janus_rtcp_has_pli(buf, len))
+		{
+			/* We got a FIR or PLI, forward a PLI it to the publisher
 			我们得到了 FIR 或 PLI，将 PLI 转发给发布者*/
-			if(s->feed) {
+			if (s->feed)
+			{
 				janus_videoroom_publisher *p = s->feed;
-				if(p && p->session) {
+				if (p && p->session)
+				{
 					//报告pli 请求关键帧
 					janus_videoroom_reqpli(p, "PLI from subscriber");
 				}
@@ -5999,7 +6575,8 @@ void janus_videoroom_incoming_rtcp(janus_plugin_session *handle, janus_plugin_rt
 		}
 		//检查现有的 RTCP REMB 消息以恢复报告的比特率
 		uint32_t bitrate = janus_rtcp_get_remb(buf, len);
-		if(bitrate > 0) {
+		if (bitrate > 0)
+		{
 			/* FIXME We got a REMB from this subscriber, should we do something about it?
 			我们从这个订阅者那里得到了一个 REMB，我们应该做些什么吗？ */
 		}
@@ -6009,22 +6586,24 @@ void janus_videoroom_incoming_rtcp(janus_plugin_session *handle, janus_plugin_rt
 
 /**
  * @brief 处理对方的传入data包
- * 
- * @param handle 
- * @param packet 
+ *
+ * @param handle
+ * @param packet
  */
-void janus_videoroom_incoming_data(janus_plugin_session *handle, janus_plugin_data *packet) {
-	if(handle == NULL || g_atomic_int_get(&handle->stopped) || g_atomic_int_get(&stopping) || !g_atomic_int_get(&initialized))
+void janus_videoroom_incoming_data(janus_plugin_session *handle, janus_plugin_data *packet)
+{
+	if (handle == NULL || g_atomic_int_get(&handle->stopped) || g_atomic_int_get(&stopping) || !g_atomic_int_get(&initialized))
 		return;
-	if(packet->buffer == NULL || packet->length == 0)
+	if (packet->buffer == NULL || packet->length == 0)
 		return;
 	janus_videoroom_session *session = (janus_videoroom_session *)handle->plugin_handle;
-	if(!session || g_atomic_int_get(&session->destroyed) || session->participant_type != janus_videoroom_p_type_publisher)
+	if (!session || g_atomic_int_get(&session->destroyed) || session->participant_type != janus_videoroom_p_type_publisher)
 		return;
 	janus_videoroom_publisher *participant = janus_videoroom_session_get_publisher_nodebug(session);
-	if(participant == NULL)
+	if (participant == NULL)
 		return;
-	if(g_atomic_int_get(&participant->destroyed) || !participant->data_active || participant->data_muted || participant->kicked) {
+	if (g_atomic_int_get(&participant->destroyed) || !participant->data_active || participant->data_muted || participant->kicked)
+	{
 		janus_videoroom_publisher_dereference_nodebug(participant);
 		return;
 	}
@@ -6037,21 +6616,23 @@ void janus_videoroom_incoming_data(janus_plugin_session *handle, janus_plugin_da
 	GHashTableIter iter;
 	gpointer value;
 	g_hash_table_iter_init(&iter, participant->rtp_forwarders);
-	while(participant->udp_sock > 0 && g_hash_table_iter_next(&iter, NULL, &value)) {
-		janus_videoroom_rtp_forwarder* rtp_forward = (janus_videoroom_rtp_forwarder*)value;
-		if(rtp_forward->is_data) {
-			struct sockaddr *address = (rtp_forward->serv_addr.sin_family == AF_INET ?
-				(struct sockaddr *)&rtp_forward->serv_addr : (struct sockaddr *)&rtp_forward->serv_addr6);
+	while (participant->udp_sock > 0 && g_hash_table_iter_next(&iter, NULL, &value))
+	{
+		janus_videoroom_rtp_forwarder *rtp_forward = (janus_videoroom_rtp_forwarder *)value;
+		if (rtp_forward->is_data)
+		{
+			struct sockaddr *address = (rtp_forward->serv_addr.sin_family == AF_INET ? (struct sockaddr *)&rtp_forward->serv_addr : (struct sockaddr *)&rtp_forward->serv_addr6);
 			size_t addrlen = (rtp_forward->serv_addr.sin_family == AF_INET ? sizeof(rtp_forward->serv_addr) : sizeof(rtp_forward->serv_addr6));
-			if(sendto(participant->udp_sock, buf, len, 0, address, addrlen) < 0) {
+			if (sendto(participant->udp_sock, buf, len, 0, address, addrlen) < 0)
+			{
 				JANUS_LOG(LOG_HUGE, "Error forwarding data packet for %s... %s (len=%d)...\n",
-					participant->display, g_strerror(errno), len);
+						  participant->display, g_strerror(errno), len);
 			}
 		}
 	}
 	janus_mutex_unlock(&participant->rtp_forwarders_mutex);
 	JANUS_LOG(LOG_VERB, "Got a %s DataChannel message (%d bytes) to forward\n",
-		packet->binary ? "binary" : "text", len);
+			  packet->binary ? "binary" : "text", len);
 	/* Save the message if we're recording 保存消息，如果我们在录制*/
 	janus_recorder_save_frame(participant->drc, buf, len);
 	/* Relay to all subscribers 转发给所有订阅者*/
@@ -6066,40 +6647,48 @@ void janus_videoroom_incoming_data(janus_plugin_session *handle, janus_plugin_da
 	janus_videoroom_publisher_dereference_nodebug(participant);
 }
 
-void janus_videoroom_data_ready(janus_plugin_session *handle) {
-	if(handle == NULL || g_atomic_int_get(&handle->stopped) ||
-			g_atomic_int_get(&stopping) || !g_atomic_int_get(&initialized) || !gateway)
+void janus_videoroom_data_ready(janus_plugin_session *handle)
+{
+	if (handle == NULL || g_atomic_int_get(&handle->stopped) ||
+		g_atomic_int_get(&stopping) || !g_atomic_int_get(&initialized) || !gateway)
 		return;
 	/* Data channels are writable */
 	janus_videoroom_session *session = (janus_videoroom_session *)handle->plugin_handle;
-	if(!session || g_atomic_int_get(&session->destroyed) || g_atomic_int_get(&session->hangingup))
+	if (!session || g_atomic_int_get(&session->destroyed) || g_atomic_int_get(&session->hangingup))
 		return;
-	if(g_atomic_int_compare_and_exchange(&session->dataready, 0, 1)) {
+	if (g_atomic_int_compare_and_exchange(&session->dataready, 0, 1))
+	{
 		JANUS_LOG(LOG_INFO, "[%s-%p] Data channel available\n", JANUS_VIDEOROOM_PACKAGE, handle);
 	}
 }
 
-void janus_videoroom_slow_link(janus_plugin_session *handle, int uplink, int video) {
+void janus_videoroom_slow_link(janus_plugin_session *handle, int uplink, int video)
+{
 	/* The core is informing us that our peer got too many NACKs, are we pushing media too hard? */
-	if(handle == NULL || g_atomic_int_get(&handle->stopped) || g_atomic_int_get(&stopping) || !g_atomic_int_get(&initialized))
+	if (handle == NULL || g_atomic_int_get(&handle->stopped) || g_atomic_int_get(&stopping) || !g_atomic_int_get(&initialized))
 		return;
 	janus_mutex_lock(&sessions_mutex);
 	janus_videoroom_session *session = janus_videoroom_lookup_session(handle);
-	if(!session || g_atomic_int_get(&session->destroyed) || !session->participant) {
+	if (!session || g_atomic_int_get(&session->destroyed) || !session->participant)
+	{
 		janus_mutex_unlock(&sessions_mutex);
 		return;
 	}
 	janus_refcount_increase(&session->ref);
 	janus_mutex_unlock(&sessions_mutex);
 	/* Check if it's an uplink (publisher) or downlink (viewer) issue */
-	if(session->participant_type == janus_videoroom_p_type_publisher) {
-		if(!uplink) {
+	if (session->participant_type == janus_videoroom_p_type_publisher)
+	{
+		if (!uplink)
+		{
 			janus_videoroom_publisher *publisher = janus_videoroom_session_get_publisher(session);
-			if(publisher == NULL) {
+			if (publisher == NULL)
+			{
 				janus_refcount_decrease(&session->ref);
 				return;
 			}
-			if(g_atomic_int_get(&publisher->destroyed)) {
+			if (g_atomic_int_get(&publisher->destroyed))
+			{
 				janus_refcount_decrease(&publisher->ref);
 				janus_refcount_decrease(&session->ref);
 				return;
@@ -6114,17 +6703,24 @@ void janus_videoroom_slow_link(janus_plugin_session *handle, int uplink, int vid
 			gateway->push_event(session->handle, &janus_videoroom_plugin, NULL, event, NULL);
 			json_decref(event);
 			janus_refcount_decrease(&publisher->ref);
-		} else {
+		}
+		else
+		{
 			JANUS_LOG(LOG_WARN, "Got a slow uplink on a VideoRoom publisher? Weird, because it doesn't receive media...\n");
 		}
-	} else if(session->participant_type == janus_videoroom_p_type_subscriber) {
-		if(uplink) {
+	}
+	else if (session->participant_type == janus_videoroom_p_type_subscriber)
+	{
+		if (uplink)
+		{
 			janus_videoroom_subscriber *subscriber = janus_videoroom_session_get_subscriber(session);
-			if(subscriber == NULL) {
+			if (subscriber == NULL)
+			{
 				janus_refcount_decrease(&session->ref);
 				return;
 			}
-			if(g_atomic_int_get(&subscriber->destroyed)) {
+			if (g_atomic_int_get(&subscriber->destroyed))
+			{
 				janus_refcount_decrease(&subscriber->ref);
 				janus_refcount_decrease(&session->ref);
 				return;
@@ -6135,7 +6731,9 @@ void janus_videoroom_slow_link(janus_plugin_session *handle, int uplink, int vid
 			json_object_set_new(event, "videoroom", json_string("slow_link"));
 			gateway->push_event(session->handle, &janus_videoroom_plugin, NULL, event, NULL);
 			json_decref(event);
-		} else {
+		}
+		else
+		{
 			JANUS_LOG(LOG_WARN, "Got a slow downlink on a VideoRoom viewer? Weird, because it doesn't send media...\n");
 		}
 	}
@@ -6144,87 +6742,106 @@ void janus_videoroom_slow_link(janus_plugin_session *handle, int uplink, int vid
 
 /**
  * @brief 开始录制
- * 
- * @param participant 
- * @param audio 
- * @param video 
- * @param data 
+ *
+ * @param participant
+ * @param audio
+ * @param video
+ * @param data
  */
-static void janus_videoroom_recorder_create(janus_videoroom_publisher *participant, gboolean audio, gboolean video, gboolean data) {
+static void janus_videoroom_recorder_create(janus_videoroom_publisher *participant, gboolean audio, gboolean video, gboolean data)
+{
 	char filename[255];
 	janus_recorder *rc = NULL;
 	gint64 now = janus_get_real_time();
-	if(audio && participant->arc == NULL) {
+	if (audio && participant->arc == NULL)
+	{
 		memset(filename, 0, 255);
-		if(participant->recording_base) {
+		if (participant->recording_base)
+		{
 			/* Use the filename and path we have been provided */
 			g_snprintf(filename, 255, "%s-audio", participant->recording_base);
 			rc = janus_recorder_create(participant->room->rec_dir,
-				janus_audiocodec_name(participant->acodec), filename);
-			if(rc == NULL) {
+									   janus_audiocodec_name(participant->acodec), filename);
+			if (rc == NULL)
+			{
 				JANUS_LOG(LOG_ERR, "Couldn't open an audio recording file for this publisher!\n");
 			}
-		} else {
+		}
+		else
+		{
 			/* Build a filename */
-			g_snprintf(filename, 255, "videoroom-%s-user-%s-%"SCNi64"-audio",
-				participant->room_id_str, participant->user_id_str, now);
+			g_snprintf(filename, 255, "videoroom-%s-user-%s-%" SCNi64 "-audio",
+					   participant->room_id_str, participant->user_id_str, now);
 			rc = janus_recorder_create(participant->room->rec_dir,
-				janus_audiocodec_name(participant->acodec), filename);
-			if(rc == NULL) {
+									   janus_audiocodec_name(participant->acodec), filename);
+			if (rc == NULL)
+			{
 				JANUS_LOG(LOG_ERR, "Couldn't open an audio recording file for this publisher!\n");
 			}
 		}
 		/* If media is encrypted, mark it in the recording */
-		if(participant->e2ee)
+		if (participant->e2ee)
 			janus_recorder_encrypted(rc);
 		participant->arc = rc;
 	}
-	if(video && participant->vrc == NULL) {
+	if (video && participant->vrc == NULL)
+	{
 		janus_rtp_switching_context_reset(&participant->rec_ctx);
 		janus_rtp_simulcasting_context_reset(&participant->rec_simctx);
 		participant->rec_simctx.substream_target = 2;
 		participant->rec_simctx.templayer_target = 2;
 		memset(filename, 0, 255);
-		if(participant->recording_base) {
+		if (participant->recording_base)
+		{
 			/* Use the filename and path we have been provided */
 			g_snprintf(filename, 255, "%s-video", participant->recording_base);
 			rc = janus_recorder_create_full(participant->room->rec_dir,
-				janus_videocodec_name(participant->vcodec), participant->vfmtp, filename);
-			if(rc == NULL) {
+											janus_videocodec_name(participant->vcodec), participant->vfmtp, filename);
+			if (rc == NULL)
+			{
 				JANUS_LOG(LOG_ERR, "Couldn't open an video recording file for this publisher!\n");
 			}
-		} else {
+		}
+		else
+		{
 			/* Build a filename */
-			g_snprintf(filename, 255, "videoroom-%s-user-%s-%"SCNi64"-video",
-				participant->room_id_str, participant->user_id_str, now);
+			g_snprintf(filename, 255, "videoroom-%s-user-%s-%" SCNi64 "-video",
+					   participant->room_id_str, participant->user_id_str, now);
 			rc = janus_recorder_create_full(participant->room->rec_dir,
-				janus_videocodec_name(participant->vcodec), participant->vfmtp, filename);
-			if(rc == NULL) {
+											janus_videocodec_name(participant->vcodec), participant->vfmtp, filename);
+			if (rc == NULL)
+			{
 				JANUS_LOG(LOG_ERR, "Couldn't open an video recording file for this publisher!\n");
 			}
 		}
 		/* If media is encrypted, mark it in the recording */
-		if(participant->e2ee)
+		if (participant->e2ee)
 			janus_recorder_encrypted(rc);
 		participant->vrc = rc;
 	}
-	if(data && participant->drc == NULL) {
+	if (data && participant->drc == NULL)
+	{
 		memset(filename, 0, 255);
-		if(participant->recording_base) {
+		if (participant->recording_base)
+		{
 			/* Use the filename and path we have been provided */
 			g_snprintf(filename, 255, "%s-data", participant->recording_base);
 			rc = janus_recorder_create(participant->room->rec_dir,
-				"text", filename);
-			if(rc == NULL) {
+									   "text", filename);
+			if (rc == NULL)
+			{
 				JANUS_LOG(LOG_ERR, "Couldn't open an data recording file for this publisher!\n");
 			}
-		} else {
+		}
+		else
+		{
 			/* Build a filename */
-			g_snprintf(filename, 255, "videoroom-%s-user-%s-%"SCNi64"-data",
-				participant->room_id_str, participant->user_id_str, now);
+			g_snprintf(filename, 255, "videoroom-%s-user-%s-%" SCNi64 "-data",
+					   participant->room_id_str, participant->user_id_str, now);
 			rc = janus_recorder_create(participant->room->rec_dir,
-				"text", filename);
-			if(rc == NULL) {
+									   "text", filename);
+			if (rc == NULL)
+			{
 				JANUS_LOG(LOG_ERR, "Couldn't open an data recording file for this publisher!\n");
 			}
 		}
@@ -6235,25 +6852,29 @@ static void janus_videoroom_recorder_create(janus_videoroom_publisher *participa
 
 /**
  * @brief 关闭录制
- * 
- * @param participant 
+ *
+ * @param participant
  */
-static void janus_videoroom_recorder_close(janus_videoroom_publisher *participant) {
-	if(participant->arc) {
+static void janus_videoroom_recorder_close(janus_videoroom_publisher *participant)
+{
+	if (participant->arc)
+	{
 		janus_recorder *rc = participant->arc;
 		participant->arc = NULL;
 		janus_recorder_close(rc);
 		JANUS_LOG(LOG_INFO, "Closed audio recording %s\n", rc->filename ? rc->filename : "??");
 		janus_recorder_destroy(rc);
 	}
-	if(participant->vrc) {
+	if (participant->vrc)
+	{
 		janus_recorder *rc = participant->vrc;
 		participant->vrc = NULL;
 		janus_recorder_close(rc);
 		JANUS_LOG(LOG_INFO, "Closed video recording %s\n", rc->filename ? rc->filename : "??");
 		janus_recorder_destroy(rc);
 	}
-	if(participant->drc) {
+	if (participant->drc)
+	{
 		janus_recorder *rc = participant->drc;
 		participant->drc = NULL;
 		janus_recorder_close(rc);
@@ -6262,18 +6883,21 @@ static void janus_videoroom_recorder_close(janus_videoroom_publisher *participan
 	}
 }
 
-void janus_videoroom_hangup_media(janus_plugin_session *handle) {
+void janus_videoroom_hangup_media(janus_plugin_session *handle)
+{
 	JANUS_LOG(LOG_INFO, "[%s-%p] No WebRTC media anymore; %p %p\n", JANUS_VIDEOROOM_PACKAGE, handle, handle->gateway_handle, handle->plugin_handle);
-	if(g_atomic_int_get(&stopping) || !g_atomic_int_get(&initialized))
+	if (g_atomic_int_get(&stopping) || !g_atomic_int_get(&initialized))
 		return;
 	janus_mutex_lock(&sessions_mutex);
 	janus_videoroom_session *session = janus_videoroom_lookup_session(handle);
-	if(!session) {
+	if (!session)
+	{
 		JANUS_LOG(LOG_ERR, "No session associated with this handle...\n");
 		janus_mutex_unlock(&sessions_mutex);
 		return;
 	}
-	if(g_atomic_int_get(&session->destroyed)) {
+	if (g_atomic_int_get(&session->destroyed))
+	{
 		janus_mutex_unlock(&sessions_mutex);
 		return;
 	}
@@ -6283,19 +6907,23 @@ void janus_videoroom_hangup_media(janus_plugin_session *handle) {
 	janus_refcount_decrease(&session->ref);
 }
 
-static void janus_videoroom_hangup_subscriber(janus_videoroom_subscriber *s) {
+static void janus_videoroom_hangup_subscriber(janus_videoroom_subscriber *s)
+{
 	/* Already hung up */
-	if (!s->feed) {
+	if (!s->feed)
+	{
 		return;
 	}
 	/* Check if the owner needs to be cleaned up */
 	janus_videoroom *room = s->room;
-	if(room != NULL)
+	if (room != NULL)
 		janus_refcount_increase(&room->ref);
-	if(s->pvt_id > 0 && room != NULL) {
+	if (s->pvt_id > 0 && room != NULL)
+	{
 		janus_mutex_lock(&room->mutex);
 		janus_videoroom_publisher *owner = g_hash_table_lookup(room->private_ids, GUINT_TO_POINTER(s->pvt_id));
-		if(owner != NULL) {
+		if (owner != NULL)
+		{
 			janus_mutex_lock(&owner->own_subscriptions_mutex);
 			/* Note: we should refcount these subscription-publisher mappings as well */
 			owner->subscriptions = g_slist_remove(owner->subscriptions, s);
@@ -6304,36 +6932,40 @@ static void janus_videoroom_hangup_subscriber(janus_videoroom_subscriber *s) {
 		janus_mutex_unlock(&room->mutex);
 	}
 	janus_mutex_lock(&s->session->mutex);
-	if(s->feed)
+	if (s->feed)
 		g_clear_pointer(&s->feed, janus_videoroom_publisher_dereference_by_subscriber);
 	janus_mutex_unlock(&s->session->mutex);
 	/* Only "leave" the room if we're closing the PeerConnection at this point */
-	if(s->close_pc) {
-		if(s->room)
+	if (s->close_pc)
+	{
+		if (s->room)
 			g_clear_pointer(&s->room, janus_videoroom_room_dereference);
-		if(s->session)
+		if (s->session)
 			gateway->close_pc(s->session->handle);
 		/* Remove the reference we added when "joining" the room */
 		janus_refcount_decrease(&s->ref);
 	}
-	if(room != NULL)
+	if (room != NULL)
 		janus_refcount_decrease(&room->ref);
 }
 
 /**
  * @brief 内部处理挂断媒体
- * 
- * @param session_data 
+ *
+ * @param session_data
  */
-static void janus_videoroom_hangup_media_internal(gpointer session_data) {
+static void janus_videoroom_hangup_media_internal(gpointer session_data)
+{
 	janus_videoroom_session *session = (janus_videoroom_session *)session_data;
 	g_atomic_int_set(&session->started, 0);
-	if(!g_atomic_int_compare_and_exchange(&session->hangingup, 0, 1)) {
+	if (!g_atomic_int_compare_and_exchange(&session->hangingup, 0, 1))
+	{
 		return;
 	}
 	g_atomic_int_set(&session->dataready, 0);
 	/* Send an event to the browser and tell the PeerConnection is over */
-	if(session->participant_type == janus_videoroom_p_type_publisher) {
+	if (session->participant_type == janus_videoroom_p_type_publisher)
+	{
 		/* This publisher just 'unpublished' */
 		janus_videoroom_publisher *participant = janus_videoroom_session_get_publisher(session);
 		/* Get rid of the recorders, if available */
@@ -6364,8 +6996,9 @@ static void janus_videoroom_hangup_media_internal(gpointer session_data) {
 		participant->vfmtp = NULL;
 		participant->acodec = JANUS_AUDIOCODEC_NONE;
 		participant->vcodec = JANUS_VIDEOCODEC_NONE;
-		int i=0;
-		for(i=0; i<3; i++) {
+		int i = 0;
+		for (i = 0; i < 3; i++)
+		{
 			participant->ssrc[i] = 0;
 			g_free(participant->rid[i]);
 			participant->rid[i] = NULL;
@@ -6373,10 +7006,12 @@ static void janus_videoroom_hangup_media_internal(gpointer session_data) {
 		GSList *subscribers = participant->subscribers;
 		participant->subscribers = NULL;
 		/* Hangup all subscribers */
-		while(subscribers) {
+		while (subscribers)
+		{
 			janus_videoroom_subscriber *s = (janus_videoroom_subscriber *)subscribers->data;
 			subscribers = g_slist_remove(subscribers, s);
-			if(s) {
+			if (s)
+			{
 				janus_videoroom_hangup_subscriber(s);
 			}
 		}
@@ -6384,23 +7019,30 @@ static void janus_videoroom_hangup_media_internal(gpointer session_data) {
 		janus_mutex_unlock(&participant->subscribers_mutex);
 		janus_videoroom_leave_or_unpublish(participant, FALSE, FALSE);
 		janus_refcount_decrease(&participant->ref);
-	} else if(session->participant_type == janus_videoroom_p_type_subscriber) {
+	}
+	else if (session->participant_type == janus_videoroom_p_type_subscriber)
+	{
 		/* Get rid of subscriber */
 		janus_videoroom_subscriber *subscriber = janus_videoroom_session_get_subscriber(session);
-		if(subscriber) {
+		if (subscriber)
+		{
 			subscriber->paused = TRUE;
 			janus_mutex_lock(&session->mutex);
 			janus_videoroom_publisher *publisher = subscriber->feed;
 			/* It is safe to use feed as the only other place sets feed to NULL
 			   is in this function and accessing to this function is synchronized
 			   by sessions_mutex */
-			if(publisher == NULL || g_atomic_int_get(&publisher->destroyed)) {
+			if (publisher == NULL || g_atomic_int_get(&publisher->destroyed))
+			{
 				janus_mutex_unlock(&session->mutex);
-			} else {
+			}
+			else
+			{
 				janus_refcount_increase(&publisher->ref);
 				janus_mutex_unlock(&session->mutex);
 				/* Also notify event handlers */
-				if(notify_events && gateway->events_is_enabled()) {
+				if (notify_events && gateway->events_is_enabled())
+				{
 					json_t *info = json_object();
 					json_object_set_new(info, "event", json_string("unsubscribed"));
 					json_object_set_new(info, "room", string_ids ? json_string(publisher->room_id_str) : json_integer(publisher->room_id));
@@ -6421,18 +7063,28 @@ static void janus_videoroom_hangup_media_internal(gpointer session_data) {
 	g_atomic_int_set(&session->hangingup, 0);
 }
 
-/* Thread to handle incoming messages 这是专门的线程来处理进入到videoRoom插件的消息 */
-static void *janus_videoroom_handler(void *data) {
+/**
+ * @brief Thread to handle incoming messages 这是专门的线程来处理进入到videoRoom插件的异步消息
+ *
+ * @param data
+ * @return void*
+ */
+static void *janus_videoroom_handler(void *data)
+{
 	JANUS_LOG(LOG_VERB, "Joining VideoRoom handler thread\n");
 	janus_videoroom_message *msg = NULL;
 	int error_code = 0;
 	char error_cause[512];
 	json_t *root = NULL;
-	while(g_atomic_int_get(&initialized) && !g_atomic_int_get(&stopping)) {
+	while (g_atomic_int_get(&initialized) && !g_atomic_int_get(&stopping))
+	{
+		//当程序已经初始化完成，并且程序没有退出的时候不断循环获取异步队列的请求
 		msg = g_async_queue_pop(messages);
-		if(msg == &exit_message)
+		if (msg == &exit_message)
+			//不处理退出消息
 			break;
-		if(msg->handle == NULL) {
+		if (msg->handle == NULL)
+		{
 			janus_videoroom_message_free(msg);
 			continue;
 		}
@@ -6440,22 +7092,31 @@ static void *janus_videoroom_handler(void *data) {
 		janus_videoroom_publisher *participant = NULL;
 		janus_videoroom_subscriber *subscriber = NULL;
 		janus_mutex_lock(&sessions_mutex);
+		//获取信息中handle的session
 		janus_videoroom_session *session = janus_videoroom_lookup_session(msg->handle);
-		if(!session) {
+		if (!session)
+		{
+			//没有找到该session
 			janus_mutex_unlock(&sessions_mutex);
 			JANUS_LOG(LOG_ERR, "No session associated with this handle...\n");
 			janus_videoroom_message_free(msg);
 			continue;
 		}
-		if(g_atomic_int_get(&session->destroyed)) {
+		if (g_atomic_int_get(&session->destroyed))
+		{
+			// session已被销毁
 			janus_mutex_unlock(&sessions_mutex);
 			janus_videoroom_message_free(msg);
 			continue;
 		}
-		if(session->participant_type == janus_videoroom_p_type_subscriber) {
+		if (session->participant_type == janus_videoroom_p_type_subscriber)
+		{
+			//如果该handle的角色是订阅者
 			subscriber = janus_videoroom_session_get_subscriber(session);
-			if(subscriber == NULL || g_atomic_int_get(&subscriber->destroyed)) {
-				if(subscriber != NULL)
+			if (subscriber == NULL || g_atomic_int_get(&subscriber->destroyed))
+			{
+				//没有找到订阅者信息，或者订阅信息已经被销毁
+				if (subscriber != NULL)
 					janus_refcount_decrease(&subscriber->ref);
 				janus_mutex_unlock(&sessions_mutex);
 				JANUS_LOG(LOG_ERR, "Invalid subscriber instance\n");
@@ -6463,7 +7124,9 @@ static void *janus_videoroom_handler(void *data) {
 				g_snprintf(error_cause, 512, "Invalid subscriber instance");
 				goto error;
 			}
-			if(subscriber->room == NULL) {
+			if (subscriber->room == NULL)
+			{
+				//如果订阅的房间为空，无法处理请求
 				janus_refcount_decrease(&subscriber->ref);
 				janus_mutex_unlock(&sessions_mutex);
 				JANUS_LOG(LOG_ERR, "No such room\n");
@@ -6473,11 +7136,14 @@ static void *janus_videoroom_handler(void *data) {
 			}
 		}
 		janus_mutex_unlock(&sessions_mutex);
-		/* Handle request */
+		/* Handle request 处理请求*/
 		error_code = 0;
 		root = NULL;
-		if(msg->message == NULL) {
-			if(session->participant_type == janus_videoroom_p_type_subscriber) {
+		if (msg->message == NULL)
+		{
+			//请求内容不为空
+			if (session->participant_type == janus_videoroom_p_type_subscriber)
+			{
 				janus_refcount_decrease(&subscriber->ref);
 			}
 			JANUS_LOG(LOG_ERR, "No message??\n");
@@ -6486,12 +7152,13 @@ static void *janus_videoroom_handler(void *data) {
 			goto error;
 		}
 		root = msg->message;
-		/* Get the request first */
-		JANUS_VALIDATE_JSON_OBJECT(root, request_parameters,
-			error_code, error_cause, TRUE,
-			JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT);
-		if(error_code != 0) {
-			if(session->participant_type == janus_videoroom_p_type_subscriber) {
+		/* Get the request first 判断该请求是否符合格式*/
+		JANUS_VALIDATE_JSON_OBJECT(root, request_parameters, error_code, error_cause, TRUE, JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT);
+		if (error_code != 0)
+		{
+			//如果请求格式错误，释放上面获取的subscriber引用
+			if (session->participant_type == janus_videoroom_p_type_subscriber)
+			{
 				janus_refcount_decrease(&subscriber->ref);
 			}
 			goto error;
@@ -6500,74 +7167,102 @@ static void *janus_videoroom_handler(void *data) {
 		const char *request_text = json_string_value(request);
 		json_t *event = NULL;
 		gboolean sdp_update = FALSE;
-		if(json_object_get(msg->jsep, "update") != NULL)
+		if (json_object_get(msg->jsep, "update") != NULL)
 			sdp_update = json_is_true(json_object_get(msg->jsep, "update"));
-		/* 'create' and 'destroy' are handled synchronously: what kind of participant is this session referring to? */
-		if(session->participant_type == janus_videoroom_p_type_none) {
+		/* 'create' and 'destroy' are handled synchronously: what kind of participant is this session referring to?
+		创建和销毁请求是同步处理的，先判断一下该handle的角色类型
+		*/
+		if (session->participant_type == janus_videoroom_p_type_none)
+		{
+			//如果是无角色类型
 			JANUS_LOG(LOG_VERB, "Configuring new participant\n");
-			/* Not configured yet, we need to do this now */
-			if(strcasecmp(request_text, "join") && strcasecmp(request_text, "joinandconfigure")) {
+			/* Not configured yet, we need to do this now 代表还没有进行协商，我们可以进行加入或者加入并协商*/
+			if (strcasecmp(request_text, "join") && strcasecmp(request_text, "joinandconfigure"))
+			{
+				//除了 join 和 joinandconfigure 请求，其他请求均不作用与无角色类型，返回错误
 				JANUS_LOG(LOG_ERR, "Invalid request \"%s\" on unconfigured participant\n", request_text);
 				error_code = JANUS_VIDEOROOM_ERROR_JOIN_FIRST;
 				g_snprintf(error_cause, 512, "Invalid request on unconfigured participant");
 				goto error;
 			}
-			if(!string_ids) {
+			if (!string_ids)
+			{
 				JANUS_VALIDATE_JSON_OBJECT(root, room_parameters,
-					error_code, error_cause, TRUE,
-					JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT);
-			} else {
-				JANUS_VALIDATE_JSON_OBJECT(root, roomstr_parameters,
-					error_code, error_cause, TRUE,
-					JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT);
+										   error_code, error_cause, TRUE,
+										   JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT);
 			}
-			if(error_code != 0)
+			else
+			{
+				JANUS_VALIDATE_JSON_OBJECT(root, roomstr_parameters,
+										   error_code, error_cause, TRUE,
+										   JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT);
+			}
+			if (error_code != 0)
+				//解析参数出错
 				goto error;
 			JANUS_VALIDATE_JSON_OBJECT(root, join_parameters,
-				error_code, error_cause, TRUE,
-				JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT);
-			if(error_code != 0)
+									   error_code, error_cause, TRUE,
+									   JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT);
+			if (error_code != 0)
+				//解析参数出错
 				goto error;
 			janus_mutex_lock(&rooms_mutex);
+			//是否有能力访问房间，权限认证，如果有
 			error_code = janus_videoroom_access_room(root, FALSE, TRUE, &videoroom, error_cause, sizeof(error_cause));
-			if(error_code != 0) {
+			if (error_code != 0)
+			{
+				//访问房间失败，无权限进行join或者joinandconfigure操作
 				janus_mutex_unlock(&rooms_mutex);
 				goto error;
 			}
 			janus_refcount_increase(&videoroom->ref);
 			janus_mutex_unlock(&rooms_mutex);
 			janus_mutex_lock(&videoroom->mutex);
+			//获取协商角色类型
 			json_t *ptype = json_object_get(root, "ptype");
 			const char *ptype_text = json_string_value(ptype);
-			if(!strcasecmp(ptype_text, "publisher")) {
+			if (!strcasecmp(ptype_text, "publisher"))
+			{
+				//角色为发布者
 				JANUS_LOG(LOG_VERB, "Configuring new publisher\n");
 				JANUS_VALIDATE_JSON_OBJECT(root, publisher_parameters,
-					error_code, error_cause, TRUE,
-					JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT);
-				if(error_code != 0) {
+										   error_code, error_cause, TRUE,
+										   JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT);
+				if (error_code != 0)
+				{
+					//解析参数出错
 					janus_mutex_unlock(&videoroom->mutex);
 					janus_refcount_decrease(&videoroom->ref);
 					goto error;
 				}
-				if(!string_ids) {
+				if (!string_ids)
+				{
 					JANUS_VALIDATE_JSON_OBJECT(root, idopt_parameters,
-						error_code, error_cause, TRUE,
-						JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT);
-				} else {
-					JANUS_VALIDATE_JSON_OBJECT(root, idstropt_parameters,
-						error_code, error_cause, TRUE,
-						JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT);
+											   error_code, error_cause, TRUE,
+											   JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT);
 				}
-				if(error_code != 0) {
+				else
+				{
+					JANUS_VALIDATE_JSON_OBJECT(root, idstropt_parameters,
+											   error_code, error_cause, TRUE,
+											   JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT);
+				}
+				if (error_code != 0)
+				{
+					//解析参数出错
 					janus_mutex_unlock(&videoroom->mutex);
 					janus_refcount_decrease(&videoroom->ref);
 					goto error;
 				}
-				/* A token might be required to join */
-				if(videoroom->check_allowed) {
+				/* A token might be required to join 如果要加入可能需要token*/
+				//当参加者入会时是否要检查tokens
+				if (videoroom->check_allowed)
+				{
+					//如果房间加入需要token
 					json_t *token = json_object_get(root, "token");
 					const char *token_text = token ? json_string_value(token) : NULL;
-					if(token_text == NULL || g_hash_table_lookup(videoroom->allowed, token_text) == NULL) {
+					if (token_text == NULL || g_hash_table_lookup(videoroom->allowed, token_text) == NULL)
+					{
 						janus_mutex_unlock(&videoroom->mutex);
 						janus_refcount_decrease(&videoroom->ref);
 						JANUS_LOG(LOG_ERR, "Unauthorized (not in the allowed list)\n");
@@ -6576,23 +7271,30 @@ static void *janus_videoroom_handler(void *data) {
 						goto error;
 					}
 				}
+				//获取是否传入了自定义名称
 				json_t *display = json_object_get(root, "display");
 				const char *display_text = display ? json_string_value(display) : NULL;
 				guint64 user_id = 0;
 				char user_id_num[30], *user_id_str = NULL;
 				gboolean user_id_allocated = FALSE;
+				//获取是否传入了自定义id
 				json_t *id = json_object_get(root, "id");
-				if(id) {
-					if(!string_ids) {
+				if (id)
+				{
+					if (!string_ids)
+					{
 						user_id = json_integer_value(id);
-						g_snprintf(user_id_num, sizeof(user_id_num), "%"SCNu64, user_id);
+						g_snprintf(user_id_num, sizeof(user_id_num), "%" SCNu64, user_id);
 						user_id_str = user_id_num;
-					} else {
+					}
+					else
+					{
 						user_id_str = (char *)json_string_value(id);
 					}
-					if(g_hash_table_lookup(videoroom->participants,
-							string_ids ? (gpointer)user_id_str : (gpointer)&user_id) != NULL) {
-						/* User ID already taken */
+					//查询传入的自定义id参数是否已经被使用
+					if (g_hash_table_lookup(videoroom->participants, string_ids ? (gpointer)user_id_str : (gpointer)&user_id) != NULL)
+					{
+						/* User ID already taken id已经被使用*/
 						janus_mutex_unlock(&videoroom->mutex);
 						janus_refcount_decrease(&videoroom->ref);
 						error_code = JANUS_VIDEOROOM_ERROR_ID_EXISTS;
@@ -6601,27 +7303,36 @@ static void *janus_videoroom_handler(void *data) {
 						goto error;
 					}
 				}
-				if(!string_ids) {
-					if(user_id == 0) {
-						/* Generate a random ID */
-						while(user_id == 0) {
+				if (!string_ids)
+				{
+					if (user_id == 0)
+					{
+						/* Generate a random ID 生成一个随机id*/
+						while (user_id == 0)
+						{
 							user_id = janus_random_uint64();
-							if(g_hash_table_lookup(videoroom->participants, &user_id) != NULL) {
-								/* User ID already taken, try another one */
+							if (g_hash_table_lookup(videoroom->participants, &user_id) != NULL)
+							{
+								/* User ID already taken, try another one id已经被使用，尝试下一个*/
 								user_id = 0;
 							}
 						}
-						g_snprintf(user_id_num, sizeof(user_id_num), "%"SCNu64, user_id);
+						g_snprintf(user_id_num, sizeof(user_id_num), "%" SCNu64, user_id);
 						user_id_str = user_id_num;
 					}
-					JANUS_LOG(LOG_VERB, "  -- Participant ID: %"SCNu64"\n", user_id);
-				} else {
-					if(user_id_str == NULL) {
-						/* Generate a random ID */
-						while(user_id_str == NULL) {
+					JANUS_LOG(LOG_VERB, "  -- Participant ID: %" SCNu64 "\n", user_id);
+				}
+				else
+				{
+					if (user_id_str == NULL)
+					{
+						/* Generate a random ID 生成一个随机id*/
+						while (user_id_str == NULL)
+						{
 							user_id_str = janus_random_uuid();
-							if(g_hash_table_lookup(videoroom->participants, user_id_str) != NULL) {
-								/* User ID already taken, try another one */
+							if (g_hash_table_lookup(videoroom->participants, user_id_str) != NULL)
+							{
+								/* User ID already taken, try another one id已经被使用，尝试下一个*/
 								g_clear_pointer(&user_id_str, g_free);
 							}
 						}
@@ -6629,14 +7340,16 @@ static void *janus_videoroom_handler(void *data) {
 					}
 					JANUS_LOG(LOG_VERB, "  -- Participant ID: %s\n", user_id_str);
 				}
-				/* Process the request */
+				/* Process the request 处理请求*/
 				json_t *audio = NULL, *video = NULL, *data = NULL,
-					*audiocodec = NULL, *videocodec = NULL,
-					*bitrate = NULL, *record = NULL, *recfile = NULL,
-					*user_audio_active_packets = NULL, *user_audio_level_average = NULL;
-				if(!strcasecmp(request_text, "joinandconfigure")) {
+					   *audiocodec = NULL, *videocodec = NULL,
+					   *bitrate = NULL, *record = NULL, *recfile = NULL,
+					   *user_audio_active_packets = NULL, *user_audio_level_average = NULL;
+				if (!strcasecmp(request_text, "joinandconfigure"))
+				{
 					/* Also configure (or publish a new feed) audio/video/bitrate for this new publisher */
 					/* join_parameters were validated earlier. */
+					// 为此新发布者配置（或发布新提要）音频/视频/比特率
 					audio = json_object_get(root, "audio");
 					audiocodec = json_object_get(root, "audiocodec");
 					video = json_object_get(root, "video");
@@ -6657,12 +7370,12 @@ static void *janus_videoroom_handler(void *data) {
 				publisher->user_id = user_id;
 				publisher->user_id_str = user_id_str ? g_strdup(user_id_str) : NULL;
 				publisher->display = display_text ? g_strdup(display_text) : NULL;
-				publisher->sdp = NULL;		/* We'll deal with this later */
-				publisher->audio = FALSE;	/* We'll deal with this later */
-				publisher->video = FALSE;	/* We'll deal with this later */
-				publisher->data = FALSE;	/* We'll deal with this later */
-				publisher->acodec = JANUS_AUDIOCODEC_NONE;	/* We'll deal with this later */
-				publisher->vcodec = JANUS_VIDEOCODEC_NONE;	/* We'll deal with this later */
+				publisher->sdp = NULL;					   /* We'll deal with this later 我们会在后面配置*/
+				publisher->audio = FALSE;				   /* We'll deal with this later 我们会在后面配置*/
+				publisher->video = FALSE;				   /* We'll deal with this later 我们会在后面配置*/
+				publisher->data = FALSE;				   /* We'll deal with this later 我们会在后面配置*/
+				publisher->acodec = JANUS_AUDIOCODEC_NONE; /* We'll deal with this later 我们会在后面配置 */
+				publisher->vcodec = JANUS_VIDEOCODEC_NONE; /* We'll deal with this later 我们会在后面配置*/
 				publisher->audio_active = TRUE;
 				publisher->video_active = TRUE;
 				publisher->data_active = TRUE;
@@ -6678,8 +7391,8 @@ static void *janus_videoroom_handler(void *data) {
 				publisher->subscriptions = NULL;
 				janus_mutex_init(&publisher->subscribers_mutex);
 				janus_mutex_init(&publisher->own_subscriptions_mutex);
-				publisher->audio_pt = -1;	/* We'll deal with this later */
-				publisher->video_pt = -1;	/* We'll deal with this later */
+				publisher->audio_pt = -1; /* We'll deal with this later 我们会在后面配置*/
+				publisher->video_pt = -1; /* We'll deal with this later 我们会在后面配置*/
 				publisher->audio_level_extmap_id = 0;
 				publisher->video_orient_extmap_id = 0;
 				publisher->playout_delay_extmap_id = 0;
@@ -6692,34 +7405,42 @@ static void *janus_videoroom_handler(void *data) {
 				publisher->srtp_contexts = g_hash_table_new_full(g_str_hash, g_str_equal, NULL, (GDestroyNotify)janus_videoroom_srtp_context_free);
 				publisher->udp_sock = -1;
 				/* Finally, generate a private ID: this is only needed in case the participant
-				 * wants to allow the plugin to know which subscriptions belong to them */
+				 * wants to allow the plugin to know which subscriptions belong to them
+				 最后，生成一个私有 ID：这仅在参与者希望允许插件知道哪些订阅属于他们的情况下才需要，这将发送给发布者以用于映射目的，但不应与其他人共享 */
 				publisher->pvt_id = 0;
-				while(publisher->pvt_id == 0) {
+				while (publisher->pvt_id == 0)
+				{
 					publisher->pvt_id = janus_random_uint32();
-					if(g_hash_table_lookup(publisher->room->private_ids, GUINT_TO_POINTER(publisher->pvt_id)) != NULL) {
-						/* Private ID already taken, try another one */
+					if (g_hash_table_lookup(publisher->room->private_ids, GUINT_TO_POINTER(publisher->pvt_id)) != NULL)
+					{
+						/* Private ID already taken, try another one 私有id已被使用，尝试下一个*/
 						publisher->pvt_id = 0;
 					}
 				}
 				g_atomic_int_set(&publisher->destroyed, 0);
 				janus_refcount_init(&publisher->ref, janus_videoroom_publisher_free);
-				/* In case we also wanted to configure */
-				if(audio) {
+				/* In case we also wanted to configure 如果我们还想配置*/
+				if (audio)
+				{
+					//如果发布者需要发布音频
 					publisher->audio_active = json_is_true(audio);
-					JANUS_LOG(LOG_VERB, "Setting audio property: %s (room %s, user %s)\n",
-						publisher->audio_active ? "true" : "false", publisher->room_id_str, publisher->user_id_str);
+					JANUS_LOG(LOG_VERB, "Setting audio property: %s (room %s, user %s)\n", publisher->audio_active ? "true" : "false", publisher->room_id_str, publisher->user_id_str);
 				}
-				if(audiocodec && json_string_value(json_object_get(msg->jsep, "sdp")) != NULL) {
+				if (audiocodec && json_string_value(json_object_get(msg->jsep, "sdp")) != NULL)
+				{
+					//如果发布者给定了特定的音频编解码并且附带上了sdp参数
 					/* The publisher would like to use an audio codec in particular */
 					janus_audiocodec acodec = janus_audiocodec_from_name(json_string_value(audiocodec));
-					if(acodec == JANUS_AUDIOCODEC_NONE ||
-							(acodec != publisher->room->acodec[0] &&
-							acodec != publisher->room->acodec[1] &&
-							acodec != publisher->room->acodec[2] &&
-							acodec != publisher->room->acodec[3] &&
-							acodec != publisher->room->acodec[4])) {
+					if (acodec == JANUS_AUDIOCODEC_NONE ||
+						(acodec != publisher->room->acodec[0] &&
+						 acodec != publisher->room->acodec[1] &&
+						 acodec != publisher->room->acodec[2] &&
+						 acodec != publisher->room->acodec[3] &&
+						 acodec != publisher->room->acodec[4]))
+					{
+						//给了错误或者不支持的音频编解码器
 						JANUS_LOG(LOG_ERR, "Participant asked for audio codec '%s', but it's not allowed (room %s, user %s)\n",
-							json_string_value(audiocodec), publisher->room_id_str, publisher->user_id_str);
+								  json_string_value(audiocodec), publisher->room_id_str, publisher->user_id_str);
 						janus_mutex_unlock(&publisher->room->mutex);
 						janus_refcount_decrease(&publisher->room->ref);
 						janus_refcount_decrease(&publisher->ref);
@@ -6727,26 +7448,32 @@ static void *janus_videoroom_handler(void *data) {
 						g_snprintf(error_cause, 512, "Audio codec unavailable in this room");
 						goto error;
 					}
+					//当发布者想要的编解码器是我们支持的并且是房间也支持的时候，我们允许用户使用该编解码器
 					publisher->acodec = acodec;
 					JANUS_LOG(LOG_VERB, "Participant asked for audio codec '%s' (room %s, user %s)\n",
-						json_string_value(audiocodec), publisher->room_id_str, publisher->user_id_str);
+							  json_string_value(audiocodec), publisher->room_id_str, publisher->user_id_str);
 				}
-				if(video) {
+				if (video)
+				{
+					//如果发布者需要发布视频
 					publisher->video_active = json_is_true(video);
-					JANUS_LOG(LOG_VERB, "Setting video property: %s (room %s, user %s)\n",
-						publisher->video_active ? "true" : "false", publisher->room_id_str, publisher->user_id_str);
+					JANUS_LOG(LOG_VERB, "Setting video property: %s (room %s, user %s)\n", publisher->video_active ? "true" : "false", publisher->room_id_str, publisher->user_id_str);
 				}
-				if(videocodec && json_string_value(json_object_get(msg->jsep, "sdp")) != NULL) {
+				if (videocodec && json_string_value(json_object_get(msg->jsep, "sdp")) != NULL)
+				{
+					//如果发布者给定了特定的视频编解码并且附带上了sdp参数
 					/* The publisher would like to use a video codec in particular */
 					janus_videocodec vcodec = janus_videocodec_from_name(json_string_value(videocodec));
-					if(vcodec == JANUS_VIDEOCODEC_NONE ||
-							(vcodec != publisher->room->vcodec[0] &&
-							vcodec != publisher->room->vcodec[1] &&
-							vcodec != publisher->room->vcodec[2] &&
-							vcodec != publisher->room->vcodec[3] &&
-							vcodec != publisher->room->vcodec[4])) {
+					if (vcodec == JANUS_VIDEOCODEC_NONE ||
+						(vcodec != publisher->room->vcodec[0] &&
+						 vcodec != publisher->room->vcodec[1] &&
+						 vcodec != publisher->room->vcodec[2] &&
+						 vcodec != publisher->room->vcodec[3] &&
+						 vcodec != publisher->room->vcodec[4]))
+					{
+						//给了错误或者不支持的视频编解码器
 						JANUS_LOG(LOG_ERR, "Participant asked for video codec '%s', but it's not allowed (room %s, user %s)\n",
-							json_string_value(videocodec), publisher->room_id_str, publisher->user_id_str);
+								  json_string_value(videocodec), publisher->room_id_str, publisher->user_id_str);
 						janus_mutex_unlock(&publisher->room->mutex);
 						janus_refcount_decrease(&publisher->room->ref);
 						janus_refcount_decrease(&publisher->ref);
@@ -6754,44 +7481,53 @@ static void *janus_videoroom_handler(void *data) {
 						g_snprintf(error_cause, 512, "Video codec unavailable in this room");
 						goto error;
 					}
+					//当发布者想要的编解码器是我们支持的并且是房间也支持的时候，我们允许用户使用该编解码器
 					publisher->vcodec = vcodec;
 					JANUS_LOG(LOG_VERB, "Participant asked for video codec '%s' (room %s, user %s)\n",
-						json_string_value(videocodec), publisher->room_id_str, publisher->user_id_str);
+							  json_string_value(videocodec), publisher->room_id_str, publisher->user_id_str);
 				}
-				if(data) {
+				if (data)
+				{
 					publisher->data_active = json_is_true(data);
 					JANUS_LOG(LOG_VERB, "Setting data property: %s (room %s, user %s)\n",
-						publisher->data_active ? "true" : "false", publisher->room_id_str, publisher->user_id_str);
+							  publisher->data_active ? "true" : "false", publisher->room_id_str, publisher->user_id_str);
 				}
-				if(bitrate) {
+				if (bitrate)
+				{
 					publisher->bitrate = json_integer_value(bitrate);
-					JANUS_LOG(LOG_VERB, "Setting video bitrate: %"SCNu32" (room %s, user %s)\n",
-						publisher->bitrate, publisher->room_id_str, publisher->user_id_str);
+					JANUS_LOG(LOG_VERB, "Setting video bitrate: %" SCNu32 " (room %s, user %s)\n",
+							  publisher->bitrate, publisher->room_id_str, publisher->user_id_str);
 				}
-				if(record) {
+				if (record)
+				{
 					publisher->recording_active = json_is_true(record);
 					JANUS_LOG(LOG_VERB, "Setting record property: %s (room %s, user %s)\n",
-						publisher->recording_active ? "true" : "false", publisher->room_id_str, publisher->user_id_str);
+							  publisher->recording_active ? "true" : "false", publisher->room_id_str, publisher->user_id_str);
 				}
-				if(recfile) {
+				if (recfile)
+				{
 					publisher->recording_base = g_strdup(json_string_value(recfile));
 					JANUS_LOG(LOG_VERB, "Setting recording basename: %s (room %s, user %s)\n",
-						publisher->recording_base, publisher->room_id_str, publisher->user_id_str);
+							  publisher->recording_base, publisher->room_id_str, publisher->user_id_str);
 				}
-				if(user_audio_active_packets) {
+				if (user_audio_active_packets)
+				{
 					publisher->user_audio_active_packets = json_integer_value(user_audio_active_packets);
 					JANUS_LOG(LOG_VERB, "Setting user audio_active_packets: %d (room %s, user %s)\n",
-						publisher->user_audio_active_packets, publisher->room_id_str, publisher->user_id_str);
+							  publisher->user_audio_active_packets, publisher->room_id_str, publisher->user_id_str);
 				}
-				if(user_audio_level_average) {
+				if (user_audio_level_average)
+				{
 					publisher->user_audio_level_average = json_integer_value(user_audio_level_average);
 					JANUS_LOG(LOG_VERB, "Setting user audio_level_average: %d (room %s, user %s)\n",
-						publisher->user_audio_level_average, publisher->room_id_str, publisher->user_id_str);
+							  publisher->user_audio_level_average, publisher->room_id_str, publisher->user_id_str);
 				}
-				/* Done */
+				/* Done 配置完成 */
 				janus_mutex_lock(&session->mutex);
-				/* Make sure the session has not been destroyed in the meanwhile */
-				if(g_atomic_int_get(&session->destroyed)) {
+				/* Make sure the session has not been destroyed in the meanwhile
+				确保该session在这期间没有被销毁 */
+				if (g_atomic_int_get(&session->destroyed))
+				{
 					janus_mutex_unlock(&session->mutex);
 					janus_mutex_unlock(&publisher->room->mutex);
 					janus_refcount_decrease(&publisher->room->ref);
@@ -6801,29 +7537,37 @@ static void *janus_videoroom_handler(void *data) {
 					g_snprintf(error_cause, 512, "Session destroyed, invalidating new publisher");
 					goto error;
 				}
+				//更新用户类型为发布者
 				session->participant_type = janus_videoroom_p_type_publisher;
 				session->participant = publisher;
-				/* Return a list of all available publishers (those with an SDP available, that is) */
+				/* Return a list of all available publishers (those with an SDP available, that is)
+				返回所有可用发布者的列表（即具有可用 SDP 的发布者）*/
 				json_t *list = json_array(), *attendees = NULL;
-				if(publisher->room->notify_joining)
+				// 当有新加入者时是否通知房间里的所有参与者
+				if (publisher->room->notify_joining)
 					attendees = json_array();
 				GHashTableIter iter;
 				gpointer value;
 				janus_refcount_increase(&publisher->ref);
-				g_hash_table_insert(publisher->room->participants,
-					string_ids ? (gpointer)g_strdup(publisher->user_id_str) : (gpointer)janus_uint64_dup(publisher->user_id),
-					publisher);
+				//把该发布者添加到房间发布者列表中
+				g_hash_table_insert(publisher->room->participants, string_ids ? (gpointer)g_strdup(publisher->user_id_str) : (gpointer)janus_uint64_dup(publisher->user_id), publisher);
 				g_hash_table_insert(publisher->room->private_ids, GUINT_TO_POINTER(publisher->pvt_id), publisher);
 				janus_mutex_unlock(&session->mutex);
+				//初始化房间发布者迭代器
 				g_hash_table_iter_init(&iter, publisher->room->participants);
-				while (!g_atomic_int_get(&publisher->room->destroyed) && g_hash_table_iter_next(&iter, NULL, &value)) {
+				while (!g_atomic_int_get(&publisher->room->destroyed) && g_hash_table_iter_next(&iter, NULL, &value))
+				{
 					janus_videoroom_publisher *p = value;
-					if(p == publisher || !p->sdp || !g_atomic_int_get(&p->session->started)) {
-						/* Check if we're also notifying normal joins and not just publishers */
-						if(p != publisher && publisher->room->notify_joining) {
+					if (p == publisher || !p->sdp || !g_atomic_int_get(&p->session->started))
+					{
+						/* Check if we're also notifying normal joins and not just publishers
+						检查我们是否也在正常加入的时候通知，而不仅仅是发布的时候通知 */
+						if (p != publisher && publisher->room->notify_joining)
+						{
+							// 当有新加入者时是否通知房间里其他所有参与者（不通知自己）
 							json_t *al = json_object();
 							json_object_set_new(al, "id", string_ids ? json_string(p->user_id_str) : json_integer(p->user_id));
-							if(p->display)
+							if (p->display)
 								json_object_set_new(al, "display", json_string(p->display));
 							json_array_append_new(attendees, al);
 						}
@@ -6831,96 +7575,107 @@ static void *janus_videoroom_handler(void *data) {
 					}
 					json_t *pl = json_object();
 					json_object_set_new(pl, "id", string_ids ? json_string(p->user_id_str) : json_integer(p->user_id));
-					if(p->display)
+					if (p->display)
 						json_object_set_new(pl, "display", json_string(p->display));
-					if(p->audio)
+					if (p->audio)
 						json_object_set_new(pl, "audio_codec", json_string(janus_audiocodec_name(p->acodec)));
-					if(p->video)
+					if (p->video)
 						json_object_set_new(pl, "video_codec", json_string(janus_videocodec_name(p->vcodec)));
-					if(p->audio_muted)
+					if (p->audio_muted)
 						json_object_set_new(pl, "audio_moderated", json_true());
-					if(p->video_muted)
+					if (p->video_muted)
 						json_object_set_new(pl, "video_moderated", json_true());
-					if(p->data_muted)
+					if (p->data_muted)
 						json_object_set_new(pl, "data_moderated", json_true());
-					if(p->ssrc[0] || p->rid[0])
+					if (p->ssrc[0] || p->rid[0])
 						json_object_set_new(pl, "simulcast", json_true());
-					if(p->audio_level_extmap_id > 0)
+					if (p->audio_level_extmap_id > 0)
 						json_object_set_new(pl, "talking", p->talking ? json_true() : json_false());
 					json_array_append_new(list, pl);
 				}
 				event = json_object();
 				json_object_set_new(event, "videoroom", json_string("joined"));
-				json_object_set_new(event, "room", string_ids ? json_string(publisher->room->room_id_str) :
-					json_integer(publisher->room->room_id));
+				json_object_set_new(event, "room", string_ids ? json_string(publisher->room->room_id_str) : json_integer(publisher->room->room_id));
 				json_object_set_new(event, "description", json_string(publisher->room->room_name));
 				json_object_set_new(event, "id", string_ids ? json_string(user_id_str) : json_integer(user_id));
 				json_object_set_new(event, "private_id", json_integer(publisher->pvt_id));
 				json_object_set_new(event, "publishers", list);
-				if(publisher->user_audio_active_packets)
+				if (publisher->user_audio_active_packets)
 					json_object_set_new(event, "audio_active_packets", json_integer(publisher->user_audio_active_packets));
-				if(publisher->user_audio_level_average)
+				if (publisher->user_audio_level_average)
 					json_object_set_new(event, "audio_level_average", json_integer(publisher->user_audio_level_average));
-				if(attendees != NULL)
+				if (attendees != NULL)
 					json_object_set_new(event, "attendees", attendees);
-				/* See if we need to notify about a new participant joined the room (by default, we don't). */
+				/* See if we need to notify about a new participant joined the room (by default, we don't).
+				通知参与者发生join事件（默认情况下，我们不需要）。*/
 				janus_videoroom_participant_joining(publisher);
 
-				/* Also notify event handlers */
-				if(notify_events && gateway->events_is_enabled()) {
+				/* Also notify event handlers 是否广播事件*/
+				if (notify_events && gateway->events_is_enabled())
+				{
 					json_t *info = json_object();
 					json_object_set_new(info, "event", json_string("joined"));
-					json_object_set_new(info, "room", string_ids ? json_string(publisher->room->room_id_str) :
-					json_integer(publisher->room->room_id));
+					json_object_set_new(info, "room", string_ids ? json_string(publisher->room->room_id_str) : json_integer(publisher->room->room_id));
 					json_object_set_new(info, "id", string_ids ? json_string(user_id_str) : json_integer(user_id));
 					json_object_set_new(info, "private_id", json_integer(publisher->pvt_id));
-                    if(publisher->room->check_allowed) {
-                        const char *token = json_string_value(json_object_get(root, "token"));
-                        json_object_set_new(info, "token", json_string(token));
-                    }
-                    if(display_text != NULL)
+					if (publisher->room->check_allowed)
+					{
+						const char *token = json_string_value(json_object_get(root, "token"));
+						json_object_set_new(info, "token", json_string(token));
+					}
+					if (display_text != NULL)
 						json_object_set_new(info, "display", json_string(display_text));
-					if(publisher->user_audio_active_packets)
+					if (publisher->user_audio_active_packets)
 						json_object_set_new(info, "audio_active_packets", json_integer(publisher->user_audio_active_packets));
-					if(publisher->user_audio_level_average)
+					if (publisher->user_audio_level_average)
 						json_object_set_new(info, "audio_level_average", json_integer(publisher->user_audio_level_average));
 					gateway->notify_event(&janus_videoroom_plugin, session->handle, info);
 				}
 				janus_mutex_unlock(&publisher->room->mutex);
-				if(user_id_allocated)
+				if (user_id_allocated)
 					g_free(user_id_str);
-			} else if(!strcasecmp(ptype_text, "subscriber") || !strcasecmp(ptype_text, "listener")) {
+			}
+			else if (!strcasecmp(ptype_text, "subscriber") || !strcasecmp(ptype_text, "listener"))
+			{
+				//如果想要成为订阅者或者listener
 				JANUS_LOG(LOG_VERB, "Configuring new subscriber\n");
 				gboolean legacy = !strcasecmp(ptype_text, "listener");
-				if(legacy) {
+				if (legacy)
+				{
 					JANUS_LOG(LOG_WARN, "Subscriber is using the legacy 'listener' ptype\n");
 				}
-				/* This is a new subscriber */
+				/* This is a new subscriber 检查参数结构是否正确*/
 				JANUS_VALIDATE_JSON_OBJECT(root, subscriber_parameters,
-					error_code, error_cause, TRUE,
-					JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT);
-				if(error_code != 0) {
+										   error_code, error_cause, TRUE,
+										   JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT);
+				if (error_code != 0)
+				{
 					janus_mutex_unlock(&videoroom->mutex);
 					janus_refcount_decrease(&videoroom->ref);
 					goto error;
 				}
-				if(!string_ids) {
+				if (!string_ids)
+				{
 					JANUS_VALIDATE_JSON_OBJECT(root, feed_parameters,
-						error_code, error_cause, TRUE,
-						JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT);
-				} else {
-					JANUS_VALIDATE_JSON_OBJECT(root, feedstr_parameters,
-						error_code, error_cause, TRUE,
-						JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT);
+											   error_code, error_cause, TRUE,
+											   JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT);
 				}
-				if(error_code != 0) {
+				else
+				{
+					JANUS_VALIDATE_JSON_OBJECT(root, feedstr_parameters,
+											   error_code, error_cause, TRUE,
+											   JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT);
+				}
+				if (error_code != 0)
+				{
 					janus_mutex_unlock(&videoroom->mutex);
 					janus_refcount_decrease(&videoroom->ref);
 					goto error;
 				}
 				janus_mutex_lock(&sessions_mutex);
 				session = janus_videoroom_lookup_session(msg->handle);
-				if(!session) {
+				if (!session)
+				{
 					janus_mutex_unlock(&sessions_mutex);
 					janus_mutex_unlock(&videoroom->mutex);
 					janus_refcount_decrease(&videoroom->ref);
@@ -6928,27 +7683,32 @@ static void *janus_videoroom_handler(void *data) {
 					janus_videoroom_message_free(msg);
 					continue;
 				}
-				if(g_atomic_int_get(&session->destroyed)) {
+				if (g_atomic_int_get(&session->destroyed))
+				{
 					janus_mutex_unlock(&sessions_mutex);
 					janus_mutex_unlock(&videoroom->mutex);
 					janus_refcount_decrease(&videoroom->ref);
 					janus_videoroom_message_free(msg);
 					continue;
 				}
+				//想要订阅的人id
 				json_t *feed = json_object_get(root, "feed");
 				guint64 feed_id = 0;
 				char feed_id_num[30], *feed_id_str = NULL;
-				if(!string_ids) {
+				if (!string_ids)
+				{
 					feed_id = json_integer_value(feed);
-					g_snprintf(feed_id_num, sizeof(feed_id_num), "%"SCNu64, feed_id);
+					g_snprintf(feed_id_num, sizeof(feed_id_num), "%" SCNu64, feed_id);
 					feed_id_str = feed_id_num;
-				} else {
+				}
+				else
+				{
 					feed_id_str = (char *)json_string_value(feed);
 				}
 				json_t *pvt = json_object_get(root, "private_id");
 				guint64 pvt_id = json_integer_value(pvt);
 				json_t *cpc = json_object_get(root, "close_pc");
-				gboolean close_pc  = cpc ? json_is_true(cpc) : TRUE;
+				gboolean close_pc = cpc ? json_is_true(cpc) : TRUE;
 				json_t *audio = json_object_get(root, "audio");
 				json_t *video = json_object_get(root, "video");
 				json_t *data = json_object_get(root, "data");
@@ -6957,8 +7717,10 @@ static void *janus_videoroom_handler(void *data) {
 				json_t *offer_data = json_object_get(root, "offer_data");
 				json_t *spatial = json_object_get(root, "spatial_layer");
 				json_t *sc_substream = json_object_get(root, "substream");
-				if(json_integer_value(spatial) < 0 || json_integer_value(spatial) > 2 ||
-						json_integer_value(sc_substream) < 0 || json_integer_value(sc_substream) > 2) {
+				if (json_integer_value(spatial) < 0 || json_integer_value(spatial) > 2 ||
+					json_integer_value(sc_substream) < 0 || json_integer_value(sc_substream) > 2)
+				{
+					//判断订阅的substream是否符合要求
 					JANUS_LOG(LOG_ERR, "Invalid element (substream/spatial_layer should be 0, 1 or 2)\n");
 					error_code = JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT;
 					g_snprintf(error_cause, 512, "Invalid value (substream/spatial_layer should be 0, 1 or 2)");
@@ -6969,8 +7731,10 @@ static void *janus_videoroom_handler(void *data) {
 				}
 				json_t *temporal = json_object_get(root, "temporal_layer");
 				json_t *sc_temporal = json_object_get(root, "temporal");
-				if(json_integer_value(temporal) < 0 || json_integer_value(temporal) > 2 ||
-						json_integer_value(sc_temporal) < 0 || json_integer_value(sc_temporal) > 2) {
+				if (json_integer_value(temporal) < 0 || json_integer_value(temporal) > 2 ||
+					json_integer_value(sc_temporal) < 0 || json_integer_value(sc_temporal) > 2)
+				{
+					//判断订阅的layer是否符合要求
 					JANUS_LOG(LOG_ERR, "Invalid element (temporal/temporal_layer should be 0, 1 or 2)\n");
 					error_code = JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT;
 					g_snprintf(error_cause, 512, "Invalid value (temporal/temporal_layer should be 0, 1 or 2)");
@@ -6981,9 +7745,11 @@ static void *janus_videoroom_handler(void *data) {
 				}
 				json_t *sc_fallback = json_object_get(root, "fallback");
 				janus_videoroom_publisher *owner = NULL;
-				janus_videoroom_publisher *publisher = g_hash_table_lookup(videoroom->participants,
-					string_ids ? (gpointer)feed_id_str : (gpointer)&feed_id);
-				if(publisher == NULL || g_atomic_int_get(&publisher->destroyed) || publisher->sdp == NULL) {
+				//根据订阅id获取发布者信息
+				janus_videoroom_publisher *publisher = g_hash_table_lookup(videoroom->participants, string_ids ? (gpointer)feed_id_str : (gpointer)&feed_id);
+				if (publisher == NULL || g_atomic_int_get(&publisher->destroyed) || publisher->sdp == NULL)
+				{
+					//找不到发布者
 					JANUS_LOG(LOG_ERR, "No such feed (%s)\n", feed_id_str);
 					error_code = JANUS_VIDEOROOM_ERROR_NO_SUCH_FEED;
 					g_snprintf(error_cause, 512, "No such feed (%s)", feed_id_str);
@@ -6991,15 +7757,21 @@ static void *janus_videoroom_handler(void *data) {
 					janus_mutex_unlock(&videoroom->mutex);
 					janus_refcount_decrease(&videoroom->ref);
 					goto error;
-				} else {
+				}
+				else
+				{
 					/* Increase the refcount before unlocking so that nobody can remove and free the publisher in the meantime. */
+					// 在解锁之前增加引用计数，以便在此期间没有人可以删除和释放发布者。
 					janus_refcount_increase(&publisher->ref);
 					janus_refcount_increase(&publisher->session->ref);
-					/* First of all, let's check if this room requires valid private_id values */
-					if(videoroom->require_pvtid) {
-						/* It does, let's make sure this subscription complies */
+					/* First of all, let's check if this room requires valid private_id values 首先，检查这个房间是否需要提供私有id*/
+					if (videoroom->require_pvtid)
+					{
+						/* It does, let's make sure this subscription complies 需要私有id，让我们确保此订阅符合要求 */
 						owner = g_hash_table_lookup(videoroom->private_ids, GUINT_TO_POINTER(pvt_id));
-						if(pvt_id == 0 || owner == NULL) {
+						if (pvt_id == 0 || owner == NULL)
+						{
+							//没有私有id或者该私有id找不到发布者
 							JANUS_LOG(LOG_ERR, "Unauthorized (this room requires a valid private_id)\n");
 							error_code = JANUS_VIDEOROOM_ERROR_UNAUTHORIZED;
 							g_snprintf(error_cause, 512, "Unauthorized (this room requires a valid private_id)");
@@ -7024,15 +7796,18 @@ static void *janus_videoroom_handler(void *data) {
 					subscriber->e2ee = publisher->e2ee;
 					subscriber->pvt_id = pvt_id;
 					subscriber->close_pc = close_pc;
-					/* Initialize the subscriber context */
+					/* Initialize the subscriber context 初始化订阅者上下文 */
 					janus_rtp_switching_context_reset(&subscriber->context);
-					subscriber->audio_offered = offer_audio ? json_is_true(offer_audio) : TRUE;	/* True by default */
-					subscriber->video_offered = offer_video ? json_is_true(offer_video) : TRUE;	/* True by default */
+					subscriber->audio_offered = offer_audio ? json_is_true(offer_audio) : TRUE; /* True by default */
+					subscriber->video_offered = offer_video ? json_is_true(offer_video) : TRUE; /* True by default */
 					subscriber->data_offered = offer_data ? json_is_true(offer_data) : TRUE;	/* True by default */
-					if((!publisher->audio || !subscriber->audio_offered) &&
-							(!publisher->video || !subscriber->video_offered) &&
-							(!publisher->data || !subscriber->data_offered)) {
-						if(owner) {
+					if ((!publisher->audio || !subscriber->audio_offered) &&
+						(!publisher->video || !subscriber->video_offered) &&
+						(!publisher->data || !subscriber->data_offered))
+					{
+						//如果发布者什么也不发布
+						if (owner)
+						{
 							janus_refcount_decrease(&owner->session->ref);
 							janus_refcount_decrease(&owner->ref);
 						}
@@ -7046,29 +7821,30 @@ static void *janus_videoroom_handler(void *data) {
 						g_free(subscriber);
 						goto error;
 					}
-					subscriber->audio = audio ? json_is_true(audio) : TRUE;	/* True by default */
-					if(!publisher->audio || !subscriber->audio_offered)
-						subscriber->audio = FALSE;	/* ... unless the publisher isn't sending any audio or we're skipping it */
-					subscriber->video = video ? json_is_true(video) : TRUE;	/* True by default */
-					if(!publisher->video || !subscriber->video_offered)
-						subscriber->video = FALSE;	/* ... unless the publisher isn't sending any video or we're skipping it */
-					subscriber->data = data ? json_is_true(data) : TRUE;	/* True by default */
-					if(!publisher->data || !subscriber->data_offered)
-						subscriber->data = FALSE;	/* ... unless the publisher isn't sending any data or we're skipping it */
-					subscriber->paused = TRUE;	/* We need an explicit start from the subscriber */
+					subscriber->audio = audio ? json_is_true(audio) : TRUE; /* True by default */
+					if (!publisher->audio || !subscriber->audio_offered)
+						subscriber->audio = FALSE;							/* ... unless the publisher isn't sending any audio or we're skipping it 除非发布者没有发送任何音频或我们跳过它*/
+					subscriber->video = video ? json_is_true(video) : TRUE; /* True by default */
+					if (!publisher->video || !subscriber->video_offered)
+						subscriber->video = FALSE;						 /* ... unless the publisher isn't sending any video or we're skipping it 除非发布者没有发送任何视频或我们跳过它*/
+					subscriber->data = data ? json_is_true(data) : TRUE; /* True by default */
+					if (!publisher->data || !subscriber->data_offered)
+						subscriber->data = FALSE; /* ... unless the publisher isn't sending any data or we're skipping it 除非发布者没有发送任何data或我们跳过它*/
+					subscriber->paused = TRUE;	  /* We need an explicit start from the subscriber 把开始的时机交给订阅者 */
 					g_atomic_int_set(&subscriber->destroyed, 0);
 					janus_refcount_init(&subscriber->ref, janus_videoroom_subscriber_free);
-					janus_refcount_increase(&subscriber->ref);	/* This reference is for handling the setup */
-					janus_refcount_increase(&subscriber->ref);	/* The publisher references the new subscriber too */
-					/* Check if a simulcasting-related request is involved */
+					janus_refcount_increase(&subscriber->ref); /* This reference is for handling the setup */
+					janus_refcount_increase(&subscriber->ref); /* The publisher references the new subscriber too */
+					/* Check if a simulcasting-related request is involved 检查请求是否涉及simulcast相关内容*/
 					janus_rtp_simulcasting_context_reset(&subscriber->sim_context);
 					subscriber->sim_context.rid_ext_id = publisher->rid_extmap_id;
 					subscriber->sim_context.substream_target = sc_substream ? json_integer_value(sc_substream) : 2;
 					subscriber->sim_context.templayer_target = sc_temporal ? json_integer_value(sc_temporal) : 2;
 					subscriber->sim_context.drop_trigger = sc_fallback ? json_integer_value(sc_fallback) : 0;
 					janus_vp8_simulcast_context_reset(&subscriber->vp8_context);
-					/* Check if a VP9 SVC-related request is involved */
-					if(subscriber->room->do_svc) {
+					/* Check if a VP9 SVC-related request is involved 检查请求是否涉及VP9-SVC相关内容*/
+					if (subscriber->room->do_svc)
+					{
 						subscriber->spatial_layer = -1;
 						subscriber->target_spatial_layer = spatial ? json_integer_value(spatial) : 2;
 						subscriber->temporal_layer = -1;
@@ -7078,9 +7854,11 @@ static void *janus_videoroom_handler(void *data) {
 					janus_mutex_lock(&publisher->subscribers_mutex);
 					publisher->subscribers = g_slist_append(publisher->subscribers, subscriber);
 					janus_mutex_unlock(&publisher->subscribers_mutex);
-					if(owner != NULL) {
+					if (owner != NULL)
+					{
 						/* Note: we should refcount these subscription-publisher mappings as well */
 						janus_mutex_lock(&owner->own_subscriptions_mutex);
+						// 把该订阅者添加到此发布者正在观看的对象中？
 						owner->subscriptions = g_slist_append(owner->subscriptions, subscriber);
 						janus_mutex_unlock(&owner->own_subscriptions_mutex);
 						/* Done adding the subscription, owner is safe to be released */
@@ -7093,43 +7871,48 @@ static void *janus_videoroom_handler(void *data) {
 					json_object_set_new(event, "videoroom", json_string("attached"));
 					json_object_set_new(event, "room", string_ids ? json_string(subscriber->room_id_str) : json_integer(subscriber->room_id));
 					json_object_set_new(event, "id", string_ids ? json_string(feed_id_str) : json_integer(feed_id));
-					if(publisher->display)
+					if (publisher->display)
 						json_object_set_new(event, "display", json_string(publisher->display));
-					if(legacy)
+					if (legacy)
+						//请不要再使用listener进行请求，使用subscriber
 						json_object_set_new(event, "warning", json_string("Deprecated use of 'listener' ptype, update to the new 'subscriber' ASAP"));
 					JANUS_LOG(LOG_VERB, "Preparing JSON event as a reply\n");
-					/* Negotiate by sending the selected publisher SDP back */
+					/* Negotiate by sending the selected publisher SDP back 通过发回选定的发布者 SDP 进行协商 */
 					janus_mutex_lock(&publisher->subscribers_mutex);
-					if(publisher->sdp != NULL) {
-						/* Check if there's something the original SDP has that we should remove */
+					if (publisher->sdp != NULL)
+					{
+						/* Check if there's something the original SDP has that we should remove 检查原始 SDP 是否有我们应该删除的内容 */
 						janus_sdp *offer = janus_sdp_parse(publisher->sdp, NULL, 0);
+						//我们发送给订阅人的sdp（当重新协商之后可能会更新）
 						subscriber->sdp = offer;
 						session->sdp_version = 1;
 						subscriber->sdp->o_version = session->sdp_version;
-						if((publisher->audio && !subscriber->audio_offered) ||
-								(publisher->video && !subscriber->video_offered) ||
-								(publisher->data && !subscriber->data_offered)) {
+						if ((publisher->audio && !subscriber->audio_offered) ||
+							(publisher->video && !subscriber->video_offered) ||
+							(publisher->data && !subscriber->data_offered))
+						{
 							JANUS_LOG(LOG_VERB, "Munging SDP offer to adapt it to the subscriber's requirements\n");
-							if(publisher->audio && !subscriber->audio_offered)
+							if (publisher->audio && !subscriber->audio_offered)
 								janus_sdp_mline_remove(offer, JANUS_SDP_AUDIO);
-							if(publisher->video && !subscriber->video_offered)
+							if (publisher->video && !subscriber->video_offered)
 								janus_sdp_mline_remove(offer, JANUS_SDP_VIDEO);
-							if(publisher->data && !subscriber->data_offered)
+							if (publisher->data && !subscriber->data_offered)
 								janus_sdp_mline_remove(offer, JANUS_SDP_APPLICATION);
 						}
-						char* sdp = janus_sdp_write(offer);
+						char *sdp = janus_sdp_write(offer);
 						json_t *jsep = json_pack("{ssss}", "type", "offer", "sdp", sdp);
 						g_free(sdp);
-						if(subscriber->e2ee)
+						if (subscriber->e2ee)
 							json_object_set_new(jsep, "e2ee", json_true());
 						janus_mutex_unlock(&publisher->subscribers_mutex);
-						/* How long will the Janus core take to push the event? */
+						/* How long will the Janus core take to push the event? Janus核心需要多长时间来推送事件 */
 						g_atomic_int_set(&session->hangingup, 0);
 						gint64 start = janus_get_monotonic_time();
 						int res = gateway->push_event(msg->handle, &janus_videoroom_plugin, msg->transaction, event, jsep);
-						JANUS_LOG(LOG_VERB, "  >> Pushing event: %d (took %"SCNu64" us)\n", res, janus_get_monotonic_time()-start);
-						/* Also notify event handlers */
-						if(notify_events && gateway->events_is_enabled()) {
+						JANUS_LOG(LOG_VERB, "  >> Pushing event: %d (took %" SCNu64 " us)\n", res, janus_get_monotonic_time() - start);
+						/* Also notify event handlers 通知事件广播*/
+						if (notify_events && gateway->events_is_enabled())
+						{
 							json_t *info = json_object();
 							json_object_set_new(info, "event", json_string("subscribing"));
 							json_object_set_new(info, "room", string_ids ? json_string(subscriber->room_id_str) : json_integer(subscriber->room_id));
@@ -7146,7 +7929,10 @@ static void *janus_videoroom_handler(void *data) {
 					janus_refcount_decrease(&subscriber->ref);
 					janus_mutex_unlock(&publisher->subscribers_mutex);
 				}
-			} else {
+			}
+			else
+			{
+				// 当角色为空时,只支持 join 和 joinandconfigure 请求 角色为 publisher ，subscribe ， listener（已过期）
 				janus_mutex_unlock(&videoroom->mutex);
 				janus_refcount_decrease(&videoroom->ref);
 				JANUS_LOG(LOG_ERR, "Invalid element (ptype)\n");
@@ -7154,48 +7940,65 @@ static void *janus_videoroom_handler(void *data) {
 				g_snprintf(error_cause, 512, "Invalid element (ptype)");
 				goto error;
 			}
-		} else if(session->participant_type == janus_videoroom_p_type_publisher) {
-			/* Handle this publisher */
+		}
+		else if (session->participant_type == janus_videoroom_p_type_publisher)
+		{
+			/* Handle this publisher 处理发布者的一些请求*/
 			participant = janus_videoroom_session_get_publisher(session);
-			if(participant == NULL) {
+			if (participant == NULL)
+			{
+				//该发布者信息找不到了
 				JANUS_LOG(LOG_ERR, "Invalid participant instance\n");
 				error_code = JANUS_VIDEOROOM_ERROR_UNKNOWN_ERROR;
 				g_snprintf(error_cause, 512, "Invalid participant instance");
 				goto error;
 			}
-			if(participant->room == NULL) {
+			if (participant->room == NULL)
+			{
+				//该发布者房间找不到了
 				janus_refcount_decrease(&participant->ref);
 				JANUS_LOG(LOG_ERR, "No such room\n");
 				error_code = JANUS_VIDEOROOM_ERROR_NO_SUCH_ROOM;
 				g_snprintf(error_cause, 512, "No such room");
 				goto error;
 			}
-			if(!strcasecmp(request_text, "join") || !strcasecmp(request_text, "joinandconfigure")) {
+			if (!strcasecmp(request_text, "join") || !strcasecmp(request_text, "joinandconfigure"))
+			{
+				//发布者不能再请求 join 和 joinandconfigure
 				janus_refcount_decrease(&participant->ref);
 				JANUS_LOG(LOG_ERR, "Already in as a publisher on this handle\n");
 				error_code = JANUS_VIDEOROOM_ERROR_ALREADY_JOINED;
 				g_snprintf(error_cause, 512, "Already in as a publisher on this handle");
 				goto error;
-			} else if(!strcasecmp(request_text, "configure") || !strcasecmp(request_text, "publish")) {
-				if(!strcasecmp(request_text, "publish") && participant->sdp) {
+			}
+			else if (!strcasecmp(request_text, "configure") || !strcasecmp(request_text, "publish"))
+			{
+				if (!strcasecmp(request_text, "publish") && participant->sdp)
+				{
+					//已经有sdp了，说明已经发布了，不需要再请求
 					janus_refcount_decrease(&participant->ref);
 					JANUS_LOG(LOG_ERR, "Can't publish, already published\n");
 					error_code = JANUS_VIDEOROOM_ERROR_ALREADY_PUBLISHED;
 					g_snprintf(error_cause, 512, "Can't publish, already published");
 					goto error;
 				}
-				if(participant->kicked) {
+				if (participant->kicked)
+				{
+					//已经被踢了
 					janus_refcount_decrease(&participant->ref);
 					JANUS_LOG(LOG_ERR, "Unauthorized, you have been kicked\n");
 					error_code = JANUS_VIDEOROOM_ERROR_UNAUTHORIZED;
 					g_snprintf(error_cause, 512, "Unauthorized, you have been kicked");
 					goto error;
 				}
-				/* Configure (or publish a new feed) audio/video/bitrate for this publisher */
+				/* Configure (or publish a new feed) audio/video/bitrate for this publisher
+				为这个发布者Configure 音频/视频/比特率 （或者重新publish）*/
 				JANUS_VALIDATE_JSON_OBJECT(root, publish_parameters,
-					error_code, error_cause, TRUE,
-					JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT);
-				if(error_code != 0) {
+										   error_code, error_cause, TRUE,
+										   JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT);
+				if (error_code != 0)
+				{
+					//参数格式错误
 					janus_refcount_decrease(&participant->ref);
 					goto error;
 				}
@@ -7212,15 +8015,19 @@ static void *janus_videoroom_handler(void *data) {
 				json_t *update = json_object_get(root, "update");
 				json_t *user_audio_active_packets = json_object_get(root, "audio_active_packets");
 				json_t *user_audio_level_average = json_object_get(root, "audio_level_average");
-				if(audio) {
+				if (audio)
+				{
 					gboolean audio_active = json_is_true(audio);
-					if(g_atomic_int_get(&session->started) && audio_active && !participant->audio_active && !participant->audio_muted) {
-						/* Audio was just resumed, try resetting the RTP headers for viewers */
+					if (g_atomic_int_get(&session->started) && audio_active && !participant->audio_active && !participant->audio_muted)
+					{
+						/* Audio was just resumed, try resetting the RTP headers for viewers
+						音频刚刚恢复，尝试为观众重置 RTP 标头 */
 						janus_mutex_lock(&participant->subscribers_mutex);
 						GSList *ps = participant->subscribers;
-						while(ps) {
+						while (ps)
+						{
 							janus_videoroom_subscriber *l = (janus_videoroom_subscriber *)ps->data;
-							if(l)
+							if (l)
 								l->context.a_seq_reset = TRUE;
 							ps = ps->next;
 						}
@@ -7228,19 +8035,22 @@ static void *janus_videoroom_handler(void *data) {
 					}
 					participant->audio_active = audio_active;
 					JANUS_LOG(LOG_VERB, "Setting audio property: %s (room %s, user %s)\n",
-						participant->audio_active ? "true" : "false", participant->room_id_str, participant->user_id_str);
+							  participant->audio_active ? "true" : "false", participant->room_id_str, participant->user_id_str);
 				}
-				if(audiocodec && json_string_value(json_object_get(msg->jsep, "sdp")) != NULL) {
-					/* The participant would like to use an audio codec in particular */
+				if (audiocodec && json_string_value(json_object_get(msg->jsep, "sdp")) != NULL)
+				{
+					/* The participant would like to use an audio codec in particular
+					发布者想使用指定音频编解码器 */
 					janus_audiocodec acodec = janus_audiocodec_from_name(json_string_value(audiocodec));
-					if(acodec == JANUS_AUDIOCODEC_NONE ||
-							(acodec != participant->room->acodec[0] &&
-							acodec != participant->room->acodec[1] &&
-							acodec != participant->room->acodec[2] &&
-							acodec != participant->room->acodec[3] &&
-							acodec != participant->room->acodec[4])) {
+					if (acodec == JANUS_AUDIOCODEC_NONE ||
+						(acodec != participant->room->acodec[0] &&
+						 acodec != participant->room->acodec[1] &&
+						 acodec != participant->room->acodec[2] &&
+						 acodec != participant->room->acodec[3] &&
+						 acodec != participant->room->acodec[4]))
+					{
 						JANUS_LOG(LOG_ERR, "Participant asked for audio codec '%s', but it's not allowed (room %s, user %s)\n",
-							json_string_value(audiocodec), participant->room_id_str, participant->user_id_str);
+								  json_string_value(audiocodec), participant->room_id_str, participant->user_id_str);
 						janus_refcount_decrease(&participant->ref);
 						error_code = JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT;
 						g_snprintf(error_cause, 512, "Audio codec unavailable in this room");
@@ -7248,17 +8058,21 @@ static void *janus_videoroom_handler(void *data) {
 					}
 					participant->acodec = acodec;
 					JANUS_LOG(LOG_VERB, "Participant asked for audio codec '%s' (room %s, user %s)\n",
-						json_string_value(audiocodec), participant->room_id_str, participant->user_id_str);
+							  json_string_value(audiocodec), participant->room_id_str, participant->user_id_str);
 				}
-				if(video) {
+				if (video)
+				{
 					gboolean video_active = json_is_true(video);
-					if(g_atomic_int_get(&session->started) && video_active && !participant->video_active && !participant->video_muted) {
-						/* Video was just resumed, try resetting the RTP headers for viewers */
+					if (g_atomic_int_get(&session->started) && video_active && !participant->video_active && !participant->video_muted)
+					{
+						/* Video was just resumed, try resetting the RTP headers for viewers
+						视频刚刚恢复，尝试为观众重置 RTP 标头*/
 						janus_mutex_lock(&participant->subscribers_mutex);
 						GSList *ps = participant->subscribers;
-						while(ps) {
+						while (ps)
+						{
 							janus_videoroom_subscriber *l = (janus_videoroom_subscriber *)ps->data;
-							if(l)
+							if (l)
 								l->context.v_seq_reset = TRUE;
 							ps = ps->next;
 						}
@@ -7266,19 +8080,22 @@ static void *janus_videoroom_handler(void *data) {
 					}
 					participant->video_active = video_active;
 					JANUS_LOG(LOG_VERB, "Setting video property: %s (room %s, user %s)\n",
-						participant->video_active ? "true" : "false", participant->room_id_str, participant->user_id_str);
+							  participant->video_active ? "true" : "false", participant->room_id_str, participant->user_id_str);
 				}
-				if(videocodec && json_string_value(json_object_get(msg->jsep, "sdp")) != NULL) {
-					/* The participant would like to use a video codec in particular */
+				if (videocodec && json_string_value(json_object_get(msg->jsep, "sdp")) != NULL)
+				{
+					/* The participant would like to use a video codec in particular
+					发布者想使用指定视频编解码器*/
 					janus_videocodec vcodec = janus_videocodec_from_name(json_string_value(videocodec));
-					if(vcodec == JANUS_VIDEOCODEC_NONE ||
-							(vcodec != participant->room->vcodec[0] &&
-							vcodec != participant->room->vcodec[1] &&
-							vcodec != participant->room->vcodec[2] &&
-							vcodec != participant->room->vcodec[3] &&
-							vcodec != participant->room->vcodec[4])) {
+					if (vcodec == JANUS_VIDEOCODEC_NONE ||
+						(vcodec != participant->room->vcodec[0] &&
+						 vcodec != participant->room->vcodec[1] &&
+						 vcodec != participant->room->vcodec[2] &&
+						 vcodec != participant->room->vcodec[3] &&
+						 vcodec != participant->room->vcodec[4]))
+					{
 						JANUS_LOG(LOG_ERR, "Participant asked for video codec '%s', but it's not allowed (room %s, user %s)\n",
-							json_string_value(videocodec), participant->room_id_str, participant->user_id_str);
+								  json_string_value(videocodec), participant->room_id_str, participant->user_id_str);
 						janus_refcount_decrease(&participant->ref);
 						error_code = JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT;
 						g_snprintf(error_cause, 512, "Video codec unavailable in this room");
@@ -7286,78 +8103,99 @@ static void *janus_videoroom_handler(void *data) {
 					}
 					participant->vcodec = vcodec;
 					JANUS_LOG(LOG_VERB, "Participant asked for video codec '%s' (room %s, user %s)\n",
-						json_string_value(videocodec), participant->room_id_str, participant->user_id_str);
+							  json_string_value(videocodec), participant->room_id_str, participant->user_id_str);
 				}
-				if(data) {
+				if (data)
+				{
 					gboolean data_active = json_is_true(data);
 					participant->data_active = data_active;
 					JANUS_LOG(LOG_VERB, "Setting data property: %s (room %s, user %s)\n",
-						participant->data_active ? "true" : "false", participant->room_id_str, participant->user_id_str);
+							  participant->data_active ? "true" : "false", participant->room_id_str, participant->user_id_str);
 				}
-				if(bitrate) {
+				if (bitrate)
+				{
 					participant->bitrate = json_integer_value(bitrate);
-					JANUS_LOG(LOG_VERB, "Setting video bitrate: %"SCNu32" (room %s, user %s)\n",
-						participant->bitrate, participant->room_id_str, participant->user_id_str);
-					/* Send a new REMB */
-					if(g_atomic_int_get(&session->started))
+					JANUS_LOG(LOG_VERB, "Setting video bitrate: %" SCNu32 " (room %s, user %s)\n",
+							  participant->bitrate, participant->room_id_str, participant->user_id_str);
+					/* Send a new REMB 重新发送REMB协商发送比特率*/
+					if (g_atomic_int_get(&session->started))
 						participant->remb_latest = janus_get_monotonic_time();
 					gateway->send_remb(msg->handle, participant->bitrate);
 				}
-				if(keyframe && json_is_true(keyframe)) {
-					/* Send a FIR */
+				if (keyframe && json_is_true(keyframe))
+				{
+					/* Send a FIR 发送FIR 请求关键帧 */
 					janus_videoroom_reqpli(participant, "Keyframe request");
 				}
-				if(user_audio_active_packets) {
+				//参与者的 audio_active_packets 覆盖全局房间设置
+				if (user_audio_active_packets)
+				{
 					participant->user_audio_active_packets = json_integer_value(user_audio_active_packets);
 					JANUS_LOG(LOG_VERB, "Setting user audio_active_packets: %d (room %s, user %s)\n",
-						participant->user_audio_active_packets, participant->room_id_str, participant->user_id_str);
+							  participant->user_audio_active_packets, participant->room_id_str, participant->user_id_str);
 				}
-				if(user_audio_level_average) {
+				//参与者的 audio_level_average 覆盖全局房间设置
+				if (user_audio_level_average)
+				{
 					participant->user_audio_level_average = json_integer_value(user_audio_level_average);
 					JANUS_LOG(LOG_VERB, "Setting user audio_level_average: %d (room %s, user %s)\n",
-						participant->user_audio_level_average, participant->room_id_str, participant->user_id_str);
+							  participant->user_audio_level_average, participant->room_id_str, participant->user_id_str);
 				}
 				gboolean record_locked = FALSE;
-				if((record || recfile) && participant->room->lock_record && participant->room->room_secret) {
+				if ((record || recfile) && participant->room->lock_record && participant->room->room_secret)
+				{
 					JANUS_CHECK_SECRET(participant->room->room_secret, root, "secret", error_code, error_cause,
-						JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT, JANUS_VIDEOROOM_ERROR_UNAUTHORIZED);
-					if(error_code != 0) {
-						/* Wrong secret provided, we'll prevent the recording state from being changed */
+									   JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT, JANUS_VIDEOROOM_ERROR_UNAUTHORIZED);
+					if (error_code != 0)
+					{
+						/* Wrong secret provided, we'll prevent the recording state from being changed
+						提供了错误的密码，我们将阻止更改录制状态 */
 						record_locked = TRUE;
 					}
 				}
 				janus_mutex_lock(&participant->rec_mutex);
 				gboolean prev_recording_active = participant->recording_active;
-				if(record && !record_locked) {
+				//此发布者是否需要被记录
+				if (record && !record_locked)
+				{
 					participant->recording_active = json_is_true(record);
 					JANUS_LOG(LOG_VERB, "Setting record property: %s (room %s, user %s)\n",
-						participant->recording_active ? "true" : "false", participant->room_id_str, participant->user_id_str);
+							  participant->recording_active ? "true" : "false", participant->room_id_str, participant->user_id_str);
 				}
-				if(recfile && !record_locked) {
+				//记录的文件名称
+				if (recfile && !record_locked)
+				{
 					participant->recording_base = g_strdup(json_string_value(recfile));
 					JANUS_LOG(LOG_VERB, "Setting recording basename: %s (room %s, user %s)\n",
-						participant->recording_base, participant->room_id_str, participant->user_id_str);
+							  participant->recording_base, participant->room_id_str, participant->user_id_str);
 				}
-				/* Do we need to do something with the recordings right now? */
-				if(participant->recording_active != prev_recording_active) {
+				/* Do we need to do something with the recordings right now? 如果录制状态改变了我们要做什么*/
+				if (participant->recording_active != prev_recording_active)
+				{
 					/* Something changed */
-					if(!participant->recording_active) {
-						/* Not recording (anymore?) */
+					if (!participant->recording_active)
+					{
+						/* Not recording (anymore?) 不再录制了*/
 						janus_videoroom_recorder_close(participant);
-					} else if(participant->recording_active && participant->sdp) {
-						/* We've started recording, send a PLI/FIR and go on */
+					}
+					else if (participant->recording_active && participant->sdp)
+					{
+						/* We've started recording, send a PLI/FIR and go on 开始录制，请求关键帧*/
 						janus_videoroom_recorder_create(
 							participant, strstr(participant->sdp, "m=audio") != NULL,
 							strstr(participant->sdp, "m=video") != NULL,
 							strstr(participant->sdp, "m=application") != NULL);
-						if(strstr(participant->sdp, "m=video")) {
-							/* Send a FIR */
+						if (strstr(participant->sdp, "m=video"))
+						{
+							/* Send a FIR  如果需要视频 请求关键帧*/
 							janus_videoroom_reqpli(participant, "Recording video");
 						}
 					}
 				}
 				janus_mutex_unlock(&participant->rec_mutex);
-				if(display) {
+				//如果需要改变名称
+				if (display)
+				{
 					janus_mutex_lock(&participant->room->mutex);
 					char *old_display = participant->display;
 					char *new_display = g_strdup(json_string_value(display));
@@ -7367,24 +8205,28 @@ static void *janus_videoroom_handler(void *data) {
 					json_object_set_new(display_event, "videoroom", json_string("event"));
 					json_object_set_new(display_event, "id", string_ids ? json_string(participant->user_id_str) : json_integer(participant->user_id));
 					json_object_set_new(display_event, "display", json_string(participant->display));
-					if(participant->room && !g_atomic_int_get(&participant->room->destroyed)) {
+					if (participant->room && !g_atomic_int_get(&participant->room->destroyed))
+					{
 						janus_videoroom_notify_participants(participant, display_event, FALSE);
 					}
 					janus_mutex_unlock(&participant->room->mutex);
 					json_decref(display_event);
 				}
-				/* A renegotiation may be taking place */
+				/* A renegotiation may be taking place 重协商是否发生了 */
 				gboolean do_update = update ? json_is_true(update) : FALSE;
-				if(do_update && !sdp_update) {
+				if (do_update && !sdp_update)
+				{
+					//虽然是一个更新请求，但是没有sdp被更新
 					JANUS_LOG(LOG_WARN, "Got an 'update' request, but no SDP update? Ignoring...\n");
 				}
-				/* Done */
+				/* Done 完成configure*/
 				event = json_object();
 				json_object_set_new(event, "videoroom", json_string("event"));
 				json_object_set_new(event, "room", string_ids ? json_string(participant->room_id_str) : json_integer(participant->room_id));
 				json_object_set_new(event, "configured", json_string("ok"));
-				/* Also notify event handlers */
-				if(notify_events && gateway->events_is_enabled()) {
+				/* Also notify event handlers 广播事件*/
+				if (notify_events && gateway->events_is_enabled())
+				{
 					json_t *info = json_object();
 					json_object_set_new(info, "event", json_string("configured"));
 					json_object_set_new(info, "room", string_ids ? json_string(participant->room_id_str) : json_integer(participant->room_id));
@@ -7393,50 +8235,62 @@ static void *janus_videoroom_handler(void *data) {
 					json_object_set_new(info, "video_active", participant->video_active ? json_true() : json_false());
 					json_object_set_new(info, "data_active", participant->data_active ? json_true() : json_false());
 					json_object_set_new(info, "bitrate", json_integer(participant->bitrate));
-					if(participant->arc || participant->vrc || participant->drc) {
+					if (participant->arc || participant->vrc || participant->drc)
+					{
 						json_t *recording = json_object();
-						if(participant->arc && participant->arc->filename)
+						if (participant->arc && participant->arc->filename)
 							json_object_set_new(recording, "audio", json_string(participant->arc->filename));
-						if(participant->vrc && participant->vrc->filename)
+						if (participant->vrc && participant->vrc->filename)
 							json_object_set_new(recording, "video", json_string(participant->vrc->filename));
-						if(participant->drc && participant->drc->filename)
+						if (participant->drc && participant->drc->filename)
 							json_object_set_new(recording, "data", json_string(participant->drc->filename));
 						json_object_set_new(info, "recording", recording);
 					}
 					gateway->notify_event(&janus_videoroom_plugin, session->handle, info);
 				}
-			} else if(!strcasecmp(request_text, "unpublish")) {
-				/* This participant wants to unpublish */
-				if(!participant->sdp) {
+			}
+			else if (!strcasecmp(request_text, "unpublish"))
+			{
+				/* This participant wants to unpublish 如果发布者希望unpublish*/
+				if (!participant->sdp)
+				{
+					//如果没有sdp说明已经没有在发布了，不需要取消
 					janus_refcount_decrease(&participant->ref);
 					JANUS_LOG(LOG_ERR, "Can't unpublish, not published\n");
 					error_code = JANUS_VIDEOROOM_ERROR_NOT_PUBLISHED;
 					g_snprintf(error_cause, 512, "Can't unpublish, not published");
 					goto error;
 				}
-				/* Tell the core to tear down the PeerConnection, hangup_media will do the rest */
+				/* Tell the core to tear down the PeerConnection, hangup_media will do the rest 通知Janus core关闭PeerConnection, hangup_media方法，会重置一些设置*/
 				janus_videoroom_hangup_media(session->handle);
+				//要求核心关闭 WebRTC PeerConnection的回调
 				gateway->close_pc(session->handle);
 				/* Done */
 				event = json_object();
 				json_object_set_new(event, "videoroom", json_string("event"));
 				json_object_set_new(event, "room", string_ids ? json_string(participant->room_id_str) : json_integer(participant->room_id));
 				json_object_set_new(event, "unpublished", json_string("ok"));
-			} else if(!strcasecmp(request_text, "leave")) {
-				/* Prepare an event to confirm the request */
+			}
+			else if (!strcasecmp(request_text, "leave"))
+			{
+				/* Prepare an event to confirm the request 如果发布者想要离开*/
 				event = json_object();
 				json_object_set_new(event, "videoroom", json_string("event"));
 				json_object_set_new(event, "room", string_ids ? json_string(participant->room_id_str) : json_integer(participant->room_id));
 				json_object_set_new(event, "leaving", json_string("ok"));
-				/* This publisher is leaving, tell everybody */
+				/* This publisher is leaving, tell everybody 告诉所有人发布者要离开*/
 				janus_videoroom_leave_or_unpublish(participant, TRUE, FALSE);
 				/* Done */
 				participant->audio_active = FALSE;
 				participant->video_active = FALSE;
 				participant->data_active = FALSE;
+				//初始化发布标志
 				g_atomic_int_set(&session->started, 0);
 				//~ session->destroy = TRUE;
-			} else {
+			}
+			else
+			{
+				// 目前发布者只接受 configure ， publish，unpublish，leave 请求
 				janus_refcount_decrease(&participant->ref);
 				JANUS_LOG(LOG_ERR, "Unknown request '%s'\n", request_text);
 				error_code = JANUS_VIDEOROOM_ERROR_INVALID_REQUEST;
@@ -7444,42 +8298,55 @@ static void *janus_videoroom_handler(void *data) {
 				goto error;
 			}
 			janus_refcount_decrease(&participant->ref);
-		} else if(session->participant_type == janus_videoroom_p_type_subscriber) {
-			/* Handle this subscriber */
-			if(!strcasecmp(request_text, "join")) {
+		}
+		else if (session->participant_type == janus_videoroom_p_type_subscriber)
+		{
+			/* Handle this subscriber 处理订阅者的请求*/
+			if (!strcasecmp(request_text, "join"))
+			{
+				//订阅者不再支持join请求
 				JANUS_LOG(LOG_ERR, "Already in as a subscriber on this handle\n");
 				error_code = JANUS_VIDEOROOM_ERROR_ALREADY_JOINED;
 				g_snprintf(error_cause, 512, "Already in as a subscriber on this handle");
 				janus_refcount_decrease(&subscriber->ref);
 				goto error;
-			} else if(!strcasecmp(request_text, "start")) {
-				/* Start/restart receiving the publisher streams */
-				if(subscriber->paused && msg->jsep == NULL) {
+			}
+			else if (!strcasecmp(request_text, "start"))
+			{
+				/* Start/restart receiving the publisher streams 开始/重新开始接收发布者的streams*/
+				if (subscriber->paused && msg->jsep == NULL)
+				{
+					//如果之前是暂停观看，msg->jsep不需要带上sdp，这只是恢复暂停的流，重置 RTP 序列号
 					janus_videoroom_publisher *feed = subscriber->feed;
-
 					/* This is just resuming a paused stream, reset the RTP sequence numbers */
 					subscriber->context.a_seq_reset = TRUE;
 					subscriber->context.v_seq_reset = TRUE;
-
-					if(feed && feed->session && g_atomic_int_get(&feed->session->started)) {
-						/* Send a FIR */
+					if (feed && feed->session && g_atomic_int_get(&feed->session->started))
+					{
+						/* Send a FIR 重新请求关键帧*/
 						janus_videoroom_reqpli(feed, "Subscriber start");
 					}
 				}
+				//设置暂停标志为false
 				subscriber->paused = FALSE;
 				event = json_object();
 				json_object_set_new(event, "videoroom", json_string("event"));
 				json_object_set_new(event, "room", string_ids ? json_string(subscriber->room_id_str) : json_integer(subscriber->room_id));
 				json_object_set_new(event, "started", json_string("ok"));
-			} else if(!strcasecmp(request_text, "configure")) {
+			}
+			else if (!strcasecmp(request_text, "configure"))
+			{
+				//配置一些音视频参数
 				JANUS_VALIDATE_JSON_OBJECT(root, configure_parameters,
-					error_code, error_cause, TRUE,
-					JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT);
-				if(error_code != 0) {
+										   error_code, error_cause, TRUE,
+										   JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT);
+				if (error_code != 0)
+				{
 					janus_refcount_decrease(&subscriber->ref);
 					goto error;
 				}
-				if(subscriber->kicked) {
+				if (subscriber->kicked)
+				{
 					JANUS_LOG(LOG_ERR, "Unauthorized, you have been kicked\n");
 					error_code = JANUS_VIDEOROOM_ERROR_UNAUTHORIZED;
 					g_snprintf(error_cause, 512, "Unauthorized, you have been kicked");
@@ -7493,8 +8360,9 @@ static void *janus_videoroom_handler(void *data) {
 				json_t *update = json_object_get(root, "update");
 				json_t *spatial = json_object_get(root, "spatial_layer");
 				json_t *sc_substream = json_object_get(root, "substream");
-				if(json_integer_value(spatial) < 0 || json_integer_value(spatial) > 2 ||
-						json_integer_value(sc_substream) < 0 || json_integer_value(sc_substream) > 2) {
+				if (json_integer_value(spatial) < 0 || json_integer_value(spatial) > 2 || json_integer_value(sc_substream) < 0 || json_integer_value(sc_substream) > 2)
+				{
+					//判断订阅的substream是否符合要求
 					JANUS_LOG(LOG_ERR, "Invalid element (substream/spatial_layer should be 0, 1 or 2)\n");
 					error_code = JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT;
 					g_snprintf(error_cause, 512, "Invalid value (substream/spatial_layer should be 0, 1 or 2)");
@@ -7503,114 +8371,148 @@ static void *janus_videoroom_handler(void *data) {
 				}
 				json_t *temporal = json_object_get(root, "temporal_layer");
 				json_t *sc_temporal = json_object_get(root, "temporal");
-				if(json_integer_value(temporal) < 0 || json_integer_value(temporal) > 2 ||
-						json_integer_value(sc_temporal) < 0 || json_integer_value(sc_temporal) > 2) {
+				if (json_integer_value(temporal) < 0 || json_integer_value(temporal) > 2 || json_integer_value(sc_temporal) < 0 || json_integer_value(sc_temporal) > 2)
+				{
+					//判断订阅的temporal是否符合要求
 					JANUS_LOG(LOG_ERR, "Invalid element (temporal/temporal_layer should be 0, 1 or 2)\n");
 					error_code = JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT;
 					g_snprintf(error_cause, 512, "Invalid value (temporal/temporal_layer should be 0, 1 or 2)");
 					janus_refcount_decrease(&subscriber->ref);
 					goto error;
 				}
+				//多少时间没有收到数据包会让我们降低substream（在我们，默认250ms）
 				json_t *sc_fallback = json_object_get(root, "fallback");
-				/* Update the audio/video/data flags, if set */
+				/* Update the audio/video/data flags, if set 更新音频/视频/data 的状态，并且重置RTP序列号*/
 				janus_videoroom_publisher *publisher = subscriber->feed;
-				if(publisher) {
-					if(audio && publisher->audio && subscriber->audio_offered) {
+				if (publisher)
+				{
+					if (audio && publisher->audio && subscriber->audio_offered)
+					{
 						gboolean oldaudio = subscriber->audio;
 						gboolean newaudio = json_is_true(audio);
-						if(!oldaudio && newaudio) {
-							/* Audio just resumed, reset the RTP sequence numbers */
+						if (!oldaudio && newaudio)
+						{
+							/* Audio just resumed, reset the RTP sequence numbers
+							音频刚刚恢复，重置 RTP 序列号 */
 							subscriber->context.a_seq_reset = TRUE;
 						}
 						subscriber->audio = newaudio;
 					}
-					if(video && publisher->video && subscriber->video_offered) {
+					if (video && publisher->video && subscriber->video_offered)
+					{
 						gboolean oldvideo = subscriber->video;
 						gboolean newvideo = json_is_true(video);
-						if(!oldvideo && newvideo) {
-							/* Video just resumed, reset the RTP sequence numbers */
+						if (!oldvideo && newvideo)
+						{
+							/* Video just resumed, reset the RTP sequence numbers
+							视频刚刚恢复，重置 RTP 序列号*/
 							subscriber->context.v_seq_reset = TRUE;
 						}
 						subscriber->video = newvideo;
-						if(subscriber->video) {
-							/* Send a FIR */
+						if (subscriber->video)
+						{
+							/* Send a FIR 请求关键帧*/
 							janus_videoroom_reqpli(publisher, "Restoring video for subscriber");
 						}
 					}
-					if(data && publisher->data && subscriber->data_offered)
+					if (data && publisher->data && subscriber->data_offered)
 						subscriber->data = json_is_true(data);
-					/* Check if a simulcasting-related request is involved */
-					if(sc_substream && (publisher->ssrc[0] != 0 || publisher->rid[0] != NULL)) {
+					/* Check if a simulcasting-related request is involved 检查是否涉及到simulcast的一些设置*/
+					if (sc_substream && (publisher->ssrc[0] != 0 || publisher->rid[0] != NULL))
+					{
 						subscriber->sim_context.substream_target = json_integer_value(sc_substream);
-						if(subscriber->sim_context.substream_target >= 0 && subscriber->sim_context.substream_target <= 2) {
-							JANUS_LOG(LOG_VERB, "Setting video SSRC to let through (simulcast): %"SCNu32" (index %d, was %d)\n",
-								publisher->ssrc[subscriber->sim_context.substream_target],
-								subscriber->sim_context.substream_target,
-								subscriber->sim_context.substream);
+						if (subscriber->sim_context.substream_target >= 0 && subscriber->sim_context.substream_target <= 2)
+						{
+							JANUS_LOG(LOG_VERB, "Setting video SSRC to let through (simulcast): %" SCNu32 " (index %d, was %d)\n",
+									  publisher->ssrc[subscriber->sim_context.substream_target],
+									  subscriber->sim_context.substream_target,
+									  subscriber->sim_context.substream);
 						}
-						if(subscriber->sim_context.substream_target == subscriber->sim_context.substream) {
-							/* No need to do anything, we're already getting the right substream, so notify the user */
+						if (subscriber->sim_context.substream_target == subscriber->sim_context.substream)
+						{
+							/* No need to do anything, we're already getting the right substream, so notify the user
+							不需要做任何事情，我们已经得到了正确的子流，所以通知用户 */
 							json_t *event = json_object();
 							json_object_set_new(event, "videoroom", json_string("event"));
 							json_object_set_new(event, "room", string_ids ? json_string(subscriber->room_id_str) : json_integer(subscriber->room_id));
 							json_object_set_new(event, "substream", json_integer(subscriber->sim_context.substream));
 							gateway->push_event(msg->handle, &janus_videoroom_plugin, NULL, event, NULL);
 							json_decref(event);
-						} else {
-							/* Send a FIR */
+						}
+						else
+						{
+							/* Send a FIR 请求关键帧更新流*/
 							janus_videoroom_reqpli(publisher, "Simulcasting substream change");
 						}
 					}
-					if(subscriber->feed && subscriber->feed->vcodec == JANUS_VIDEOCODEC_VP8 &&
-							sc_temporal && (publisher->ssrc[0] != 0 || publisher->rid[0] != NULL)) {
+					//只有VP8处理temporal
+					if (subscriber->feed && subscriber->feed->vcodec == JANUS_VIDEOCODEC_VP8 && sc_temporal && (publisher->ssrc[0] != 0 || publisher->rid[0] != NULL))
+					{
 						subscriber->sim_context.templayer_target = json_integer_value(sc_temporal);
-						JANUS_LOG(LOG_VERB, "Setting video temporal layer to let through (simulcast): %d (was %d)\n",
-							subscriber->sim_context.templayer_target, subscriber->sim_context.templayer);
-						if(subscriber->sim_context.templayer_target == subscriber->sim_context.templayer) {
-							/* No need to do anything, we're already getting the right temporal, so notify the user */
+						JANUS_LOG(LOG_VERB, "Setting video temporal layer to let through (simulcast): %d (was %d)\n", subscriber->sim_context.templayer_target, subscriber->sim_context.templayer);
+						if (subscriber->sim_context.templayer_target == subscriber->sim_context.templayer)
+						{
+							/* No need to do anything, we're already getting the right temporal, so notify the user
+							不需要做任何事情，我们已经得到了正确的temporal，所以通知用户*/
 							json_t *event = json_object();
 							json_object_set_new(event, "videoroom", json_string("event"));
 							json_object_set_new(event, "room", string_ids ? json_string(subscriber->room_id_str) : json_integer(subscriber->room_id));
 							json_object_set_new(event, "temporal", json_integer(subscriber->sim_context.templayer));
 							gateway->push_event(msg->handle, &janus_videoroom_plugin, NULL, event, NULL);
 							json_decref(event);
-						} else {
-							/* Send a FIR */
+						}
+						else
+						{
+							/* Send a FIR 请求关键帧更新流*/
 							janus_videoroom_reqpli(publisher, "Simulcasting temporal layer change");
 						}
 					}
-					if(sc_fallback && (publisher->ssrc[0] != 0 || publisher->rid[0] != NULL)) {
+					if (sc_fallback && (publisher->ssrc[0] != 0 || publisher->rid[0] != NULL))
+					{
+						//多少时间没有收到数据包会让我们降低substream
 						subscriber->sim_context.drop_trigger = json_integer_value(sc_fallback);
 					}
 				}
-				if(subscriber->room && subscriber->room->do_svc) {
-					/* Also check if the viewer is trying to configure a layer change */
-					if(spatial) {
+				if (subscriber->room && subscriber->room->do_svc)
+				{
+					/* Also check if the viewer is trying to configure a layer change
+					检查观众是否需要对SVC的layer做一些修改 */
+					if (spatial)
+					{
 						int spatial_layer = json_integer_value(spatial);
-						if(spatial_layer > 1) {
+						if (spatial_layer > 1)
+						{
+							//空间层高于 1，如果使用 EnabledByFlag_2SL3TL 将被忽略
 							JANUS_LOG(LOG_WARN, "Spatial layer higher than 1, it will be ignored if using EnabledByFlag_2SL3TL\n");
 						}
-						if(spatial_layer == subscriber->spatial_layer) {
-							/* No need to do anything, we're already getting the right spatial layer, so notify the user */
+						if (spatial_layer == subscriber->spatial_layer)
+						{
+							/* No need to do anything, we're already getting the right spatial layer, so notify the user 目标层和当前层一致，通知用户*/
 							json_t *event = json_object();
 							json_object_set_new(event, "videoroom", json_string("event"));
 							json_object_set_new(event, "room", string_ids ? json_string(subscriber->room_id_str) : json_integer(subscriber->room_id));
 							json_object_set_new(event, "spatial_layer", json_integer(subscriber->spatial_layer));
 							gateway->push_event(msg->handle, &janus_videoroom_plugin, NULL, event, NULL);
 							json_decref(event);
-						} else if(spatial_layer != subscriber->target_spatial_layer) {
-							/* Send a FIR to the new RTP forward publisher */
+						}
+						else if (spatial_layer != subscriber->target_spatial_layer)
+						{
+							/* Send a FIR to the new RTP forward publisher 请求关键帧*/
 							janus_videoroom_reqpli(publisher, "Need to downscale spatially");
 						}
 						subscriber->target_spatial_layer = spatial_layer;
 					}
-					if(temporal) {
+					if (temporal)
+					{
 						int temporal_layer = json_integer_value(temporal);
-						if(temporal_layer > 2) {
+						if (temporal_layer > 2)
+						{
+							//高于 2 的temporal_layer，可能会被忽略
 							JANUS_LOG(LOG_WARN, "Temporal layer higher than 2, will probably be ignored\n");
 						}
-						if(temporal_layer == subscriber->temporal_layer) {
-							/* No need to do anything, we're already getting the right temporal layer, so notify the user */
+						if (temporal_layer == subscriber->temporal_layer)
+						{
+							/* No need to do anything, we're already getting the right temporal layer, so notify the user 目标层和当前层一致，啥也不干，通知用户*/
 							json_t *event = json_object();
 							json_object_set_new(event, "videoroom", json_string("event"));
 							json_object_set_new(event, "room", string_ids ? json_string(subscriber->room_id_str) : json_integer(subscriber->room_id));
@@ -7625,51 +8527,70 @@ static void *janus_videoroom_handler(void *data) {
 				json_object_set_new(event, "videoroom", json_string("event"));
 				json_object_set_new(event, "room", string_ids ? json_string(subscriber->room_id_str) : json_integer(subscriber->room_id));
 				json_object_set_new(event, "configured", json_string("ok"));
-				/* The user may be interested in an ICE restart */
+				/* The user may be interested in an ICE restart 用户是否需要重新协商ICE */
 				gboolean do_restart = restart ? json_is_true(restart) : FALSE;
 				gboolean do_update = update ? json_is_true(update) : FALSE;
-				if(publisher && (sdp_update || do_restart || do_update)) {
-					/* Negotiate by sending the selected publisher SDP back, and/or force an ICE restart */
-					if(publisher->sdp != NULL) {
+				if (publisher && (sdp_update || do_restart || do_update))
+				{
+					/* Negotiate by sending the selected publisher SDP back, and/or force an ICE restart 通过发回选定的发布者 SDP 进行协商，强制重启 ICE*/
+					if (publisher->sdp != NULL)
+					{
 						char temp_error[512];
 						JANUS_LOG(LOG_VERB, "Munging SDP offer (update) to adapt it to the subscriber's requirements\n");
+						//将发布者 SDP 字符串解析为 janus_sdp 对象
 						janus_sdp *offer = janus_sdp_parse(publisher->sdp, temp_error, sizeof(temp_error));
-						if(publisher->audio && !subscriber->audio_offered)
+						if (publisher->audio && !subscriber->audio_offered)
 							janus_sdp_mline_remove(offer, JANUS_SDP_AUDIO);
-						if(publisher->video && !subscriber->video_offered)
+						if (publisher->video && !subscriber->video_offered)
 							janus_sdp_mline_remove(offer, JANUS_SDP_VIDEO);
-						if(publisher->data && !subscriber->data_offered)
+						if (publisher->data && !subscriber->data_offered)
 							janus_sdp_mline_remove(offer, JANUS_SDP_APPLICATION);
-						/* This is an update, check if we need to update */
-						janus_sdp_mtype mtype[3] = { JANUS_SDP_AUDIO, JANUS_SDP_VIDEO, JANUS_SDP_APPLICATION };
-						int i=0;
-						for(i=0; i<3; i++) {
+						/* This is an update, check if we need to update 检查我们有没有需要更新的地方*/
+						janus_sdp_mtype mtype[3] = {JANUS_SDP_AUDIO, JANUS_SDP_VIDEO, JANUS_SDP_APPLICATION};
+						int i = 0;
+						for (i = 0; i < 3; i++)
+						{
+							//订阅者sdp
 							janus_sdp_mline *m = janus_sdp_mline_find(subscriber->sdp, mtype[i]);
+							//发布者sdp
 							janus_sdp_mline *m_new = janus_sdp_mline_find(offer, mtype[i]);
-							if(m != NULL && m->port > 0 && m->direction != JANUS_SDP_INACTIVE) {
-								/* We have such an m-line and it's active, should it be changed? */
-								if(m_new == NULL || m_new->port == 0 || m_new->direction == JANUS_SDP_INACTIVE) {
-									/* Turn the m-line to inactive */
+							if (m != NULL && m->port > 0 && m->direction != JANUS_SDP_INACTIVE)
+							{
+								/* We have such an m-line and it's active, should it be changed?
+								我们有 m-line 并且它是活跃的，它应该改变吗？*/
+								if (m_new == NULL || m_new->port == 0 || m_new->direction == JANUS_SDP_INACTIVE)
+								{
+									/* Turn the m-line to inactive 改变m-line为非活跃 */
 									m->direction = JANUS_SDP_INACTIVE;
 								}
-							} else {
-								/* We don't have such an m-line or it's disabled, should it be added/enabled? */
-								if(m_new != NULL && m_new->port > 0 && m_new->direction != JANUS_SDP_INACTIVE) {
-									if(m != NULL) {
+							}
+							else
+							{
+								/* We don't have such an m-line or it's disabled, should it be added/enabled?
+								我们没有只找到m-line或者它被禁止使用了，是否应该添加/启用
+								*/
+								if (m_new != NULL && m_new->port > 0 && m_new->direction != JANUS_SDP_INACTIVE)
+								{
+									if (m != NULL)
+									{
 										m->port = m_new->port;
 										m->direction = m_new->direction;
-									} else {
-										/* Add the new m-line */
+									}
+									else
+									{
+										/* Add the new m-line 添加新 m-line */
 										m = janus_sdp_mline_create(m_new->type, m_new->port, m_new->proto, m_new->direction);
 										subscriber->sdp->m_lines = g_list_append(subscriber->sdp->m_lines, m);
 									}
-									/* Copy/replace the other properties */
+									/* Copy/replace the other properties 复制/替换 其他配置 */
 									m->c_ipv4 = m_new->c_ipv4;
-									if(m_new->c_addr && (m->c_addr == NULL || strcmp(m->c_addr, m_new->c_addr))) {
+									if (m_new->c_addr && (m->c_addr == NULL || strcmp(m->c_addr, m_new->c_addr)))
+									{
 										g_free(m->c_addr);
 										m->c_addr = g_strdup(m_new->c_addr);
 									}
-									if(m_new->b_name && (m->b_name == NULL || strcmp(m->b_name, m_new->b_name))) {
+									if (m_new->b_name && (m->b_name == NULL || strcmp(m->b_name, m_new->b_name)))
+									{
 										g_free(m->b_name);
 										m->b_name = g_strdup(m_new->b_name);
 									}
@@ -7677,10 +8598,11 @@ static void *janus_videoroom_handler(void *data) {
 									g_list_free_full(m->fmts, (GDestroyNotify)g_free);
 									m->fmts = NULL;
 									GList *fmts = m_new->fmts;
-									while(fmts) {
+									while (fmts)
+									{
 										char *fmt = (char *)fmts->data;
-										if(fmt)
-											m->fmts = g_list_append(m->fmts,g_strdup(fmt));
+										if (fmt)
+											m->fmts = g_list_append(m->fmts, g_strdup(fmt));
 										fmts = fmts->next;
 									}
 									g_list_free(m->ptypes);
@@ -7688,10 +8610,13 @@ static void *janus_videoroom_handler(void *data) {
 									g_list_free_full(m->attributes, (GDestroyNotify)janus_sdp_attribute_destroy);
 									m->attributes = NULL;
 									GList *attr = m_new->attributes;
-									while(attr) {
+									while (attr)
+									{
 										janus_sdp_attribute *a = (janus_sdp_attribute *)attr->data;
+										//向媒体行添加属性
 										janus_sdp_attribute_add_to_mline(m,
-											janus_sdp_attribute_create(a->name, "%s", a->value));
+																		 // janus_sdp_attribute 实例
+																		 janus_sdp_attribute_create(a->name, "%s", a->value));
 										attr = attr->next;
 									}
 								}
@@ -7700,17 +8625,20 @@ static void *janus_videoroom_handler(void *data) {
 						janus_sdp_destroy(offer);
 						session->sdp_version++;
 						subscriber->sdp->o_version = session->sdp_version;
+						//根据发布者sdp的一些参数 更新发送给订阅人的sdp
 						char *newsdp = janus_sdp_write(subscriber->sdp);
 						JANUS_LOG(LOG_VERB, "Updating subscriber:\n%s\n", newsdp);
 						json_t *jsep = json_pack("{ssss}", "type", "offer", "sdp", newsdp);
-						if(do_restart)
+						if (do_restart)
+							//重新协商ICE
 							json_object_set_new(jsep, "restart", json_true());
-						if(subscriber->e2ee)
+						if (subscriber->e2ee)
+							//端到端加密
 							json_object_set_new(jsep, "e2ee", json_true());
 						/* How long will the Janus core take to push the event? */
 						gint64 start = janus_get_monotonic_time();
 						int res = gateway->push_event(msg->handle, &janus_videoroom_plugin, msg->transaction, event, jsep);
-						JANUS_LOG(LOG_VERB, "  >> Pushing event: %d (took %"SCNu64" us)\n", res, janus_get_monotonic_time()-start);
+						JANUS_LOG(LOG_VERB, "  >> Pushing event: %d (took %" SCNu64 " us)\n", res, janus_get_monotonic_time() - start);
 						json_decref(event);
 						json_decref(jsep);
 						g_free(newsdp);
@@ -7724,43 +8652,56 @@ static void *janus_videoroom_handler(void *data) {
 						continue;
 					}
 				}
-			} else if(!strcasecmp(request_text, "pause")) {
-				/* Stop receiving the publisher streams for a while */
+			}
+			else if (!strcasecmp(request_text, "pause"))
+			{
+				/* Stop receiving the publisher streams for a while 处理订阅者 pause请求，直接更改pause状态，后续接收流会判断这个状态*/
 				subscriber->paused = TRUE;
 				event = json_object();
 				json_object_set_new(event, "videoroom", json_string("event"));
 				json_object_set_new(event, "room", string_ids ? json_string(subscriber->room_id_str) : json_integer(subscriber->room_id));
 				json_object_set_new(event, "paused", json_string("ok"));
-			} else if(!strcasecmp(request_text, "switch")) {
-				/* This subscriber wants to switch to a different publisher */
+			}
+			else if (!strcasecmp(request_text, "switch"))
+			{
+				/* This subscriber wants to switch to a different publisher 处理订阅者的Switch请求，切换想要观看的publisher */
 				JANUS_VALIDATE_JSON_OBJECT(root, subscriber_parameters,
-					error_code, error_cause, TRUE,
-					JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT);
-				if(error_code != 0) {
+										   error_code, error_cause, TRUE,
+										   JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT);
+				if (error_code != 0)
+				{
 					janus_refcount_decrease(&subscriber->ref);
 					goto error;
 				}
-				if(!string_ids) {
+				if (!string_ids)
+				{
 					JANUS_VALIDATE_JSON_OBJECT(root, feed_parameters,
-						error_code, error_cause, TRUE,
-						JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT);
-				} else {
-					JANUS_VALIDATE_JSON_OBJECT(root, feedstr_parameters,
-						error_code, error_cause, TRUE,
-						JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT);
+											   error_code, error_cause, TRUE,
+											   JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT);
 				}
-				if(error_code != 0) {
+				else
+				{
+					JANUS_VALIDATE_JSON_OBJECT(root, feedstr_parameters,
+											   error_code, error_cause, TRUE,
+											   JANUS_VIDEOROOM_ERROR_MISSING_ELEMENT, JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT);
+				}
+				if (error_code != 0)
+				{
 					janus_refcount_decrease(&subscriber->ref);
 					goto error;
 				}
+				//新订阅的publisher id
 				json_t *feed = json_object_get(root, "feed");
 				guint64 feed_id = 0;
 				char feed_id_num[30], *feed_id_str = NULL;
-				if(!string_ids) {
+				if (!string_ids)
+				{
 					feed_id = json_integer_value(feed);
-					g_snprintf(feed_id_num, sizeof(feed_id_num), "%"SCNu64, feed_id);
+					g_snprintf(feed_id_num, sizeof(feed_id_num), "%" SCNu64, feed_id);
 					feed_id_str = feed_id_num;
-				} else {
+				}
+				else
+				{
 					feed_id_str = (char *)json_string_value(feed);
 				}
 				json_t *audio = json_object_get(root, "audio");
@@ -7768,8 +8709,9 @@ static void *janus_videoroom_handler(void *data) {
 				json_t *data = json_object_get(root, "data");
 				json_t *spatial = json_object_get(root, "spatial_layer");
 				json_t *sc_substream = json_object_get(root, "substream");
-				if(json_integer_value(spatial) < 0 || json_integer_value(spatial) > 2 ||
-						json_integer_value(sc_substream) < 0 || json_integer_value(sc_substream) > 2) {
+				if (json_integer_value(spatial) < 0 || json_integer_value(spatial) > 2 ||
+					json_integer_value(sc_substream) < 0 || json_integer_value(sc_substream) > 2)
+				{
 					JANUS_LOG(LOG_ERR, "Invalid element (substream/spatial_layer should be 0, 1 or 2)\n");
 					error_code = JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT;
 					g_snprintf(error_cause, 512, "Invalid value (substream/spatial_layer should be 0, 1 or 2)");
@@ -7778,8 +8720,9 @@ static void *janus_videoroom_handler(void *data) {
 				}
 				json_t *temporal = json_object_get(root, "temporal_layer");
 				json_t *sc_temporal = json_object_get(root, "temporal");
-				if(json_integer_value(temporal) < 0 || json_integer_value(temporal) > 2 ||
-						json_integer_value(sc_temporal) < 0 || json_integer_value(sc_temporal) > 2) {
+				if (json_integer_value(temporal) < 0 || json_integer_value(temporal) > 2 ||
+					json_integer_value(sc_temporal) < 0 || json_integer_value(sc_temporal) > 2)
+				{
 					JANUS_LOG(LOG_ERR, "Invalid element (temporal/temporal_layer should be 0, 1 or 2)\n");
 					error_code = JANUS_VIDEOROOM_ERROR_INVALID_ELEMENT;
 					g_snprintf(error_cause, 512, "Invalid value (temporal/temporal_layer should be 0, 1 or 2)");
@@ -7787,14 +8730,16 @@ static void *janus_videoroom_handler(void *data) {
 					goto error;
 				}
 				json_t *sc_fallback = json_object_get(root, "fallback");
-				if(!subscriber->room) {
+				if (!subscriber->room)
+				{
 					JANUS_LOG(LOG_ERR, "Room Destroyed\n");
 					error_code = JANUS_VIDEOROOM_ERROR_NO_SUCH_ROOM;
 					g_snprintf(error_cause, 512, "No such room");
 					janus_refcount_decrease(&subscriber->ref);
 					goto error;
 				}
-				if(g_atomic_int_get(&subscriber->destroyed)) {
+				if (g_atomic_int_get(&subscriber->destroyed))
+				{
 					JANUS_LOG(LOG_ERR, "Room Destroyed (%s)\n", subscriber->room_id_str);
 					error_code = JANUS_VIDEOROOM_ERROR_NO_SUCH_ROOM;
 					g_snprintf(error_cause, 512, "No such room (%s)", subscriber->room_id_str);
@@ -7803,8 +8748,9 @@ static void *janus_videoroom_handler(void *data) {
 				}
 				janus_mutex_lock(&subscriber->room->mutex);
 				janus_videoroom_publisher *publisher = g_hash_table_lookup(subscriber->room->participants,
-					string_ids ? (gpointer)feed_id_str : (gpointer)&feed_id);
-				if(publisher == NULL || g_atomic_int_get(&publisher->destroyed) || publisher->sdp == NULL) {
+																		   string_ids ? (gpointer)feed_id_str : (gpointer)&feed_id);
+				if (publisher == NULL || g_atomic_int_get(&publisher->destroyed) || publisher->sdp == NULL)
+				{
 					JANUS_LOG(LOG_ERR, "No such feed (%s)\n", feed_id_str);
 					error_code = JANUS_VIDEOROOM_ERROR_NO_SUCH_FEED;
 					g_snprintf(error_cause, 512, "No such feed (%s)", feed_id_str);
@@ -7816,12 +8762,16 @@ static void *janus_videoroom_handler(void *data) {
 				janus_refcount_increase(&publisher->session->ref);
 				janus_mutex_unlock(&subscriber->room->mutex);
 				gboolean paused = subscriber->paused;
-				subscriber->paused = TRUE;
-				/* Unsubscribe from the previous publisher */
+				subscriber->paused = TRUE; //取消上一个订阅的接收
+				/* Unsubscribe from the previous publisher 取消上一个订阅*/
 				janus_videoroom_publisher *prev_feed = subscriber->feed;
-				if(prev_feed) {
-					/* ... but make sure the codecs are compliant first */
-					if(publisher->acodec != prev_feed->acodec || publisher->vcodec != prev_feed->vcodec) {
+				if (prev_feed)
+				{
+					/* ... but make sure the codecs are compliant first
+					但首先要确保编解码器符合要求 */
+					if (publisher->acodec != prev_feed->acodec || publisher->vcodec != prev_feed->vcodec)
+					{
+						//两个发布者没有使用相同的编解码器，无法切换
 						janus_refcount_decrease(&publisher->session->ref);
 						janus_refcount_decrease(&publisher->ref);
 						subscriber->paused = paused;
@@ -7831,7 +8781,7 @@ static void *janus_videoroom_handler(void *data) {
 						janus_refcount_decrease(&subscriber->ref);
 						goto error;
 					}
-					/* Go on */
+					/* Go on 移除之前的订阅*/
 					janus_mutex_lock(&prev_feed->subscribers_mutex);
 					prev_feed->subscribers = g_slist_remove(prev_feed->subscribers, subscriber);
 					janus_mutex_unlock(&prev_feed->subscribers_mutex);
@@ -7840,16 +8790,16 @@ static void *janus_videoroom_handler(void *data) {
 					g_clear_pointer(&subscriber->feed, janus_videoroom_publisher_dereference);
 					janus_mutex_unlock(&session->mutex);
 				}
-				/* Subscribe to the new one */
-				subscriber->audio = audio ? json_is_true(audio) : TRUE;	/* True by default */
-				if(!publisher->audio)
-					subscriber->audio = FALSE;	/* ... unless the publisher isn't sending any audio */
-				subscriber->video = video ? json_is_true(video) : TRUE;	/* True by default */
-				if(!publisher->video)
-					subscriber->video = FALSE;	/* ... unless the publisher isn't sending any video */
-				subscriber->data = data ? json_is_true(data) : TRUE;	/* True by default */
-				if(!publisher->data)
-					subscriber->data = FALSE;	/* ... unless the publisher isn't sending any data */
+				/* Subscribe to the new one 重新订阅，跟上面一样，初始化配置一些基本信息*/
+				subscriber->audio = audio ? json_is_true(audio) : TRUE; /* True by default */
+				if (!publisher->audio)
+					subscriber->audio = FALSE;							/* ... unless the publisher isn't sending any audio */
+				subscriber->video = video ? json_is_true(video) : TRUE; /* True by default */
+				if (!publisher->video)
+					subscriber->video = FALSE;						 /* ... unless the publisher isn't sending any video */
+				subscriber->data = data ? json_is_true(data) : TRUE; /* True by default */
+				if (!publisher->data)
+					subscriber->data = FALSE; /* ... unless the publisher isn't sending any data */
 				/* Check if a simulcasting-related request is involved */
 				janus_rtp_simulcasting_context_reset(&subscriber->sim_context);
 				subscriber->sim_context.rid_ext_id = publisher->rid_extmap_id;
@@ -7858,7 +8808,8 @@ static void *janus_videoroom_handler(void *data) {
 				subscriber->sim_context.drop_trigger = sc_fallback ? json_integer_value(sc_fallback) : 0;
 				janus_vp8_simulcast_context_reset(&subscriber->vp8_context);
 				/* Check if a VP9 SVC-related request is involved */
-				if(subscriber->room && subscriber->room->do_svc) {
+				if (subscriber->room && subscriber->room->do_svc)
+				{
 					/* This subscriber belongs to a room where VP9 SVC has been enabled,
 					 * let's assume we're interested in all layers for the time being */
 					subscriber->spatial_layer = -1;
@@ -7875,38 +8826,45 @@ static void *janus_videoroom_handler(void *data) {
 				janus_mutex_lock(&session->mutex);
 				subscriber->feed = publisher;
 				janus_mutex_unlock(&session->mutex);
-				/* Send a FIR to the new publisher */
+				/* Send a FIR to the new publisher 发送请求关键帧 */
 				janus_videoroom_reqpli(publisher, "Switching existing subscriber to new publisher");
 				/* Done */
-				subscriber->paused = paused;
+				subscriber->paused = paused; //保持和上一个订阅的观看状态
 				event = json_object();
 				json_object_set_new(event, "videoroom", json_string("event"));
 				json_object_set_new(event, "switched", json_string("ok"));
 				json_object_set_new(event, "room", string_ids ? json_string(subscriber->room_id_str) : json_integer(subscriber->room_id));
 				json_object_set_new(event, "id", string_ids ? json_string(feed_id_str) : json_integer(feed_id));
-				if(publisher->display)
+				if (publisher->display)
 					json_object_set_new(event, "display", json_string(publisher->display));
 				/* Also notify event handlers */
-				if(notify_events && gateway->events_is_enabled()) {
+				if (notify_events && gateway->events_is_enabled())
+				{
 					json_t *info = json_object();
 					json_object_set_new(info, "event", json_string("switched"));
 					json_object_set_new(info, "room", string_ids ? json_string(publisher->room_id_str) : json_integer(publisher->room_id));
 					json_object_set_new(info, "feed", string_ids ? json_string(publisher->user_id_str) : json_integer(publisher->user_id));
 					gateway->notify_event(&janus_videoroom_plugin, session->handle, info);
 				}
-			} else if(!strcasecmp(request_text, "leave")) {
+			}
+			else if (!strcasecmp(request_text, "leave"))
+			{
+				//处理订阅者离开请求
 				guint64 room_id = subscriber ? subscriber->room_id : 0;
 				char *room_id_str = subscriber ? subscriber->room_id_str : NULL;
-				/* Tell the core to tear down the PeerConnection, hangup_media will do the rest */
+				/* Tell the core to tear down the PeerConnection, hangup_media will do the rest 告诉核心移除 PeerConnection，hangup_media 会做剩下的事情*/
 				janus_videoroom_hangup_media(session->handle);
 				gateway->close_pc(session->handle);
-				/* Send an event back */
+				/* Send an event back 发送返回结果*/
 				event = json_object();
 				json_object_set_new(event, "videoroom", json_string("event"));
 				json_object_set_new(event, "room", string_ids ? json_string(room_id_str) : json_integer(room_id));
 				json_object_set_new(event, "left", json_string("ok"));
 				g_atomic_int_set(&session->started, 0);
-			} else {
+			}
+			else
+			{
+				//目前订阅者只处理 join，start，configure，pause，switch，leave请求
 				JANUS_LOG(LOG_ERR, "Unknown request '%s'\n", request_text);
 				error_code = JANUS_VIDEOROOM_ERROR_INVALID_REQUEST;
 				g_snprintf(error_cause, 512, "Unknown request '%s'", request_text);
@@ -7916,80 +8874,105 @@ static void *janus_videoroom_handler(void *data) {
 			janus_refcount_decrease(&subscriber->ref);
 		}
 
-		/* Prepare JSON event */
+		/* Prepare JSON event 准备JSON事件*/
 		JANUS_LOG(LOG_VERB, "Preparing JSON event as a reply\n");
-		/* Any SDP or update to handle? */
+		/* Any SDP or update to handle? 是否有sdp或者其他更新需要处理 */
 		const char *msg_sdp_type = json_string_value(json_object_get(msg->jsep, "type"));
 		const char *msg_sdp = json_string_value(json_object_get(msg->jsep, "sdp"));
 		json_t *msg_simulcast = json_object_get(msg->jsep, "simulcast");
 		gboolean e2ee = json_is_true(json_object_get(msg->jsep, "e2ee"));
-		if(!msg_sdp) {
-			/* No SDP to send */
+		if (!msg_sdp)
+		{
+			/* No SDP to send 如果没有sdp*/
 			int ret = gateway->push_event(msg->handle, &janus_videoroom_plugin, msg->transaction, event, NULL);
 			JANUS_LOG(LOG_VERB, "  >> %d (%s)\n", ret, janus_get_api_error(ret));
 			json_decref(event);
-		} else {
-			/* Generate offer or answer */
+		}
+		else
+		{
+			/* Generate offer or answer 生成offer或者answer*/
 			JANUS_LOG(LOG_VERB, "This is involving a negotiation (%s) as well:\n%s\n", msg_sdp_type, msg_sdp);
-			if(sdp_update) {
-				/* Renegotiation: make sure the user provided an offer, and send answer */
+			if (sdp_update)
+			{
+				/* Renegotiation: make sure the user provided an offer, and send answer
+				这是一个sdp更新请求，确保用户提供了offer，我们会发送answer */
 				JANUS_LOG(LOG_VERB, "  -- Updating existing publisher\n");
-				session->sdp_version++;		/* This needs to be increased when it changes */
-			} else {
-				/* New PeerConnection */
-				session->sdp_version = 1;	/* This needs to be increased when it changes */
+				session->sdp_version++; /* This needs to be increased when it changes 当我们改变了sdp的时候，需要增加sdp的版本*/
+			}
+			else
+			{
+				/* New PeerConnection 这是一个新的PeerConnection */
+				session->sdp_version = 1; /* This needs to be increased when it changes 当我们改变了sdp的时候，需要增加sdp的版本*/
 				session->sdp_sessid = janus_get_real_time();
 			}
 			const char *type = NULL;
-			if(!strcasecmp(msg_sdp_type, "offer")) {
-				/* We need to answer */
+			if (!strcasecmp(msg_sdp_type, "offer"))
+			{
+				/* We need to answer 如果传来的是一个offer，我们需要返回answer*/
 				type = "answer";
-			} else if(!strcasecmp(msg_sdp_type, "answer")) {
-				/* We got an answer (from a subscriber?), no need to negotiate */
+			}
+			else if (!strcasecmp(msg_sdp_type, "answer"))
+			{
+				/* We got an answer (from a subscriber?), no need to negotiate
+				我们得到一个answer（来自订阅者？）我们不需要协商
+				*/
 				g_atomic_int_set(&session->hangingup, 0);
 				int ret = gateway->push_event(msg->handle, &janus_videoroom_plugin, msg->transaction, event, NULL);
 				JANUS_LOG(LOG_VERB, "  >> %d (%s)\n", ret, janus_get_api_error(ret));
 				json_decref(event);
 				janus_videoroom_message_free(msg);
 				continue;
-			} else {
-				/* TODO We don't support anything else right now... */
+			}
+			else
+			{
+				/* TODO We don't support anything else right now... 不支持的sdp类型*/
 				JANUS_LOG(LOG_ERR, "Unknown SDP type '%s'\n", msg_sdp_type);
 				error_code = JANUS_VIDEOROOM_ERROR_INVALID_SDP_TYPE;
 				g_snprintf(error_cause, 512, "Unknown SDP type '%s'", msg_sdp_type);
 				goto error;
 			}
-			if(session->participant_type != janus_videoroom_p_type_publisher) {
-				/* We shouldn't be here, we always offer ourselves */
+			if (session->participant_type != janus_videoroom_p_type_publisher)
+			{
+				/* We shouldn't be here, we always offer ourselves 只有发布者会发送offer*/
 				JANUS_LOG(LOG_ERR, "Only publishers send offers\n");
 				error_code = JANUS_VIDEOROOM_ERROR_INVALID_SDP_TYPE;
 				g_snprintf(error_cause, 512, "Only publishers send offers");
 				goto error;
-			} else {
-				/* This is a new publisher: is there room? */
+			}
+			else
+			{
+				/* This is a new publisher: is there room? 这是一个新发布者*/
 				participant = janus_videoroom_session_get_publisher(session);
 				janus_videoroom *videoroom = participant->room;
 				int count = 0;
 				GHashTableIter iter;
 				gpointer value;
-				if(!videoroom) {
+				if (!videoroom)
+				{
+					//房间不存在
 					error_code = JANUS_VIDEOROOM_ERROR_NO_SUCH_ROOM;
 					goto error;
 				}
-				if(g_atomic_int_get(&videoroom->destroyed)) {
+				if (g_atomic_int_get(&videoroom->destroyed))
+				{
+					//房间已经被销毁了
 					error_code = JANUS_VIDEOROOM_ERROR_NO_SUCH_ROOM;
 					goto error;
 				}
 				janus_mutex_lock(&videoroom->mutex);
+				//迭代房间中的参与者，统计人数，如果人数已经到达最大发布者人数时，不允许加入
 				g_hash_table_iter_init(&iter, videoroom->participants);
-				while (!g_atomic_int_get(&videoroom->destroyed) && g_hash_table_iter_next(&iter, NULL, &value)) {
+				while (!g_atomic_int_get(&videoroom->destroyed) && g_hash_table_iter_next(&iter, NULL, &value))
+				{
 					janus_videoroom_publisher *p = value;
-					if(p != participant && p->sdp)
+					if (p != participant && p->sdp)
 						count++;
 				}
 				janus_refcount_increase(&videoroom->ref);
 				janus_mutex_unlock(&videoroom->mutex);
-				if(count == videoroom->max_publishers) {
+				if (count == videoroom->max_publishers)
+				{
+					//如果人数已经到达最大发布者人数时，不允许加入
 					janus_refcount_decrease(&videoroom->ref);
 					participant->audio_active = FALSE;
 					participant->video_active = FALSE;
@@ -7999,7 +8982,9 @@ static void *janus_videoroom_handler(void *data) {
 					g_snprintf(error_cause, 512, "Maximum number of publishers (%d) already reached", videoroom->max_publishers);
 					goto error;
 				}
-				if(videoroom->require_e2ee && !e2ee && !participant->e2ee) {
+				if (videoroom->require_e2ee && !e2ee && !participant->e2ee)
+				{
+					//房间需要端对端加密，但是发布者并没有提供
 					janus_refcount_decrease(&videoroom->ref);
 					participant->audio_active = FALSE;
 					participant->video_active = FALSE;
@@ -8009,14 +8994,17 @@ static void *janus_videoroom_handler(void *data) {
 					g_snprintf(error_cause, 512, "Room requires end-to-end encrypted media");
 					goto error;
 				}
-				/* Now prepare the SDP to give back */
-				if(strstr(msg_sdp, "mozilla") || strstr(msg_sdp, "Mozilla")) {
+				/* Now prepare the SDP to give back 准备返回sdp */
+				if (strstr(msg_sdp, "mozilla") || strstr(msg_sdp, "Mozilla"))
+				{
+				    //使用firefox浏览器
 					participant->firefox = TRUE;
 				}
-				/* Start by parsing the offer */
+				/* Start by parsing the offer 开始解析offer*/
 				char error_str[512];
 				janus_sdp *offer = janus_sdp_parse(msg_sdp, error_str, sizeof(error_str));
-				if(offer == NULL) {
+				if (offer == NULL)
+				{
 					janus_refcount_decrease(&videoroom->ref);
 					json_decref(event);
 					JANUS_LOG(LOG_ERR, "Error parsing offer: %s\n", error_str);
@@ -8028,59 +9016,88 @@ static void *janus_videoroom_handler(void *data) {
 				char custom_fmtp[256];
 				custom_fmtp[0] = '\0';
 				GList *temp = offer->m_lines;
-				while(temp) {
-					/* Which media are available? */
+				while (temp)
+				{
+					/* Which media are available? 哪个媒体是活跃的 */
 					janus_sdp_mline *m = (janus_sdp_mline *)temp->data;
-					if(m->type == JANUS_SDP_AUDIO && m->port > 0 &&
-							m->direction != JANUS_SDP_RECVONLY && m->direction != JANUS_SDP_INACTIVE) {
+					if (m->type == JANUS_SDP_AUDIO && m->port > 0 &&
+						m->direction != JANUS_SDP_RECVONLY && m->direction != JANUS_SDP_INACTIVE)
+					{
 						participant->audio = TRUE;
-					} else if(m->type == JANUS_SDP_VIDEO && m->port > 0 &&
-							m->direction != JANUS_SDP_RECVONLY && m->direction != JANUS_SDP_INACTIVE) {
+					}
+					else if (m->type == JANUS_SDP_VIDEO && m->port > 0 &&
+							 m->direction != JANUS_SDP_RECVONLY && m->direction != JANUS_SDP_INACTIVE)
+					{
 						participant->video = TRUE;
-					} else if(m->type == JANUS_SDP_APPLICATION && m->port > 0) {
+					}
+					else if (m->type == JANUS_SDP_APPLICATION && m->port > 0)
+					{
 						participant->data = TRUE;
 					}
-					if(m->type == JANUS_SDP_AUDIO || m->type == JANUS_SDP_VIDEO) {
+					if (m->type == JANUS_SDP_AUDIO || m->type == JANUS_SDP_VIDEO)
+					{
 						/* Are the extmaps we care about there? */
 						GList *ma = m->attributes;
-						while(ma) {
+						while (ma)
+						{
 							janus_sdp_attribute *a = (janus_sdp_attribute *)ma->data;
-							if(a->name && a->value) {
-								if(videoroom->audiolevel_ext && m->type == JANUS_SDP_AUDIO && strstr(a->value, JANUS_RTP_EXTMAP_AUDIO_LEVEL)) {
-									if(janus_string_to_uint8(a->value, &participant->audio_level_extmap_id) < 0)
+							if (a->name && a->value)
+							{
+								if (videoroom->audiolevel_ext && m->type == JANUS_SDP_AUDIO && strstr(a->value, JANUS_RTP_EXTMAP_AUDIO_LEVEL))
+								{
+									if (janus_string_to_uint8(a->value, &participant->audio_level_extmap_id) < 0)
 										JANUS_LOG(LOG_WARN, "Invalid audio-level extension ID: %s\n", a->value);
-								} else if(videoroom->videoorient_ext && m->type == JANUS_SDP_VIDEO && strstr(a->value, JANUS_RTP_EXTMAP_VIDEO_ORIENTATION)) {
-									if(janus_string_to_uint8(a->value, &participant->video_orient_extmap_id) < 0)
+								}
+								else if (videoroom->videoorient_ext && m->type == JANUS_SDP_VIDEO && strstr(a->value, JANUS_RTP_EXTMAP_VIDEO_ORIENTATION))
+								{
+									if (janus_string_to_uint8(a->value, &participant->video_orient_extmap_id) < 0)
 										JANUS_LOG(LOG_WARN, "Invalid video-orientation extension ID: %s\n", a->value);
-								} else if(videoroom->playoutdelay_ext && m->type == JANUS_SDP_VIDEO && strstr(a->value, JANUS_RTP_EXTMAP_PLAYOUT_DELAY)) {
-									if(janus_string_to_uint8(a->value, &participant->playout_delay_extmap_id) < 0)
+								}
+								else if (videoroom->playoutdelay_ext && m->type == JANUS_SDP_VIDEO && strstr(a->value, JANUS_RTP_EXTMAP_PLAYOUT_DELAY))
+								{
+									if (janus_string_to_uint8(a->value, &participant->playout_delay_extmap_id) < 0)
 										JANUS_LOG(LOG_WARN, "Invalid playout-delay extension ID: %s\n", a->value);
-								} else if(m->type == JANUS_SDP_AUDIO && !strcasecmp(a->name, "fmtp")) {
-									if(strstr(a->value, "useinbandfec=1") && videoroom->do_opusfec) {
+								}
+								else if (m->type == JANUS_SDP_AUDIO && !strcasecmp(a->name, "fmtp"))
+								{
+									if (strstr(a->value, "useinbandfec=1") && videoroom->do_opusfec)
+									{
 										participant->do_opusfec = TRUE;
-										if(strlen(custom_fmtp) == 0) {
+										if (strlen(custom_fmtp) == 0)
+										{
 											g_snprintf(custom_fmtp, sizeof(custom_fmtp), "useinbandfec=1");
-										} else {
+										}
+										else
+										{
 											g_strlcat(custom_fmtp, ";useinbandfec=1", sizeof(custom_fmtp));
 										}
 									}
-									if(strstr(a->value, "usedtx=1") && videoroom->do_opusdtx) {
+									if (strstr(a->value, "usedtx=1") && videoroom->do_opusdtx)
+									{
 										participant->do_opusdtx = TRUE;
-										if(strlen(custom_fmtp) == 0) {
+										if (strlen(custom_fmtp) == 0)
+										{
 											g_snprintf(custom_fmtp, sizeof(custom_fmtp), "usedtx=1");
-										} else {
+										}
+										else
+										{
 											g_strlcat(custom_fmtp, ";usedtx=1", sizeof(custom_fmtp));
 										}
 									}
-									if(strstr(a->value, "stereo=1")) {
-										if(strlen(custom_fmtp) == 0) {
+									if (strstr(a->value, "stereo=1"))
+									{
+										if (strlen(custom_fmtp) == 0)
+										{
 											g_snprintf(custom_fmtp, sizeof(custom_fmtp), "stereo=1");
-										} else {
+										}
+										else
+										{
 											g_strlcat(custom_fmtp, ";stereo=1", sizeof(custom_fmtp));
 										}
 									}
 									char *tmp = strchr(a->value, ' ');
-									if(tmp && strlen(tmp) > 1) {
+									if (tmp && strlen(tmp) > 1)
+									{
 										tmp++;
 										g_free(audio_fmtp);
 										audio_fmtp = g_strdup(tmp);
@@ -8092,17 +9109,23 @@ static void *janus_videoroom_handler(void *data) {
 					}
 					temp = temp->next;
 				}
-				/* Prepare an answer now: force the room codecs and recvonly on the Janus side */
+				/* Prepare an answer now: force the room codecs and recvonly on the Janus side 
+				现在准备一个amswer：在 Janus 端强制使用房间编解码器和 recvonly*/
 				JANUS_LOG(LOG_VERB, "The publisher %s going to send an audio stream\n", participant->audio ? "is" : "is NOT");
 				JANUS_LOG(LOG_VERB, "The publisher %s going to send a video stream\n", participant->video ? "is" : "is NOT");
 				JANUS_LOG(LOG_VERB, "The publisher %s going to open a data channel\n", participant->data ? "is" : "is NOT");
-				/* Check the codecs we can use, or the ones we should */
-				if(participant->acodec == JANUS_AUDIOCODEC_NONE) {
-					int i=0;
-					for(i=0; i<5; i++) {
-						if(videoroom->acodec[i] == JANUS_AUDIOCODEC_NONE)
+				/* Check the codecs we can use, or the ones we should 
+				检查我们可以使用的编解码器，或者我们应该使用的编解码器*/
+				if (participant->acodec == JANUS_AUDIOCODEC_NONE)
+				{
+					int i = 0;
+					for (i = 0; i < 5; i++)
+					{
+						if (videoroom->acodec[i] == JANUS_AUDIOCODEC_NONE)
 							continue;
-						if(janus_sdp_get_codec_pt(offer, janus_audiocodec_name(videoroom->acodec[i])) != -1) {
+						// 获取与特定编解码器关联的有效负载类型
+						if (janus_sdp_get_codec_pt(offer, janus_audiocodec_name(videoroom->acodec[i])) != -1)
+						{
 							participant->acodec = videoroom->acodec[i];
 							break;
 						}
@@ -8110,40 +9133,51 @@ static void *janus_videoroom_handler(void *data) {
 				}
 				JANUS_LOG(LOG_VERB, "The publisher is going to use the %s audio codec\n", janus_audiocodec_name(participant->acodec));
 				participant->audio_pt = janus_audiocodec_pt(participant->acodec);
-				if(participant->acodec != JANUS_AUDIOCODEC_MULTIOPUS) {
+				if (participant->acodec != JANUS_AUDIOCODEC_MULTIOPUS)
+				{
 					g_free(audio_fmtp);
 					audio_fmtp = NULL;
 				}
 				char *vp9_profile = videoroom->vp9_profile;
 				char *h264_profile = videoroom->h264_profile;
-				if(participant->vcodec == JANUS_VIDEOCODEC_NONE) {
-					int i=0;
-					for(i=0; i<5; i++) {
-						if(videoroom->vcodec[i] == JANUS_VIDEOCODEC_NONE)
+				if (participant->vcodec == JANUS_VIDEOCODEC_NONE)
+				{
+					int i = 0;
+					for (i = 0; i < 5; i++)
+					{
+						if (videoroom->vcodec[i] == JANUS_VIDEOCODEC_NONE)
 							continue;
-						if(videoroom->vcodec[i] == JANUS_VIDEOCODEC_VP9 && vp9_profile) {
-							/* Check if this VP9 profile is available */
-							if(janus_sdp_get_codec_pt_full(offer, janus_videocodec_name(videoroom->vcodec[i]), vp9_profile) != -1) {
-								/* It is */
+						if (videoroom->vcodec[i] == JANUS_VIDEOCODEC_VP9 && vp9_profile)
+						{
+							/* Check if this VP9 profile is available 检查是否有VP9配置*/
+							if (janus_sdp_get_codec_pt_full(offer, janus_videocodec_name(videoroom->vcodec[i]), vp9_profile) != -1)
+							{
+								/* It is 含有VP9配置 */
 								h264_profile = NULL;
 								participant->vcodec = videoroom->vcodec[i];
 								break;
 							}
-							/* It isn't, fallback to checking whether VP9 is available without the profile */
+							/* It isn't, fallback to checking whether VP9 is available without the profile 
+							没有VP9配置*/
 							vp9_profile = NULL;
-						} else if(videoroom->vcodec[i] == JANUS_VIDEOCODEC_H264 && h264_profile) {
-							/* Check if this H.264 profile is available */
-							if(janus_sdp_get_codec_pt_full(offer, janus_videocodec_name(videoroom->vcodec[i]), h264_profile) != -1) {
-								/* It is */
+						}
+						else if (videoroom->vcodec[i] == JANUS_VIDEOCODEC_H264 && h264_profile)
+						{
+							/* Check if this H.264 profile is available 检查是否有H264配置 */
+							if (janus_sdp_get_codec_pt_full(offer, janus_videocodec_name(videoroom->vcodec[i]), h264_profile) != -1)
+							{
+								/* It is 含有H264配置*/
 								vp9_profile = NULL;
 								participant->vcodec = videoroom->vcodec[i];
 								break;
 							}
-							/* It isn't, fallback to checking whether H.264 is available without the profile */
+							/* It isn't, fallback to checking whether H.264 is available without the profile 
+							含有H264配置*/
 							h264_profile = NULL;
 						}
-						/* Check if the codec is available */
-						if(janus_sdp_get_codec_pt(offer, janus_videocodec_name(videoroom->vcodec[i])) != -1) {
+						/* Check if the codec is available 检查是否协商了视频编码*/
+						if (janus_sdp_get_codec_pt(offer, janus_videocodec_name(videoroom->vcodec[i])) != -1)
+						{
 							participant->vcodec = videoroom->vcodec[i];
 							break;
 						}
@@ -8152,144 +9186,169 @@ static void *janus_videoroom_handler(void *data) {
 				JANUS_LOG(LOG_VERB, "The publisher is going to use the %s video codec\n", janus_videocodec_name(participant->vcodec));
 				participant->video_pt = janus_videocodec_pt(participant->vcodec);
 				janus_sdp *answer = janus_sdp_generate_answer(offer,
-					JANUS_SDP_OA_AUDIO_CODEC, janus_audiocodec_name(participant->acodec),
-					JANUS_SDP_OA_AUDIO_DIRECTION, JANUS_SDP_RECVONLY,
-					JANUS_SDP_OA_AUDIO_FMTP, audio_fmtp ? audio_fmtp : (strlen(custom_fmtp) > 0 ? custom_fmtp : NULL),
-					JANUS_SDP_OA_VIDEO_CODEC, janus_videocodec_name(participant->vcodec),
-					JANUS_SDP_OA_VP9_PROFILE, vp9_profile,
-					JANUS_SDP_OA_H264_PROFILE, h264_profile,
-					JANUS_SDP_OA_VIDEO_DIRECTION, JANUS_SDP_RECVONLY,
-					JANUS_SDP_OA_ACCEPT_EXTMAP, JANUS_RTP_EXTMAP_MID,
-					JANUS_SDP_OA_ACCEPT_EXTMAP, JANUS_RTP_EXTMAP_RID,
-					JANUS_SDP_OA_ACCEPT_EXTMAP, JANUS_RTP_EXTMAP_REPAIRED_RID,
-					JANUS_SDP_OA_ACCEPT_EXTMAP, videoroom->audiolevel_ext ? JANUS_RTP_EXTMAP_AUDIO_LEVEL : NULL,
-					JANUS_SDP_OA_ACCEPT_EXTMAP, videoroom->videoorient_ext ? JANUS_RTP_EXTMAP_VIDEO_ORIENTATION : NULL,
-					JANUS_SDP_OA_ACCEPT_EXTMAP, videoroom->playoutdelay_ext ? JANUS_RTP_EXTMAP_PLAYOUT_DELAY : NULL,
-					JANUS_SDP_OA_ACCEPT_EXTMAP, videoroom->transport_wide_cc_ext ? JANUS_RTP_EXTMAP_TRANSPORT_WIDE_CC : NULL,
-					JANUS_SDP_OA_DONE);
+															  JANUS_SDP_OA_AUDIO_CODEC, janus_audiocodec_name(participant->acodec),
+															  JANUS_SDP_OA_AUDIO_DIRECTION, JANUS_SDP_RECVONLY,
+															  JANUS_SDP_OA_AUDIO_FMTP, audio_fmtp ? audio_fmtp : (strlen(custom_fmtp) > 0 ? custom_fmtp : NULL),
+															  JANUS_SDP_OA_VIDEO_CODEC, janus_videocodec_name(participant->vcodec),
+															  JANUS_SDP_OA_VP9_PROFILE, vp9_profile,
+															  JANUS_SDP_OA_H264_PROFILE, h264_profile,
+															  JANUS_SDP_OA_VIDEO_DIRECTION, JANUS_SDP_RECVONLY,
+															  JANUS_SDP_OA_ACCEPT_EXTMAP, JANUS_RTP_EXTMAP_MID,
+															  JANUS_SDP_OA_ACCEPT_EXTMAP, JANUS_RTP_EXTMAP_RID,
+															  JANUS_SDP_OA_ACCEPT_EXTMAP, JANUS_RTP_EXTMAP_REPAIRED_RID,
+															  JANUS_SDP_OA_ACCEPT_EXTMAP, videoroom->audiolevel_ext ? JANUS_RTP_EXTMAP_AUDIO_LEVEL : NULL,
+															  JANUS_SDP_OA_ACCEPT_EXTMAP, videoroom->videoorient_ext ? JANUS_RTP_EXTMAP_VIDEO_ORIENTATION : NULL,
+															  JANUS_SDP_OA_ACCEPT_EXTMAP, videoroom->playoutdelay_ext ? JANUS_RTP_EXTMAP_PLAYOUT_DELAY : NULL,
+															  JANUS_SDP_OA_ACCEPT_EXTMAP, videoroom->transport_wide_cc_ext ? JANUS_RTP_EXTMAP_TRANSPORT_WIDE_CC : NULL,
+															  JANUS_SDP_OA_DONE);
 				janus_sdp_destroy(offer);
 				/* Replace the session name */
 				g_free(answer->s_name);
 				char s_name[100];
 				g_snprintf(s_name, sizeof(s_name), "VideoRoom %s", videoroom->room_id_str);
 				answer->s_name = g_strdup(s_name);
-				/* Which media are REALLY available? (some may have been rejected) */
+				/* Which media are REALLY available? (some may have been rejected) 哪些媒体是真正可用的？ （有些可能被拒绝了）*/
 				participant->audio = FALSE;
 				participant->video = FALSE;
 				participant->data = FALSE;
 				temp = answer->m_lines;
-				while(temp) {
+				while (temp)
+				{
 					janus_sdp_mline *m = (janus_sdp_mline *)temp->data;
-					if(m->type == JANUS_SDP_AUDIO && m->port > 0 && m->direction != JANUS_SDP_INACTIVE) {
+					if (m->type == JANUS_SDP_AUDIO && m->port > 0 && m->direction != JANUS_SDP_INACTIVE)
+					{
 						participant->audio = TRUE;
-					} else if(m->type == JANUS_SDP_VIDEO && m->port > 0 && m->direction != JANUS_SDP_INACTIVE) {
+					}
+					else if (m->type == JANUS_SDP_VIDEO && m->port > 0 && m->direction != JANUS_SDP_INACTIVE)
+					{
 						participant->video = TRUE;
-					} else if(m->type == JANUS_SDP_APPLICATION && m->port > 0) {
+					}
+					else if (m->type == JANUS_SDP_APPLICATION && m->port > 0)
+					{
 						participant->data = TRUE;
 					}
 					temp = temp->next;
 				}
 				JANUS_LOG(LOG_VERB, "Per the answer, the publisher %s going to send an audio stream\n",
-					participant->audio ? "is" : "is NOT");
+						  participant->audio ? "is" : "is NOT");
 				JANUS_LOG(LOG_VERB, "Per the answer, the publisher %s going to send a video stream\n",
-					participant->video ? "is" : "is NOT");
+						  participant->video ? "is" : "is NOT");
 				JANUS_LOG(LOG_VERB, "Per the answer, the publisher %s going to open a data channel\n",
-					participant->data ? "is" : "is NOT");
-				/* Update the event with info on the codecs that we'll be handling */
-				if(event) {
-					if(participant->audio)
+						  participant->data ? "is" : "is NOT");
+				/* Update the event with info on the codecs that we'll be handling 使用我们将要处理的编解码器的信息更新事件*/
+				if (event)
+				{
+					if (participant->audio)
 						json_object_set_new(event, "audio_codec", json_string(janus_audiocodec_name(participant->acodec)));
-					if(participant->video)
+					if (participant->video)
 						json_object_set_new(event, "video_codec", json_string(janus_videocodec_name(participant->vcodec)));
 				}
-				/* Also add a bandwidth SDP attribute if we're capping the bitrate in the room */
+				/* Also add a bandwidth SDP attribute if we're capping the bitrate in the room
+				如果我们要限制房间中的比特率，请添加带宽 SDP 属性  */
 				janus_sdp_mline *m = janus_sdp_mline_find(answer, JANUS_SDP_VIDEO);
-				if(m != NULL && videoroom->bitrate > 0 && videoroom->bitrate_cap) {
-					if(participant->firefox) {
+				if (m != NULL && videoroom->bitrate > 0 && videoroom->bitrate_cap)
+				{
+					if (participant->firefox)
+					{
 						/* Use TIAS (bps) instead of AS (kbps) for the b= attribute, as explained here:
 						 * https://github.com/meetecho/janus-gateway/issues/1277#issuecomment-397677746 */
 						m->b_name = g_strdup("TIAS");
 						m->b_value = videoroom->bitrate;
-					} else {
+					}
+					else
+					{
 						m->b_name = g_strdup("AS");
-						m->b_value = videoroom->bitrate/1000;
+						m->b_value = videoroom->bitrate / 1000;
 					}
 				}
-				/* Find out which fmtp was used for video */
+				/* Find out which fmtp was used for video 找出哪个 fmtp 用于视频 */
 				g_free(participant->vfmtp);
 				participant->vfmtp = NULL;
 				const char *video_profile = NULL;
-				if(m != NULL) {
+				if (m != NULL)
+				{
 					int video_pt = -1;
-					if(m->ptypes && m->ptypes->data)
+					if (m->ptypes && m->ptypes->data)
 						video_pt = GPOINTER_TO_INT(m->ptypes->data);
 					video_profile = janus_sdp_get_fmtp(answer, video_pt);
-					if(video_profile != NULL)
+					if (video_profile != NULL)
 						participant->vfmtp = g_strdup(video_profile);
 				}
-				/* Generate an SDP string we can send back to the publisher */
+				/* Generate an SDP string we can send back to the publisher 生成一个 SDP 字符串，我们可以将其发送回发布者 */
 				char *answer_sdp = janus_sdp_write(answer);
-				/* Now turn the SDP into what we'll send subscribers, using the static payload types for making switching easier */
+				/* Now turn the SDP into what we'll send subscribers, using the static payload types for making switching easier 
+				现在将 SDP 变成我们将发送订阅者的内容，使用静态有效负载类型使切换更容易*/
 				int mid_ext_id = 1;
-				while(mid_ext_id < 15) {
-					if(mid_ext_id != participant->audio_level_extmap_id &&
-							mid_ext_id != participant->video_orient_extmap_id &&
-							mid_ext_id != participant->playout_delay_extmap_id)
+				while (mid_ext_id < 15)
+				{
+					if (mid_ext_id != participant->audio_level_extmap_id &&
+						mid_ext_id != participant->video_orient_extmap_id &&
+						mid_ext_id != participant->playout_delay_extmap_id)
 						break;
 					mid_ext_id++;
 				}
 				int abs_send_time_ext_id = 1;
-				while(abs_send_time_ext_id < 15) {
-					if(abs_send_time_ext_id != mid_ext_id &&
-							abs_send_time_ext_id != participant->audio_level_extmap_id &&
-							abs_send_time_ext_id != participant->video_orient_extmap_id &&
-							abs_send_time_ext_id != participant->playout_delay_extmap_id)
+				while (abs_send_time_ext_id < 15)
+				{
+					if (abs_send_time_ext_id != mid_ext_id &&
+						abs_send_time_ext_id != participant->audio_level_extmap_id &&
+						abs_send_time_ext_id != participant->video_orient_extmap_id &&
+						abs_send_time_ext_id != participant->playout_delay_extmap_id)
 						break;
 					abs_send_time_ext_id++;
 				}
+				//生成answer返回给publisher之后，用answer再生成一个offer，该offer用来给那些想订阅该publisher的订阅者使用
 				offer = janus_sdp_generate_offer(s_name, answer->c_addr,
-					JANUS_SDP_OA_AUDIO, participant->audio,
-					JANUS_SDP_OA_AUDIO_CODEC, janus_audiocodec_name(participant->acodec),
-					JANUS_SDP_OA_AUDIO_PT, janus_audiocodec_pt(participant->acodec),
-					JANUS_SDP_OA_AUDIO_DIRECTION, JANUS_SDP_SENDONLY,
-					JANUS_SDP_OA_AUDIO_FMTP, audio_fmtp ? audio_fmtp : (strlen(custom_fmtp) > 0 ? custom_fmtp : NULL),
-					JANUS_SDP_OA_AUDIO_EXTENSION, JANUS_RTP_EXTMAP_AUDIO_LEVEL,
-						participant->audio_level_extmap_id > 0 ? participant->audio_level_extmap_id : 0,
-					JANUS_SDP_OA_AUDIO_EXTENSION, JANUS_RTP_EXTMAP_MID, mid_ext_id,
-					JANUS_SDP_OA_VIDEO, participant->video,
-					JANUS_SDP_OA_VIDEO_CODEC, janus_videocodec_name(participant->vcodec),
-					JANUS_SDP_OA_VIDEO_PT, janus_videocodec_pt(participant->vcodec),
-					JANUS_SDP_OA_VIDEO_FMTP, video_profile,
-					JANUS_SDP_OA_VIDEO_DIRECTION, JANUS_SDP_SENDONLY,
-					JANUS_SDP_OA_VIDEO_EXTENSION, JANUS_RTP_EXTMAP_MID, mid_ext_id,
-					JANUS_SDP_OA_VIDEO_EXTENSION, JANUS_RTP_EXTMAP_VIDEO_ORIENTATION,
-						participant->video_orient_extmap_id > 0 ? participant->video_orient_extmap_id : 0,
-					JANUS_SDP_OA_VIDEO_EXTENSION, JANUS_RTP_EXTMAP_PLAYOUT_DELAY,
-						participant->playout_delay_extmap_id > 0 ? participant->playout_delay_extmap_id : 0,
-					JANUS_SDP_OA_VIDEO_EXTENSION, JANUS_RTP_EXTMAP_ABS_SEND_TIME, abs_send_time_ext_id,
-					JANUS_SDP_OA_DATA, participant->data,
-					JANUS_SDP_OA_DONE);
-				/* Is this room recorded, or are we recording this publisher already? */
+												 JANUS_SDP_OA_AUDIO, participant->audio,
+												 JANUS_SDP_OA_AUDIO_CODEC, janus_audiocodec_name(participant->acodec),
+												 JANUS_SDP_OA_AUDIO_PT, janus_audiocodec_pt(participant->acodec),
+												 JANUS_SDP_OA_AUDIO_DIRECTION, JANUS_SDP_SENDONLY,
+												 JANUS_SDP_OA_AUDIO_FMTP, audio_fmtp ? audio_fmtp : (strlen(custom_fmtp) > 0 ? custom_fmtp : NULL),
+												 JANUS_SDP_OA_AUDIO_EXTENSION, JANUS_RTP_EXTMAP_AUDIO_LEVEL,
+												 participant->audio_level_extmap_id > 0 ? participant->audio_level_extmap_id : 0,
+												 JANUS_SDP_OA_AUDIO_EXTENSION, JANUS_RTP_EXTMAP_MID, mid_ext_id,
+												 JANUS_SDP_OA_VIDEO, participant->video,
+												 JANUS_SDP_OA_VIDEO_CODEC, janus_videocodec_name(participant->vcodec),
+												 JANUS_SDP_OA_VIDEO_PT, janus_videocodec_pt(participant->vcodec),
+												 JANUS_SDP_OA_VIDEO_FMTP, video_profile,
+												 JANUS_SDP_OA_VIDEO_DIRECTION, JANUS_SDP_SENDONLY,
+												 JANUS_SDP_OA_VIDEO_EXTENSION, JANUS_RTP_EXTMAP_MID, mid_ext_id,
+												 JANUS_SDP_OA_VIDEO_EXTENSION, JANUS_RTP_EXTMAP_VIDEO_ORIENTATION,
+												 participant->video_orient_extmap_id > 0 ? participant->video_orient_extmap_id : 0,
+												 JANUS_SDP_OA_VIDEO_EXTENSION, JANUS_RTP_EXTMAP_PLAYOUT_DELAY,
+												 participant->playout_delay_extmap_id > 0 ? participant->playout_delay_extmap_id : 0,
+												 JANUS_SDP_OA_VIDEO_EXTENSION, JANUS_RTP_EXTMAP_ABS_SEND_TIME, abs_send_time_ext_id,
+												 JANUS_SDP_OA_DATA, participant->data,
+												 JANUS_SDP_OA_DONE);
+				/* Is this room recorded, or are we recording this publisher already? 这个房间是录制的？ 还是我们已经录制了这个发布者？*/
 				janus_mutex_lock(&participant->rec_mutex);
-				if(videoroom->record || participant->recording_active) {
+				if (videoroom->record || participant->recording_active)
+				{
 					participant->recording_active = TRUE;
+					//开始录制
 					janus_videoroom_recorder_create(participant, participant->audio, participant->video, participant->data);
 				}
 				janus_mutex_unlock(&participant->rec_mutex);
-				/* Generate an SDP string we can offer subscribers later on */
+				/* Generate an SDP string we can offer subscribers later on 生成一个 SDP 字符串，我们稍后可以提供给订阅者 */
 				char *offer_sdp = janus_sdp_write(offer);
-				if(!sdp_update || (participant->ssrc[0] == 0 && participant->rid[0] == NULL)) {
-					/* Is simulcasting involved */
-					if(msg_simulcast && (participant->vcodec == JANUS_VIDEOCODEC_VP8 ||
-							participant->vcodec == JANUS_VIDEOCODEC_H264)) {
+				if (!sdp_update || (participant->ssrc[0] == 0 && participant->rid[0] == NULL))
+				{
+					/* Is simulcasting involved 涉及simulcasting的配置*/
+					if (msg_simulcast && (participant->vcodec == JANUS_VIDEOCODEC_VP8 ||
+										  participant->vcodec == JANUS_VIDEOCODEC_H264))
+					{
 						JANUS_LOG(LOG_VERB, "Publisher is going to do simulcasting\n");
+						//准备联播信息（rids 和/或 SSRC)
 						janus_rtp_simulcasting_prepare(msg_simulcast,
-							&participant->rid_extmap_id,
-							participant->ssrc, participant->rid);
-					} else {
-						/* No simulcasting involved */
-						int i=0;
-						for(i=0; i<3; i++) {
+													   &participant->rid_extmap_id,
+													   participant->ssrc, participant->rid);
+					}
+					else
+					{
+						/* No simulcasting involved 不涉及simulcasting*/
+						int i = 0;
+						for (i = 0; i < 3; i++)
+						{
 							participant->ssrc[i] = 0;
 							g_free(participant->rid[i]);
 							participant->rid[i] = NULL;
@@ -8299,13 +9358,14 @@ static void *janus_videoroom_handler(void *data) {
 				g_free(audio_fmtp);
 				janus_sdp_destroy(offer);
 				janus_sdp_destroy(answer);
-				/* Send the answer back to the publisher */
+				/* Send the answer back to the publisher 发送answer给publisher*/
 				JANUS_LOG(LOG_VERB, "Handling publisher: turned this into an '%s':\n%s\n", type, answer_sdp);
 				json_t *jsep = json_pack("{ssss}", "type", type, "sdp", answer_sdp);
 				g_free(answer_sdp);
-				if(e2ee)
+				if (e2ee)
 					participant->e2ee = TRUE;
-				if(participant->e2ee) {
+				if (participant->e2ee)
+				{
 					JANUS_LOG(LOG_VERB, "Publisher is going to do end-to-end media encryption\n");
 					json_object_set_new(jsep, "e2ee", json_true());
 				}
@@ -8313,27 +9373,36 @@ static void *janus_videoroom_handler(void *data) {
 				g_atomic_int_set(&session->hangingup, 0);
 				gint64 start = janus_get_monotonic_time();
 				int res = gateway->push_event(msg->handle, &janus_videoroom_plugin, msg->transaction, event, jsep);
-				JANUS_LOG(LOG_VERB, "  >> Pushing event: %d (took %"SCNu64" us)\n", res, janus_get_monotonic_time()-start);
+				JANUS_LOG(LOG_VERB, "  >> Pushing event: %d (took %" SCNu64 " us)\n", res, janus_get_monotonic_time() - start);
 				/* Done */
-				if(res != JANUS_OK) {
-					/* TODO Failed to negotiate? We should remove this publisher */
+				if (res != JANUS_OK)
+				{
+					/* TODO Failed to negotiate? We should remove this publisher 
+					协商失败？ 我们应该删除此发布者 */
 					g_free(offer_sdp);
-				} else {
-					/* Store the participant's SDP for interested subscribers */
+				}
+				else
+				{
+					/* Store the participant's SDP for interested subscribers 为感兴趣的订阅者存储参与者的 SDP*/
 					g_free(participant->sdp);
 					participant->sdp = offer_sdp;
 					/* We'll wait for the setup_media event before actually telling subscribers */
+					//在实际告诉订阅者之前，我们将等待 setup_media 事件
 				}
-				/* Unless this is an update, in which case schedule a new offer for all viewers */
-				if(sdp_update) {
+				/* Unless this is an update, in which case schedule a new offer for all viewers 
+				除非这是一个更新，在这种情况下，为所有观众安排一个新的offer */
+				if (sdp_update)
+				{
 					json_t *update = json_object();
 					json_object_set_new(update, "request", json_string("configure"));
 					json_object_set_new(update, "update", json_true());
 					janus_mutex_lock(&participant->subscribers_mutex);
 					GSList *s = participant->subscribers;
-					while(s) {
+					while (s)
+					{
 						janus_videoroom_subscriber *subscriber = (janus_videoroom_subscriber *)s->data;
-						if(subscriber && subscriber->session && subscriber->session->handle) {
+						if (subscriber && subscriber->session && subscriber->session->handle)
+						{
 							/* Enqueue the fake request: this will trigger a renegotiation */
 							janus_videoroom_message *msg = g_malloc(sizeof(janus_videoroom_message));
 							janus_refcount_increase(&subscriber->session->ref);
@@ -8353,68 +9422,77 @@ static void *janus_videoroom_handler(void *data) {
 				json_decref(event);
 				json_decref(jsep);
 			}
-			if(participant != NULL)
+			if (participant != NULL)
 				janus_refcount_decrease(&participant->ref);
 		}
 		janus_videoroom_message_free(msg);
 
 		continue;
 
-error:
-		{
-			/* Prepare JSON error event */
-			json_t *event = json_object();
-			json_object_set_new(event, "videoroom", json_string("event"));
-			json_object_set_new(event, "error_code", json_integer(error_code));
-			json_object_set_new(event, "error", json_string(error_cause));
-			int ret = gateway->push_event(msg->handle, &janus_videoroom_plugin, msg->transaction, event, NULL);
-			JANUS_LOG(LOG_VERB, "  >> Pushing event: %d (%s)\n", ret, janus_get_api_error(ret));
-			json_decref(event);
-			janus_videoroom_message_free(msg);
-		}
+	error:
+	{
+		/* Prepare JSON error event */
+		json_t *event = json_object();
+		json_object_set_new(event, "videoroom", json_string("event"));
+		json_object_set_new(event, "error_code", json_integer(error_code));
+		json_object_set_new(event, "error", json_string(error_cause));
+		int ret = gateway->push_event(msg->handle, &janus_videoroom_plugin, msg->transaction, event, NULL);
+		JANUS_LOG(LOG_VERB, "  >> Pushing event: %d (%s)\n", ret, janus_get_api_error(ret));
+		json_decref(event);
+		janus_videoroom_message_free(msg);
+	}
 	}
 	JANUS_LOG(LOG_VERB, "Leaving VideoRoom handler thread\n");
 	return NULL;
 }
 
-/* Helper to quickly relay RTP packets from publishers to subscribers 
+/* Helper to quickly relay RTP packets from publishers to subscribers
 快速将 RTP 数据包从发布者转发到订阅者 */
-static void janus_videoroom_relay_rtp_packet(gpointer data, gpointer user_data) {
+static void janus_videoroom_relay_rtp_packet(gpointer data, gpointer user_data)
+{
 	janus_videoroom_rtp_relay_packet *packet = (janus_videoroom_rtp_relay_packet *)user_data;
-	if(!packet || !packet->data || packet->length < 1) {
+	if (!packet || !packet->data || packet->length < 1)
+	{
 		JANUS_LOG(LOG_ERR, "Invalid packet...\n");
 		return;
 	}
 	janus_videoroom_subscriber *subscriber = (janus_videoroom_subscriber *)data;
-	if(!subscriber || !subscriber->session) {
+	if (!subscriber || !subscriber->session)
+	{
 		// 没有订阅者 JANUS_LOG(LOG_ERR, "Invalid session...\n");
 		return;
 	}
-	if(subscriber->paused || subscriber->kicked) {
+	if (subscriber->paused || subscriber->kicked)
+	{
 		// 订阅已经暂停或者订阅者已被提走 JANUS_LOG(LOG_ERR, "This subscriber paused the stream...\n");
 		return;
 	}
 	janus_videoroom_session *session = subscriber->session;
-	if(!session || !session->handle) {
+	if (!session || !session->handle)
+	{
 		//订阅者session不存在或者handle不存在 JANUS_LOG(LOG_ERR, "Invalid session...\n");
 		return;
 	}
-	if(!g_atomic_int_get(&session->started)) {
+	if (!g_atomic_int_get(&session->started))
+	{
 		//还没有为该session开启流 JANUS_LOG(LOG_ERR, "Streaming not started yet for this session...\n");
 		return;
 	}
 
-	/* Make sure there hasn't been a publisher switch by checking the SSRC 
+	/* Make sure there hasn't been a publisher switch by checking the SSRC
 	通过检查 SSRC 确保没有发布者切换 */
-	if(packet->is_video) {
+	if (packet->is_video)
+	{
 		/* Check if this subscriber is subscribed to this medium 检查此订阅者是否订阅了此媒体 */
-		if(!subscriber->video) {
+		if (!subscriber->video)
+		{
 			/* Nope, don't relay */
 			return;
 		}
 		/* Check if there's any SVC info to take into account
 		检查是否有任何 SVC 信息需要考虑 */
-		if(packet->svc) {
+		if (packet->svc)
+		{
 			//处理svc
 			/* There is: check if this is a layer that can be dropped for this viewer 检查这是不是可以丢弃的一个layer
 			 * Note: Following core inspired by the excellent job done by Sergio Garcia Murillo here:
@@ -8427,31 +9505,38 @@ static void janus_videoroom_relay_rtp_packet(gpointer data, gpointer user_data) 
 			gboolean override_mark_bit = FALSE, has_marker_bit = packet->data->markerbit;
 			int spatial_layer = subscriber->spatial_layer;
 			gint64 now = janus_get_monotonic_time();
-			if(packet->svc_info.spatial_layer >= 0 && packet->svc_info.spatial_layer <= 2)
-			    //更新最后一次收到layer的时间为现在
+			if (packet->svc_info.spatial_layer >= 0 && packet->svc_info.spatial_layer <= 2)
+				//更新最后一次收到layer的时间为现在
 				subscriber->last_spatial_layer[packet->svc_info.spatial_layer] = now;
-			/*如果当前订阅者希望订阅的layer和目前订阅的layer不同，如果希望大于目前，我们实施升级layer*/	
-			if(subscriber->target_spatial_layer > subscriber->spatial_layer) {
-				JANUS_LOG(LOG_HUGE, "We need to upscale spatially: (%d < %d)\n",subscriber->spatial_layer, subscriber->target_spatial_layer);
+			/*如果当前订阅者希望订阅的layer和目前订阅的layer不同，如果希望大于目前，我们实施升级layer*/
+			if (subscriber->target_spatial_layer > subscriber->spatial_layer)
+			{
+				JANUS_LOG(LOG_HUGE, "We need to upscale spatially: (%d < %d)\n", subscriber->spatial_layer, subscriber->target_spatial_layer);
 				/* We need to upscale: wait for a keyframe 我们需要升级，我能只能等待关键帧去升级layer */
-				if(keyframe) {
+				if (keyframe)
+				{
 					//如果这是VP9关键帧
 					// new_spatial_layer 目前订阅的layer
 					int new_spatial_layer = subscriber->target_spatial_layer;
 					/* 当希望订阅的layer大于目前订阅的layer时候，我们尝试升级 */
-					while(new_spatial_layer > subscriber->spatial_layer && new_spatial_layer > 0) {
-						if(now - subscriber->last_spatial_layer[new_spatial_layer] >= 250000) {
-							/* We haven't received packets from this layer for a while, try a lower layer 
+					while (new_spatial_layer > subscriber->spatial_layer && new_spatial_layer > 0)
+					{
+						if (now - subscriber->last_spatial_layer[new_spatial_layer] >= 250000)
+						{
+							/* We haven't received packets from this layer for a while, try a lower layer
 							就算我们希望升级，但是我们很久没有接收到该layer的包了，我们可以降一层试试
 							我们已经有一段时间没有收到这个层的数据包了，试试低一点的层*/
-							JANUS_LOG(LOG_HUGE, "Haven't received packets from layer %d for a while, trying %d instead...\n", new_spatial_layer, new_spatial_layer-1);
+							JANUS_LOG(LOG_HUGE, "Haven't received packets from layer %d for a while, trying %d instead...\n", new_spatial_layer, new_spatial_layer - 1);
 							new_spatial_layer--;
-						} else {
+						}
+						else
+						{
 							break;
 						}
 					}
 					/* 如果能够升级layer */
-					if(new_spatial_layer > subscriber->spatial_layer) {
+					if (new_spatial_layer > subscriber->spatial_layer)
+					{
 						JANUS_LOG(LOG_HUGE, "  -- Upscaling spatial layer: %d --> %d (need %d)\n", subscriber->spatial_layer, new_spatial_layer, subscriber->target_spatial_layer);
 						// 更新当前订阅layer
 						subscriber->spatial_layer = new_spatial_layer;
@@ -8461,8 +9546,9 @@ static void janus_videoroom_relay_rtp_packet(gpointer data, gpointer user_data) 
 						json_object_set_new(event, "videoroom", json_string("event"));
 						json_object_set_new(event, "room", string_ids ? json_string(subscriber->room_id_str) : json_integer(subscriber->room_id));
 						json_object_set_new(event, "spatial_layer", json_integer(subscriber->spatial_layer));
-						if(subscriber->temporal_layer == -1) {
-							/* We just started: initialize the temporal layer and notify that too 
+						if (subscriber->temporal_layer == -1)
+						{
+							/* We just started: initialize the temporal layer and notify that too
 							我们刚刚开始，初始化 temporal layer并通知它 */
 							subscriber->temporal_layer = 0;
 							json_object_set_new(event, "temporal_layer", json_integer(subscriber->temporal_layer));
@@ -8471,20 +9557,26 @@ static void janus_videoroom_relay_rtp_packet(gpointer data, gpointer user_data) 
 						json_decref(event);
 					}
 				}
-			} else if(subscriber->target_spatial_layer < subscriber->spatial_layer) {
+			}
+			else if (subscriber->target_spatial_layer < subscriber->spatial_layer)
+			{
 				/* We need to downscale 我们需要缩小规模 */
 				JANUS_LOG(LOG_HUGE, "We need to downscale spatially: (%d > %d)\n", subscriber->spatial_layer, subscriber->target_spatial_layer);
 				gboolean downscaled = FALSE;
-				if(!packet->svc_info.fbit && keyframe) {
+				if (!packet->svc_info.fbit && keyframe)
+				{
 					/* Non-flexible mode: wait for a keyframe 等待关键帧*/
 					downscaled = TRUE;
-				} else if(packet->svc_info.fbit && packet->svc_info.ebit) {
+				}
+				else if (packet->svc_info.fbit && packet->svc_info.ebit)
+				{
 					/* Flexible mode: check the E bit 检查 E bit?*/
 					downscaled = TRUE;
 				}
-				if(downscaled) {
+				if (downscaled)
+				{
 					JANUS_LOG(LOG_HUGE, "  -- Downscaling spatial layer: %d --> %d\n",
-						subscriber->spatial_layer, subscriber->target_spatial_layer);
+							  subscriber->spatial_layer, subscriber->target_spatial_layer);
 					subscriber->spatial_layer = subscriber->target_spatial_layer;
 					/* Notify the viewer 通知观众layer层下降 */
 					json_t *event = json_object();
@@ -8495,26 +9587,31 @@ static void janus_videoroom_relay_rtp_packet(gpointer data, gpointer user_data) 
 					json_decref(event);
 				}
 			}
-			if(spatial_layer < packet->svc_info.spatial_layer) {
-				/* Drop the packet: update the context to make sure sequence number is increased normally later 
+			if (spatial_layer < packet->svc_info.spatial_layer)
+			{
+				/* Drop the packet: update the context to make sure sequence number is increased normally later
 				丢弃数据包：更新上下文以确保序列号稍后正常增加 */
 				JANUS_LOG(LOG_HUGE, "Dropping packet (spatial layer %d < %d)\n", spatial_layer, packet->svc_info.spatial_layer);
 				subscriber->context.v_base_seq++;
 				return;
-			} else if(packet->svc_info.ebit && spatial_layer == packet->svc_info.spatial_layer) {
-				/* If we stop at layer 0, we need a marker bit now, as the one from layer 1 will not be received 
+			}
+			else if (packet->svc_info.ebit && spatial_layer == packet->svc_info.spatial_layer)
+			{
+				/* If we stop at layer 0, we need a marker bit now, as the one from layer 1 will not be received
 				如果我们停在第 0 层，我们现在需要一个标记位，因为来自第 1 层的 将不会被接收 */
 				override_mark_bit = TRUE;
 			}
 			int temporal_layer = subscriber->temporal_layer;
 			//如果我们使用simulcast
-			if(subscriber->target_temporal_layer > subscriber->temporal_layer) {
+			if (subscriber->target_temporal_layer > subscriber->temporal_layer)
+			{
 				/* We need to upscale 当目标层大于当前层时,提升层数 */
 				JANUS_LOG(LOG_HUGE, "We need to upscale temporally: (%d < %d)\n", subscriber->temporal_layer, subscriber->target_temporal_layer);
-				if(packet->svc_info.ubit && packet->svc_info.bbit &&
-						packet->svc_info.temporal_layer > subscriber->temporal_layer &&
-						packet->svc_info.temporal_layer <= subscriber->target_temporal_layer) {
-							//如果包里的layer大于原层级小于等于目标层
+				if (packet->svc_info.ubit && packet->svc_info.bbit &&
+					packet->svc_info.temporal_layer > subscriber->temporal_layer &&
+					packet->svc_info.temporal_layer <= subscriber->target_temporal_layer)
+				{
+					//如果包里的layer大于原层级小于等于目标层
 					JANUS_LOG(LOG_HUGE, "  -- Upscaling temporal layer: %d --> %d (want %d)\n", subscriber->temporal_layer, packet->svc_info.temporal_layer, subscriber->target_temporal_layer);
 					subscriber->temporal_layer = packet->svc_info.temporal_layer;
 					//更新当前订阅层
@@ -8527,13 +9624,16 @@ static void janus_videoroom_relay_rtp_packet(gpointer data, gpointer user_data) 
 					gateway->push_event(subscriber->session->handle, &janus_videoroom_plugin, NULL, event, NULL);
 					json_decref(event);
 				}
-			} else if(subscriber->target_temporal_layer < subscriber->temporal_layer) {
+			}
+			else if (subscriber->target_temporal_layer < subscriber->temporal_layer)
+			{
 				/* We need to downscale 如果目标层级少于当前层级，我们把层级下降 */
 				JANUS_LOG(LOG_HUGE, "We need to downscale temporally: (%d > %d)\n",
-					subscriber->temporal_layer, subscriber->target_temporal_layer);
-				if(packet->svc_info.ebit && packet->svc_info.temporal_layer == subscriber->target_temporal_layer) {
+						  subscriber->temporal_layer, subscriber->target_temporal_layer);
+				if (packet->svc_info.ebit && packet->svc_info.temporal_layer == subscriber->target_temporal_layer)
+				{
 					JANUS_LOG(LOG_HUGE, "  -- Downscaling temporal layer: %d --> %d\n",
-						subscriber->temporal_layer, subscriber->target_temporal_layer);
+							  subscriber->temporal_layer, subscriber->target_temporal_layer);
 					subscriber->temporal_layer = subscriber->target_temporal_layer;
 					/* Notify the viewer 通知听众 */
 					json_t *event = json_object();
@@ -8544,7 +9644,8 @@ static void janus_videoroom_relay_rtp_packet(gpointer data, gpointer user_data) 
 					json_decref(event);
 				}
 			}
-			if(temporal_layer < packet->svc_info.temporal_layer) {
+			if (temporal_layer < packet->svc_info.temporal_layer)
+			{
 				/* Drop the packet: update the context to make sure sequence number is increased normally later */
 				/* 丢弃数据包：更新上下文以确保序列号稍后正常增加 */
 				JANUS_LOG(LOG_HUGE, "Dropping packet (temporal layer %d < %d)\n", temporal_layer, packet->svc_info.temporal_layer);
@@ -8552,59 +9653,67 @@ static void janus_videoroom_relay_rtp_packet(gpointer data, gpointer user_data) 
 				return;
 			}
 			/* If we got here, we can send the frame: this doesn't necessarily mean it's
-			 * one of the layers the user wants, as there may be dependencies involved 
+			 * one of the layers the user wants, as there may be dependencies involved
 			 如果我们到达这里，我们可以发送帧：这并不一定意味着它是用户想要的层之一，因为可能涉及依赖关系 */
 			JANUS_LOG(LOG_HUGE, "Sending packet (spatial=%d, temporal=%d)\n", packet->svc_info.spatial_layer, packet->svc_info.temporal_layer);
-			/* Fix sequence number and timestamp (publisher switching may be involved) 
+			/* Fix sequence number and timestamp (publisher switching may be involved)
 			修复序列号和时间戳（可能涉及发布者切换） */
 			janus_rtp_header_update(packet->data, &subscriber->context, TRUE, 0);
-			if(override_mark_bit && !has_marker_bit) {
+			if (override_mark_bit && !has_marker_bit)
+			{
 				packet->data->markerbit = 1;
 			}
-			if(gateway != NULL) {
-				janus_plugin_rtp rtp = { .video = packet->is_video, .buffer = (char *)packet->data, .length = packet->length,
-					.extensions = packet->extensions };
+			if (gateway != NULL)
+			{
+				janus_plugin_rtp rtp = {.video = packet->is_video, .buffer = (char *)packet->data, .length = packet->length, .extensions = packet->extensions};
 				gateway->relay_rtp(session->handle, &rtp);
 			}
-			if(override_mark_bit && !has_marker_bit) {
+			if (override_mark_bit && !has_marker_bit)
+			{
 				packet->data->markerbit = 0;
 			}
-			/* Restore the timestamp and sequence number to what the publisher set them to 
+			/* Restore the timestamp and sequence number to what the publisher set them to
 			将时间戳和序列号恢复为发布者设置的值 */
 			packet->data->timestamp = htonl(packet->timestamp);
 			packet->data->seq_number = htons(packet->seq_number);
-		} else if(packet->ssrc[0] != 0) {
-			/* Handle simulcast: make sure we have a payload to work with 
+		}
+		else if (packet->ssrc[0] != 0)
+		{
+			/* Handle simulcast: make sure we have a payload to work with
 			处理simulcast：确保我们有一个有效载荷可以使用 */
 			int plen = 0;
 			char *payload = janus_rtp_payload((char *)packet->data, packet->length, &plen);
-			if(payload == NULL)
+			if (payload == NULL)
 				return;
-			/* Process this packet: don't relay if it's not the SSRC/layer we wanted to handle 
+			/* Process this packet: don't relay if it's not the SSRC/layer we wanted to handle
 			处理这个数据包：如果它不是我们想要处理的 SSRC/层，不要转发 */
 			//处理一个 RTP 数据包，并决定是否应该转发它，相应地更新上下文
 			gboolean relay = janus_rtp_simulcasting_context_process_rtp(&subscriber->sim_context,
-				(char *)packet->data, packet->length, packet->ssrc, NULL, subscriber->feed->vcodec, &subscriber->context);
-			if(!relay) {
-				/* Did a lot of time pass before we could relay a packet? 
+																		(char *)packet->data, packet->length, packet->ssrc, NULL, subscriber->feed->vcodec, &subscriber->context);
+			if (!relay)
+			{
+				/* Did a lot of time pass before we could relay a packet?
 				在我们转发数据包之前是否经过了很多时间？如果是，请求一次关键帧*/
 				gint64 now = janus_get_monotonic_time();
-				if((now - subscriber->sim_context.last_relayed) >= G_USEC_PER_SEC) {
+				if ((now - subscriber->sim_context.last_relayed) >= G_USEC_PER_SEC)
+				{
 					g_atomic_int_set(&subscriber->sim_context.need_pli, 1);
 				}
 			}
-			if(subscriber->sim_context.need_pli && subscriber->feed && subscriber->feed->session &&
-					subscriber->feed->session->handle) {
+			if (subscriber->sim_context.need_pli && subscriber->feed && subscriber->feed->session &&
+				subscriber->feed->session->handle)
+			{
 				/* Send a PLI 重新请求关键帧 */
 				JANUS_LOG(LOG_VERB, "We need a PLI for the simulcast context\n");
 				gateway->send_pli(subscriber->feed->session->handle);
 			}
 			/* Do we need to drop this? 我们丢弃不转发的包 */
-			if(!relay)
+			if (!relay)
 				return;
 			/* Any event we should notify? 是否有需要我们通知的内容 */
 			//处理数据包后substream是否发生变化
-			if(subscriber->sim_context.changed_substream) {
+			if (subscriber->sim_context.changed_substream)
+			{
 				/* Notify the user about the substream change 通知用户substream发生改变 */
 				json_t *event = json_object();
 				json_object_set_new(event, "videoroom", json_string("event"));
@@ -8614,7 +9723,8 @@ static void janus_videoroom_relay_rtp_packet(gpointer data, gpointer user_data) 
 				json_decref(event);
 			}
 			//处理数据包后temporal layer是否发生变化
-			if(subscriber->sim_context.changed_temporal) {
+			if (subscriber->sim_context.changed_temporal)
+			{
 				/* Notify the user about the temporal layer change 通知用户temporal layer发生改变 */
 				json_t *event = json_object();
 				json_object_set_new(event, "videoroom", json_string("event"));
@@ -8626,54 +9736,61 @@ static void janus_videoroom_relay_rtp_packet(gpointer data, gpointer user_data) 
 			/* If we got here, update the RTP header and send the packet 如果运行到这，更新RTP包头和发送包*/
 			janus_rtp_header_update(packet->data, &subscriber->context, TRUE, 0);
 			char vp8pd[6];
-			if(subscriber->feed && subscriber->feed->vcodec == JANUS_VIDEOCODEC_VP8) {
+			if (subscriber->feed && subscriber->feed->vcodec == JANUS_VIDEOCODEC_VP8)
+			{
 				/* For VP8, we save the original payload descriptor, to restore it after
 				对于 VP8，我们保存原始的有效载荷描述符，以便在之后恢复它 */
 				memcpy(vp8pd, payload, sizeof(vp8pd));
 				/*如果需要，使用上下文信息更新数据包的 RTP 标头*/
 				janus_vp8_simulcast_descriptor_update(payload, plen, &subscriber->vp8_context,
-					subscriber->sim_context.changed_substream);
+													  subscriber->sim_context.changed_substream);
 			}
 			/* Send the packet 发送包*/
-			if(gateway != NULL) {
-				janus_plugin_rtp rtp = { .video = packet->is_video, .buffer = (char *)packet->data, .length = packet->length,
-					.extensions = packet->extensions };
+			if (gateway != NULL)
+			{
+				janus_plugin_rtp rtp = {.video = packet->is_video, .buffer = (char *)packet->data, .length = packet->length, .extensions = packet->extensions};
 				gateway->relay_rtp(session->handle, &rtp);
 			}
 			/* Restore the timestamp and sequence number to what the publisher set them to 将时间戳和序列号恢复为发布者设置的值*/
 			packet->data->timestamp = htonl(packet->timestamp);
 			packet->data->seq_number = htons(packet->seq_number);
-			if(subscriber->feed && subscriber->feed->vcodec == JANUS_VIDEOCODEC_VP8) {
-				/* Restore the original payload descriptor as well, as it will be needed by the next viewer 
+			if (subscriber->feed && subscriber->feed->vcodec == JANUS_VIDEOCODEC_VP8)
+			{
+				/* Restore the original payload descriptor as well, as it will be needed by the next viewer
 				恢复原始有效负载描述符，因为下一个viewer将需要它 */
 				memcpy(payload, vp8pd, sizeof(vp8pd));
 			}
-		} else {
+		}
+		else
+		{
 			//处理普通视频
 			/* Fix sequence number and timestamp (publisher switching may be involved) 修复序列号和时间戳（可能涉及发布者切换） */
 			janus_rtp_header_update(packet->data, &subscriber->context, TRUE, 0);
 			/* Send the packet 发送包*/
-			if(gateway != NULL) {
-				janus_plugin_rtp rtp = { .video = packet->is_video, .buffer = (char *)packet->data, .length = packet->length,
-					.extensions = packet->extensions };
+			if (gateway != NULL)
+			{
+				janus_plugin_rtp rtp = {.video = packet->is_video, .buffer = (char *)packet->data, .length = packet->length, .extensions = packet->extensions};
 				gateway->relay_rtp(session->handle, &rtp);
 			}
 			/* Restore the timestamp and sequence number to what the publisher set them to 将时间戳和序列号恢复为发布者设置的值 */
 			packet->data->timestamp = htonl(packet->timestamp);
 			packet->data->seq_number = htons(packet->seq_number);
 		}
-	} else {
+	}
+	else
+	{
 		/* Check if this subscriber is subscribed to this medium 检查此订阅者是否订阅了此媒体*/
-		if(!subscriber->audio) {
+		if (!subscriber->audio)
+		{
 			/* Nope, don't relay */
 			return;
 		}
 		/* Fix sequence number and timestamp (publisher switching may be involved) 修复序列号和时间戳（可能涉及发布者切换）*/
 		janus_rtp_header_update(packet->data, &subscriber->context, FALSE, 0);
 		/* Send the packet 发送包*/
-		if(gateway != NULL) {
-			janus_plugin_rtp rtp = { .video = packet->is_video, .buffer = (char *)packet->data, .length = packet->length,
-				.extensions = packet->extensions };
+		if (gateway != NULL)
+		{
+			janus_plugin_rtp rtp = {.video = packet->is_video, .buffer = (char *)packet->data, .length = packet->length, .extensions = packet->extensions};
 			gateway->relay_rtp(session->handle, &rtp);
 		}
 		/* Restore the timestamp and sequence number to what the publisher set them to 将时间戳和序列号恢复为发布者设置的值 */
@@ -8686,64 +9803,72 @@ static void janus_videoroom_relay_rtp_packet(gpointer data, gpointer user_data) 
 
 /**
  * @brief 转发data数据包
- * 
- * @param data 
- * @param user_data 
+ *
+ * @param data
+ * @param user_data
  */
-static void janus_videoroom_relay_data_packet(gpointer data, gpointer user_data) {
+static void janus_videoroom_relay_data_packet(gpointer data, gpointer user_data)
+{
 	janus_videoroom_rtp_relay_packet *packet = (janus_videoroom_rtp_relay_packet *)user_data;
-	if(!packet || packet->is_rtp || !packet->data || packet->length < 1) {
+	if (!packet || packet->is_rtp || !packet->data || packet->length < 1)
+	{
 		JANUS_LOG(LOG_ERR, "Invalid packet...\n");
 		return;
 	}
 	janus_videoroom_subscriber *subscriber = (janus_videoroom_subscriber *)data;
-	if(!subscriber || !subscriber->session || !subscriber->data || subscriber->paused) {
+	if (!subscriber || !subscriber->session || !subscriber->data || subscriber->paused)
+	{
 		return;
 	}
 	janus_videoroom_session *session = subscriber->session;
-	if(!session || !session->handle) {
+	if (!session || !session->handle)
+	{
 		return;
 	}
-	if(!g_atomic_int_get(&session->started) || !g_atomic_int_get(&session->dataready)) {
+	if (!g_atomic_int_get(&session->started) || !g_atomic_int_get(&session->dataready))
+	{
 		return;
 	}
-	if(gateway != NULL && packet->data != NULL) {
+	if (gateway != NULL && packet->data != NULL)
+	{
 		JANUS_LOG(LOG_VERB, "Forwarding %s DataChannel message (%d bytes) to viewer\n",
-			packet->textdata ? "text" : "binary", packet->length);
+				  packet->textdata ? "text" : "binary", packet->length);
 		janus_plugin_data data = {
 			.label = NULL,
 			.protocol = NULL,
 			.binary = !packet->textdata,
 			.buffer = (char *)packet->data,
-			.length = packet->length
-		};
+			.length = packet->length};
 		gateway->relay_data(session->handle, &data);
 	}
 	return;
 }
 
 /* The following methods are only relevant if RTCP is used for RTP forwarders 仅当 RTCP 用于 RTP 转发器时，以下方法才有用 */
-static void janus_videoroom_rtp_forwarder_rtcp_receive(janus_videoroom_rtp_forwarder *forward) {
+static void janus_videoroom_rtp_forwarder_rtcp_receive(janus_videoroom_rtp_forwarder *forward)
+{
 	char buffer[1500];
 	struct sockaddr_storage remote_addr;
 	socklen_t addrlen = sizeof(remote_addr);
 	int len = recvfrom(forward->rtcp_fd, buffer, sizeof(buffer), 0, (struct sockaddr *)&remote_addr, &addrlen);
-	if(len > 0 && janus_is_rtcp(buffer, len)) {
+	if (len > 0 && janus_is_rtcp(buffer, len))
+	{
 		JANUS_LOG(LOG_HUGE, "Got %s RTCP packet: %d bytes\n", forward->is_video ? "video" : "audio", len);
 		/* We only handle incoming video PLIs or FIR at the moment 我们目前只处理传入的视频 PLI 或 FIR 请求*/
-		if(!janus_rtcp_has_fir(buffer, len) && !janus_rtcp_has_pli(buffer, len))
+		if (!janus_rtcp_has_fir(buffer, len) && !janus_rtcp_has_pli(buffer, len))
 			return;
 		janus_videoroom_reqpli((janus_videoroom_publisher *)forward->source, "RTCP from forwarder");
 	}
 }
 
 /**
- * @brief 处理RTP forwarder RTCP线程
- * 
- * @param data 
- * @return void* 
+ * @brief 处理RTP forwarder RTCP数据的线程
+ *
+ * @param data
+ * @return void*
  */
-static void *janus_videoroom_rtp_forwarder_rtcp_thread(void *data) {
+static void *janus_videoroom_rtp_forwarder_rtcp_thread(void *data)
+{
 	JANUS_LOG(LOG_VERB, "Joining RTCP thread for RTP forwarders...\n");
 	/* Run the main loop */
 	g_main_loop_run(rtcpfwd_loop);
