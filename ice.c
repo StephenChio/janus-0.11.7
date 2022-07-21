@@ -10,9 +10,9 @@
  * to be sent to peers are relayed by peers invoking the relay_rtp and
  * relay_rtcp core callbacks instead.
  * ICE 进程的实现（基于 libnice）。 该代码处理整个 ICE 过程，
- * 从候选者的收集到虚拟通道 RTP 和 RTCP 的最终设置都可以传输。 
- * 通过incoming_rtp 和incoming_rtcp 回调将来自对等点的传入RTP 和RTCP 数据包转发到相关插件。
- * 要发送到对等点的数据包由调用relay_rtp 和relay_rtcp 核心回调的对等点进行中继。
+ * 从候选者的收集到可以传输RTP 和 RTCP的虚拟通道的最终设置。 
+ * 通过incoming_rtp 和incoming_rtcp 回调将来自对端传入RTP和RTCP数据包转发到相关插件。
+ * 要发送到对端的数据包由调用relay_rtp和relay_rtcp核心回调进行转发。
  *
  * \ingroup protocols
  * \ref protocols
@@ -821,7 +821,7 @@ gboolean janus_plugin_session_is_alive(janus_plugin_session *plugin_session) {
 	if(plugin_session == NULL || plugin_session < (janus_plugin_session *)0x1000 ||
 			g_atomic_int_get(&plugin_session->stopped))
 		return FALSE;
-	/* Make sure this plugin session is still alive */
+	/* Make sure this plugin session is still alive 确保session处于活跃状态 */
 	janus_mutex_lock_nodebug(&plugin_sessions_mutex);
 	janus_plugin_session *result = g_hash_table_lookup(plugin_sessions, plugin_session);
 	janus_mutex_unlock_nodebug(&plugin_sessions_mutex);
@@ -871,7 +871,7 @@ static void janus_ice_notify_trickle(janus_ice_handle *handle, char *buffer) {
 	char cbuffer[200];
 	if(buffer != NULL)
 		g_snprintf(cbuffer, sizeof(cbuffer), "candidate:%s", buffer);
-	/* Send a "trickle" event to the browser */
+	/* Send a "trickle" event to the browser 发送trickle事件到浏览器 */
 	janus_session *session = (janus_session *)handle->session;
 	if(session == NULL)
 		return;
@@ -1109,9 +1109,9 @@ void janus_ice_init(gboolean ice_lite, gboolean ice_tcp, gboolean full_trickle, 
 	 * instance, libnice supports this since 0.1.0, but the 0.1.3 on Fedora fails
 	 * when linking with an undefined reference to \c nice_agent_set_port_range
 	 * so this is checked by the install.sh script in advance. 
-	 * RTP/RTCP 端口范围配置可能只是一个占位符：
+	 * RTP/RTCP 的端口范围配置可能只是一个占位符：
 	 * 例如，libnice 自 0.1.0 起就支持此功能，
-	 * 但在 Fedora 上的 0.1.3 会失败在链接到nice_agent_set_port_range的未定义引用，因此由 install.sh 脚本检查提前
+	 * 但在 Fedora 上的 0.1.3 会失败，因此由 install.sh 脚本检查提前
 	 * */
 	rtp_range_min = rtp_min_port;
 	rtp_range_max = rtp_max_port;
@@ -1128,7 +1128,7 @@ void janus_ice_init(gboolean ice_lite, gboolean ice_tcp, gboolean full_trickle, 
 		JANUS_LOG(LOG_WARN, "mDNS resolution disabled, .local candidates will be ignored\n");
 
 	/* We keep track of plugin sessions to avoid problems 
-	我们跟踪插件会话以避免出现问题 */
+	我们跟踪插件session以避免出现问题 */
 	plugin_sessions = g_hash_table_new_full(NULL, NULL, NULL, (GDestroyNotify)janus_plugin_session_dereference);
 	janus_mutex_init(&plugin_sessions_mutex);
 
@@ -1485,7 +1485,7 @@ janus_ice_handle *janus_ice_handle_create(void *core_session, const char *opaque
 		handle = janus_session_handles_find(session, handle_id);
 		if(handle != NULL) {
 			/* Handle ID already taken, try another one 
-			处理ID已被占用，尝试另一个*/
+			handle ID已被占用，尝试另一个*/
 			janus_refcount_decrease(&handle->ref);	/* janus_session_handles_find increases it */
 			handle_id = 0;
 		}
@@ -3687,7 +3687,16 @@ static void janus_ice_cb_nice_recv(NiceAgent *agent, guint stream_id, guint comp
 }
 
 
-
+/**
+ * @brief 处理ICE 传入的data数据
+ * 
+ * @param handle 
+ * @param label 
+ * @param protocol 
+ * @param textdata 
+ * @param buffer 
+ * @param length 
+ */
 void janus_ice_incoming_data(janus_ice_handle *handle, char *label, char *protocol, gboolean textdata, char *buffer, int length) {
 	if(handle == NULL || buffer == NULL || length <= 0)
 		return;
@@ -4088,7 +4097,7 @@ int janus_ice_setup_local(janus_ice_handle *handle, int offer, int audio, int vi
 	NICE_COMPATIBILITY_RFC5245 仅在较新版本的 libnice 中可用  */
 	/* 如果开启了ICE LITE, handle的角色标志成controlled(受控制), 
 	 * 如果没有开启ICE LITE ，在收到offer 的时候，！offer = 1 handle的角色标志成controlling (控制) 
-	 如果没有开启ICE LITE ，  在收到answer的时候，！offer = 0 handle的角色标志成controlled (受控制)
+	 * 如果没有开启ICE LITE ，  在收到answer的时候，！offer = 0 handle的角色标志成controlled (受控制)
 	 */
 	handle->controlling = janus_ice_lite_enabled ? FALSE : !offer;
 	JANUS_LOG(LOG_INFO, "[%"SCNu64"] Creating ICE agent (ICE %s mode, %s)\n", handle->handle_id,
@@ -4582,6 +4591,12 @@ static gboolean janus_ice_outgoing_transport_wide_cc_feedback(gpointer user_data
 	return G_SOURCE_CONTINUE;
 }
 
+/**
+ * @brief 用于处理传出的RTCP数据
+ * 
+ * @param user_data 
+ * @return gboolean 
+ */
 static gboolean janus_ice_outgoing_rtcp_handle(gpointer user_data) {
 	janus_ice_handle *handle = (janus_ice_handle *)user_data;
 	janus_ice_stream *stream = handle->stream;
@@ -4721,6 +4736,12 @@ static gboolean janus_ice_outgoing_rtcp_handle(gpointer user_data) {
 	return G_SOURCE_CONTINUE;
 }
 
+/**
+ * @brief 用于统计传出的数据
+ * 
+ * @param user_data 
+ * @return gboolean 
+ */
 static gboolean janus_ice_outgoing_stats_handle(gpointer user_data) {
 	janus_ice_handle *handle = (janus_ice_handle *)user_data;
 	/* This callback is for stats and other things we need to do on a regular basis (typically called once per second) */
@@ -4890,12 +4911,19 @@ static gboolean janus_ice_outgoing_stats_handle(gpointer user_data) {
 	return G_SOURCE_CONTINUE;
 }
 
+/**
+ * @brief 用于传出的流量处理
+ * 
+ * @param handle 
+ * @param pkt 
+ * @return gboolean 
+ */
 static gboolean janus_ice_outgoing_traffic_handle(janus_ice_handle *handle, janus_ice_queued_packet *pkt) {
 	janus_session *session = (janus_session *)handle->session;
 	janus_ice_stream *stream = handle->stream;
 	janus_ice_component *component = stream ? stream->component : NULL;
 	if(pkt == &janus_ice_start_gathering) {
-		/* Start gathering candidates */
+		/* Start gathering candidates 开始收集candidtae*/
 		if(handle->agent == NULL) {
 			JANUS_LOG(LOG_WARN, "[%"SCNu64"] No ICE agent, not going to gather candidates...\n", handle->handle_id);
 		} else if(!nice_agent_gather_candidates(handle->agent, handle->stream_id)) {
@@ -4904,7 +4932,7 @@ static gboolean janus_ice_outgoing_traffic_handle(janus_ice_handle *handle, janu
 		}
 		return G_SOURCE_CONTINUE;
 	} else if(pkt == &janus_ice_add_candidates) {
-		/* There are remote candidates pending, add them now */
+		/* There are remote candidates pending, add them now 有一些远端的candidate等待被添加，现在可以进行添加*/
 		GSList *candidates = NULL;
 		NiceCandidate *c = NULL;
 		while((c = g_async_queue_try_pop(handle->queued_candidates)) != NULL) {
@@ -4933,16 +4961,17 @@ static gboolean janus_ice_outgoing_traffic_handle(janus_ice_handle *handle, janu
 			JANUS_LOG(LOG_WARN, "[%"SCNu64"] ICE component not initialized, aborting DTLS handshake\n", handle->handle_id);
 			return G_SOURCE_CONTINUE;
 		}
-		/* Start the DTLS handshake */
+		/* Start the DTLS handshake 开始DTLS握手*/
 		janus_dtls_srtp_handshake(component->dtls);
-		/* Create retransmission timer */
+		/* Create retransmission timer 创建重传定时器*/
 		component->dtlsrt_source = g_timeout_source_new(50);
 		g_source_set_callback(component->dtlsrt_source, janus_dtls_retry, component->dtls, NULL);
 		guint id = g_source_attach(component->dtlsrt_source, handle->mainctx);
 		JANUS_LOG(LOG_VERB, "[%"SCNu64"] Creating retransmission timer with ID %u\n", handle->handle_id, id);
 		return G_SOURCE_CONTINUE;
 	} else if(pkt == &janus_ice_media_stopped) {
-		/* Either audio or video has been disabled on the way in, so use the callback to notify the peer */
+		/* Either audio or video has been disabled on the way in, so use the callback to notify the peer 
+		音频或视频在进入的过程中已禁用，因此使用回调通知对端 */
 		if(component && stream && !component->in_stats.audio.notified_lastsec && component->in_stats.audio.bytes && !stream->audio_send) {
 			/* Audio won't be received for a while, notify */
 			component->in_stats.audio.notified_lastsec = TRUE;
@@ -4994,7 +5023,7 @@ static gboolean janus_ice_outgoing_traffic_handle(janus_ice_handle *handle, janu
 		return G_SOURCE_CONTINUE;
 	} else if(pkt == &janus_ice_detach_handle) {
 		/* This handle has just been detached, notify the plugin 
-		此handle刚刚分离，通知插件
+		此 handle 刚刚分离，通知插件
 		*/
 		janus_plugin *plugin = (janus_plugin *)handle->app;
 		JANUS_LOG(LOG_VERB, "[%"SCNu64"] Telling the plugin about the handle detach (%s)\n",
