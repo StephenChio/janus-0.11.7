@@ -143,7 +143,7 @@ int janus_rtp_header_extension_get_id(const char *sdp, const char *extension);
  * @returns The extension namespace, if found, NULL otherwise */
 const char *janus_rtp_header_extension_get_from_id(const char *sdp, int id);
 
-/*! \brief Helper to parse a ssrc-audio-level RTP extension 解析 ssrc 音频级 RTP 扩展 (https://tools.ietf.org/html/rfc6464)
+/*! \brief Helper to parse a ssrc-audio-level RTP extension解析 ssrc 音频级别 RTP 扩展 (https://tools.ietf.org/html/rfc6464)
  * @note Browsers apparently always set the VAD to 1, so it's unreliable and should be ignored:
  * only use this method if you're interested in the audio-level value itself.
  * @param[in] buf The packet data

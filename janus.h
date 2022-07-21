@@ -10,7 +10,11 @@
  * or not. The core also takes care of bridging peers and plugins
  * accordingly, in terms of both messaging and real-time media transfer
  * via WebRTC.
- *
+ * Janus 核心的实现。 此代码负责服务器初始化（命令行/配置）和设置，
+ * 并利用可用的传输插件（默认为 HTTP、WebSockets、RabbitMQ，如果已编译）
+ * 和 Janus 协议（基于 JSON 的协议）与 应用程序，无论它们是否基于 Web。 
+ * 在通过 WebRTC 的消息传递和实时媒体传输方面，核心还相应地负责桥接peers和插件。
+ * 
  * \ingroup core
  * \ref core
  */
@@ -40,68 +44,68 @@
 /*! \brief Helper to address requests and their sources (e.g., a specific HTTP connection, websocket, RabbitMQ or others) */
 typedef struct janus_request janus_request;
 
-/*! \brief Janus Core-Client session */
+/*! \brief Janus Core-Client session #Janus核心客户端的session*/
 typedef struct janus_session {
-	/*! \brief Janus Core-Client session ID */
+	/*! \brief Janus Core-Client session ID 核心客户端session id*/
 	guint64 session_id;
-	/*! \brief Map of handles this session is managing */
+	/*! \brief Map of handles this session is managing 这个session所管理的ICE handles（每加载一个插件，就会对应生成一个ICE handle）*/
 	GHashTable *ice_handles;
-	/*! \brief Time of the last activity on the session */
+	/*! \brief Time of the last activity on the session 这个session最后一次活跃的时间 */
 	gint64 last_activity;
-	/*! \brief Pointer to the request instance (and the transport that originated the session) */
+	/*! \brief Pointer to the request instance (and the transport that originated the session) 指向请求实例（以及发起会话的传输）的指针 */
 	janus_request *source;
-	/*! \brief Flag to notify there's been a session timeout */
+	/*! \brief Flag to notify there's been a session timeout 通知session超时的标志 */
 	volatile gint timedout;
-	/*! \brief Timeout value in seconds to use with this session, 0 is unlimited, -1 is global session timeout setting */
+	/*! \brief Timeout value in seconds to use with this session, 0 is unlimited, -1 is global session timeout setting 用于此session的超时值（以秒为单位），0 是无限制的，-1 是根据全局session超时设置*/
 	gint timeout;
-	/*! \brief Flag to notify that transport is gone */
+	/*! \brief Flag to notify that transport is gone 通知该传输已经离开的标志*/
 	volatile gint transport_gone;
 	/*! \brief Mutex to lock/unlock this session */
 	janus_mutex mutex;
-	/*! \brief Atomic flag to check if this instance has been destroyed */
+	/*! \brief Atomic flag to check if this instance has been destroyed #session是否被销毁*/
 	volatile gint destroyed;
-	/*! \brief Reference counter for this instance */
+	/*! \brief Reference counter for this instance #session的引用 */
 	janus_refcount ref;
 } janus_session;
 
 
-/** @name Janus Core-Client session methods
+/** @name Janus Core-Client session methods 核心方法
  */
 ///@{
-/*! \brief Method to create a new Janus Core-Client session
+/*! \brief Method to create a new Janus Core-Client session 为新客户创建一个全局session
  * @param[in] session_id The desired Janus Core-Client session ID, or 0 if it needs to be generated randomly
  * @returns The created Janus Core-Client session if successful, NULL otherwise */
 janus_session *janus_session_create(guint64 session_id);
-/*! \brief Method to find an existing Janus Core-Client session from its ID
+/*! \brief Method to find an existing Janus Core-Client session from its ID 通过session id找到一个存在的session实例
  * @param[in] session_id The Janus Core-Client session ID
  * @returns The created Janus Core-Client session if successful, NULL otherwise */
 janus_session *janus_session_find(guint64 session_id);
-/*! \brief Method to add an event to notify to the queue of notifications for this session
+/*! \brief Method to add an event to notify to the queue of notifications for this session 将要通知的事件添加到此session的通知队列中
  * @param[in] session The Janus Core-Client session this notification is related to
  * @param[in] event The event to notify as a Jansson JSON object */
 void janus_session_notify_event(janus_session *session, json_t *event);
-/*! \brief Method to destroy a Janus Core-Client session
+/*! \brief Method to destroy a Janus Core-Client session 销毁session
  * @param[in] session The Janus Core-Client session to destroy
  * @returns 0 in case of success, a negative integer otherwise */
 gint janus_session_destroy(janus_session *session);
-/*! \brief Method to find an existing Janus ICE handle from its ID
+/*! \brief Method to find an existing Janus ICE handle from its ID 根据session和handle_id找到ICE handle实例
  * @param[in] session The Janus Core-Client session this ICE handle belongs to
  * @param[in] handle_id The Janus ICE handle ID
  * @returns The Janus ICE handle if successful, NULL otherwise */
 janus_ice_handle *janus_session_handles_find(janus_session *session, guint64 handle_id);
-/*! \brief Method to insert a Janus ICE handle in a session
+/*! \brief Method to insert a Janus ICE handle in a session 在session 中插入 Janus ICE handle
  * @param[in] session The Janus Core-Client session
  * @param[in] handle The Janus ICE handle */
 void janus_session_handles_insert(janus_session *session, janus_ice_handle *handle);
-/*! \brief Method to remove a Janus ICE handle from a session
+/*! \brief Method to remove a Janus ICE handle from a session 在session 中移除 Janus ICE handle
  * @param[in] session The Janus Core-Client session
  * @param[in] handle The Janus ICE handle
  * @returns The error code of janus_ice_handle_destroy */
 gint janus_session_handles_remove(janus_session *session, janus_ice_handle *handle);
-/*! \brief Method to remove all Janus ICE handles from a session
- * @param[in] session The Janus Core-Client session */
+/*! \brief Method to remove all Janus ICE handles from a session 移除所有 Janus ICE handle
+ * @param[in] session The Janus Core-Client session */ 
 void janus_session_handles_clear(janus_session *session);
-/*! \brief Method to list the IDs of all Janus ICE handles of a session as JSON
+/*! \brief Method to list the IDs of all Janus ICE handles of a session as JSON 以 JSON 格式列出会话的所有 Janus ICE handle的 ID
  * @param[in] session The Janus Core-Client session
  * @returns The JSON array */
 json_t *janus_session_handles_list_json(janus_session *session);
@@ -113,6 +117,8 @@ json_t *janus_session_handles_list_json(janus_session *session);
  * WebSockets, RabbitMQ and potentially even more in the future), we
  * have a shared way to process messages: a method to process a request,
  * and helper methods to return a success or an error message.
+ * 由于消息可能来自不同的来源（普通的 HTTP、WebSockets、RabbitMQ 以及未来可能更多），
+ * 我们有一个共享的方式来处理消息：处理请求的方法和返回成功或错误消息的辅助方法.
  */
 ///@{
 /*! \brief Helper to address requests and their sources (e.g., a specific HTTP connection, websocket, RabbitMQ or others) */

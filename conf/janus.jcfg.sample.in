@@ -12,9 +12,9 @@ general: {
 
 		# The next settings configure logging
 	#log_to_stdout = false					# Whether the Janus output should be written
-											# to stdout or not (default=true)
-	#log_to_file = "/path/to/janus.log"		# Whether to use a log file or not
-	debug_level = 4							# Debug/logging level, valid values are 0-7
+											# to stdout or not (default=true) 是否输出log到控制台，默认输出
+	#log_to_file = "/path/to/janus.log"		# Whether to use a log file or not 是否使用日志文件
+	debug_level = 4							# Debug/logging level, valid values are 0-7 日志级别，有效值是0-7 数字越大越详细
 	#debug_timestamps = true				# Whether to show a timestamp for each log line #是否展示每一行的时间戳
 	#debug_colors = false					# Whether colors should be disabled in the log #是否关闭debug颜色区分
 	#debug_locks = true						# Whether to enable debugging of locks (very verbose!) #是否启用锁调试（非常详细！）
@@ -27,6 +27,7 @@ general: {
 		# This is what you configure if you want to launch Janus as a daemon
 	#daemonize = true						# Whether Janus should run as a daemon
 											# or not (default=run in foreground)
+											# 是否以守护进程的方式运行
 	#pid_file = "/path/to/janus.pid"		# PID file to create when Janus has been
 											# started, and to destroy at shutdown
 											# 启动Janus时创建的PID文件，并在关闭时销毁
@@ -79,6 +80,8 @@ general: {
 									# them (default=45s). Notice that setting this
 									# to 0 will NOT disable the timeout, but will
 									# be considered an invalid value and ignored.
+									# 在丢弃它们之前，我们应该保留待处理（trickle）候选者多长时间（以秒为单位）（默认值 = 45 秒）。
+									 请注意，将此设置为 0 不会禁用超时，但会被视为无效值并被忽略。
 	#reclaim_session_timeout = 0	# How long (in seconds) we should wait for a
 									# janus session to be reclaimed after the transport
 									# is gone. After the transport is gone, a session
@@ -261,7 +264,8 @@ certificates: {
 # 多少时间没有收到任何媒体（音频或视频），Janus会通知你（默认值为1s，0完全禁用这些事件），
 # 有多少丢失的数据包应该触发“slowlink”事件给用户（默认值为0，禁用）
 # 将全传输拥塞控制反馈信息发送回发送方的频率（默认值为200ms）。
-# 最后，如果您使用的是BoringSSL，则可以自定义重新传输的频率：OpenSSL的固定值为1秒（默认值），而BoringSSL可以覆盖该值。请注意，较低的值（例如100ms）通常会加快连接时间，但在用户的RTT较高的情况下可能不起作用：因此，您应该选择一个合理的权衡（通常为最大预期RTT的2倍）。
+# 最后，如果您使用的是BoringSSL，则可以自定义重新传输的频率：OpenSSL的固定值为1秒（默认值），而BoringSSL可以覆盖该值。
+# 请注意，较低的值（例如100ms）通常会加快连接时间，但在用户的RTT较高的情况下可能不起作用：因此，您应该选择一个合理的权衡（通常为最大预期RTT的2倍）。
 media: {
 	#ipv6 = true
 	#ipv6_linklocal = true
@@ -329,6 +333,15 @@ media: {
 # if you do not enable ICE Lite as well), choose which interfaces should
 # be used for gathering candidates, and enable or disable the
 # internal libnice debugging, if needed.
+# NAT相关的东西：具体来说：
+# 你可以通过配置STUN/TURN服务区去收集candidates如果 gateway在NAT之后，也可以根据需要 srflx/ralay candidates
+# 如果没有STUN而且它是必须的（不应该发送这种情况）
+# 您还可以将 Janus 配置作为 TURN 服务器来使用（请注意，这不是使用浏览器中配置的TURN，而是使用Janus本身来收集relay candidates，
+# 例如，如果您想限制私有机器上 Janus 实例使用的端口。因此，您可以选择是否应将 Janus 配置为 full-trickle（Janus 还将其候选者trickle给用户）而不是默认的half-trickle（Janus 支持来自用户的trickle候选者，但在 SDP 中发送自己的），
+# 以及配置是否应该在 ICE-Lite 模式下工作（默认情况下不工作）。
+# 如果 libnice 至少为 0.1.15，您可以选择使用哪种 ICE nomination模式：有效值为“regular”和“aggressive”（默认取决于 libnice 版本本身）
+# 您还可以配置是否使用连接检查作为 keep-alives,这可能有助于检测对等方何时不再可用（请注意，当前 libnice 主服务器在使用 keepalive-conncheck 时会在 50 秒后断开连接，所以如果您想使用它，最好坚持使用 0.1.18，直到问题在上游得到解决）。
+# 最后，您还可以启用 ICE-TCP 支持（请注意，如果您不启用 ICE Lite，这可能会导致问题），选择应该使用哪些接口来收集候选人，并在需要时启用或禁用内部 libnice 调试.
 nat: {
 	#stun_server = "stun.voip.eutelia.it"
 	#stun_port = 3478
@@ -389,7 +402,7 @@ nat: {
 	# 要使用的传输（udp/tcp/tls）和一组要验证的有效凭据。
 	# 请注意，除非您真正需要，否则您永远不应该为Janus配置TURN服务器！
 	# 如果您希望用户使用TURN，那么您需要在客户端而不是Janus中进行配置。
-	# 只有当Janus本身位于限制性防火墙之后时（例如，它是安装在私人住宅盒子上的服务的一部分），才应启用以下回合配置。
+	# 只有当Janus本身位于限制性防火墙之后时（例如，它是安装在私人住宅box上的服务的一部分），才应启用以下回合配置。
 	#turn_server = "myturnserver.com"
 	#turn_port = 3478
 	#turn_type = "udp"
@@ -431,11 +444,16 @@ nat: {
 	# to enforce. This is especially useful if the server hosting the gateway
 	# has several interfaces, and you only want a subset to be used. Any of
 	# the following examples are valid:
+	# 您还可以选择网关应明确使用哪些接口来收集 ICE 候选人，从而排除其他可能可用的接口。 
+	# 为此，请使用“ice_enforce_list”设置并将以逗号分隔的接口或 IP 地址列表传递给它以强制执行。
+	# 如果托管网关的服务器有多个接口，并且您只希望使用一个子集，这将特别有用。
+	# 以下任何示例均有效：
 	#     ice_enforce_list = "eth0"
 	#     ice_enforce_list = "eth0,eth1"
 	#     ice_enforce_list = "eth0,192.168."
 	#     ice_enforce_list = "eth0,192.168.0.1"
 	# By default, no interface is enforced, meaning Janus will try to use them all.
+	# 默认情况下，没有接口被强制使用，意味着Janus会尝试使用所有接口
 	#ice_enforce_list = "eth0"
 
 	# In case you don't want to specify specific interfaces to use, but would
@@ -449,11 +467,17 @@ nat: {
 	# always slow down ICE (e.g., virtual interfaces created by VMware).
 	# Partial strings are supported, which means that any of the following
 	# examples are valid:
+	# 如果您不想指定要使用的特定接口，而是希望告诉 Janus 使用所有可用的接口，
+	# 除了一些您不想涉及的接口，您还可以选择网关应排除和忽略哪些接口或 IP 地址，以便收集 ICE 候选人 
+	# 为此，请使用“ice_ignore_list”设置并将其传递给以逗号分隔的接口或 IP 地址列表以忽略。 
+	# 如果托管网关的服务器有几个您已经知道不会使用或只会降低 ICE 速度的接口（例如，VMware 创建的虚拟接口），
+	# 这将特别有用。支持部分字符串，这意味着以下任何示例都有效：
 	#     ice_ignore_list = "vmnet8,192.168.0.1,10.0.0.1"
 	#     ice_ignore_list = "vmnet,192.168."
 	# Just beware that the ICE ignore list is not used if an enforce list
 	# has been configured. By default, Janus ignores all interfaces whose
 	# name starts with 'vmnet', to skip VMware interfaces:
+	# 请注意，如果已配置强制列表，则不使用 ICE 忽略列表。 默认情况下，Janus 会忽略名称以“vmnet”开头的所有接口，以跳过 VMware 接口：
 	ice_ignore_list = "vmnet"
 
 	# In case you want to allow Janus to start even if the configured STUN or TURN
@@ -464,6 +488,10 @@ nat: {
 	# your machine is ready. Note that Linux distributions offer such directives.
 	# You could use the following directive in systemd: 'After=network-online.target'
 	# https://www.freedesktop.org/software/systemd/man/systemd.unit.html#Before=
+	# 如果您希望即使配置的 STUN 或 TURN 服务器无法访问也允许 Janus 启动，
+	# 您可以将 'ignore_unreachable_ice_server' 设置为 true。警告：我们不建议忽略可访问性问题，特别是如果您在云中运行 Janus。 
+	# 在启用此标志之前，请确保您的系统配置正确，并且 Janus 在网络层或您的机器准备就绪后启动。 
+	# 请注意，Linux 发行版提供了这样的指令。 您可以在 systemd 中使用以下指令：'After=network-online.target'
 	#ignore_unreachable_ice_server = true
 }
 
@@ -472,6 +500,10 @@ nat: {
 # loading one or more plugins: use a comma separated list of plugin file
 # names to identify the plugins to disable. By default all available
 # plugins are enabled and loaded at startup.
+# 您可以选择应启用或不启用哪些可用插件。 
+# 使用“禁用”指令来阻止 Janus 加载一个或多个插件：
+# 使用逗号分隔的插件文件名列表来标识要禁用的插件。 
+# 默认情况下，所有可用插件都在启动时启用并加载。
 plugins: {
 	#disable = "libjanus_voicemail.so,libjanus_recordplay.so"
 }
@@ -481,6 +513,10 @@ plugins: {
 # or more transport: use a comma separated list of transport file names
 # to identify the transports to disable. By default all available
 # transports are enabled and loaded at startup.
+# 您可以选择应启用或不启用哪些可用传输。 
+# 使用“禁用”指令来防止 Janus 加载一个或多个传输：
+# 使用逗号分隔的传输文件名列表来标识要禁用的传输。 
+# 默认情况下，所有可用的传输都在启动时启用并加载。
 transports: {
 	#disable = "libjanus_rabbitmq.so"
 }

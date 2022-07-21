@@ -5,6 +5,7 @@
  * \details  Implementation of the RTP header. Since the server does not
  * much more than relaying frames around, the only thing we're interested
  * in is the RTP header and how to get its payload, and parsing extensions.
+ * RTP头的实现。 由于服务器只是在转发帧，因此我们唯一感兴趣的是 RTP 标头以及如何获取其有效负载以及解析扩展。
  *
  * \ingroup protocols
  * \ref protocols
@@ -16,6 +17,13 @@
 #include "debug.h"
 #include "utils.h"
 
+/**
+ * @brief  判断是否是RTP数据
+ * 
+ * @param buf 
+ * @param len 
+ * @return gboolean 
+ */
 gboolean janus_is_rtp(char *buf, guint len) {
 	if (len < 12)
 		return FALSE;
@@ -86,6 +94,13 @@ char *janus_rtp_payload(char *buf, int len, int *plen) {
 	return buf+hlen;
 }
 
+/**
+ * @brief 快速获取 SDP 中 RTP 扩展（extmap）关联的 id
+ * 
+ * @param sdp 
+ * @param extension 
+ * @return int 
+ */
 int janus_rtp_header_extension_get_id(const char *sdp, const char *extension) {
 	if(!sdp || !extension)
 		return -1;
@@ -114,6 +129,13 @@ int janus_rtp_header_extension_get_id(const char *sdp, const char *extension) {
 	return -2;
 }
 
+/**
+ * @brief 快速获取 SDP 中 id (extmap) 关联的 RTP 扩展命名空间
+ * 
+ * @param sdp 
+ * @param id 
+ * @return const char* 
+ */
 const char *janus_rtp_header_extension_get_from_id(const char *sdp, int id) {
 	if(!sdp || id < 0)
 		return NULL;
@@ -159,7 +181,7 @@ const char *janus_rtp_header_extension_get_from_id(const char *sdp, int id) {
 	return NULL;
 }
 
-/* Static helper to quickly find the extension data */
+/* Static helper to quickly find the extension data 快速找到拓展数据 */
 static int janus_rtp_header_extension_find(char *buf, int len, int id,
 		uint8_t *byte, uint32_t *word, char **ref) {
 	if(!buf || len < 12)
@@ -169,14 +191,14 @@ static int janus_rtp_header_extension_find(char *buf, int len, int id,
 		return -1;
 	}
 	int hlen = 12;
-	if(rtp->csrccount)	/* Skip CSRC if needed */
+	if(rtp->csrccount)	/* Skip CSRC if needed 如果需要跳过CSRC部分 */
 		hlen += rtp->csrccount*4;
 	if(rtp->extension) {
 		janus_rtp_header_extension *ext = (janus_rtp_header_extension *)(buf+hlen);
 		int extlen = ntohs(ext->length)*4;
 		hlen += 4;
 		if(len > (hlen + extlen)) {
-			/* 1-Byte extension */
+			/* 1-Byte extension one-Byte类型拓展 */
 			if(ntohs(ext->type) == 0xBEDE) {
 				const uint8_t padding = 0x00, reserved = 0xF;
 				uint8_t extid = 0, idlen;
@@ -216,6 +238,16 @@ static int janus_rtp_header_extension_find(char *buf, int len, int id,
 	return -1;
 }
 
+/**
+ * @brief 解析 ssrc 音频级别 RTP 扩展
+ * 
+ * @param buf 
+ * @param len 
+ * @param id 
+ * @param vad 
+ * @param level 
+ * @return int 
+ */
 int janus_rtp_header_extension_parse_audio_level(char *buf, int len, int id, gboolean *vad, int *level) {
 	uint8_t byte = 0;
 	if(janus_rtp_header_extension_find(buf, len, id, &byte, NULL, NULL) < 0)
@@ -231,6 +263,18 @@ int janus_rtp_header_extension_parse_audio_level(char *buf, int len, int id, gbo
 	return 0;
 }
 
+/**
+ * @brief 解析 RTP 视频方向 扩展
+ * 
+ * @param buf 
+ * @param len 
+ * @param id 
+ * @param c 
+ * @param f 
+ * @param r1 
+ * @param r0 
+ * @return int 
+ */
 int janus_rtp_header_extension_parse_video_orientation(char *buf, int len, int id,
 		gboolean *c, gboolean *f, gboolean *r1, gboolean *r0) {
 	uint8_t byte = 0;
@@ -253,6 +297,16 @@ int janus_rtp_header_extension_parse_video_orientation(char *buf, int len, int i
 	return 0;
 }
 
+/**
+ * @brief 解析播放延迟 RTP 扩展
+ * 
+ * @param buf 
+ * @param len 
+ * @param id 
+ * @param min_delay 
+ * @param max_delay 
+ * @return int 
+ */
 int janus_rtp_header_extension_parse_playout_delay(char *buf, int len, int id,
 		uint16_t *min_delay, uint16_t *max_delay) {
 	uint32_t bytes = 0;
@@ -269,6 +323,16 @@ int janus_rtp_header_extension_parse_playout_delay(char *buf, int len, int id,
 	return 0;
 }
 
+/**
+ * @brief 解析 sdes-mid RTP 扩展
+ * 
+ * @param buf 
+ * @param len 
+ * @param id 
+ * @param sdes_item 
+ * @param sdes_len 
+ * @return int 
+ */
 int janus_rtp_header_extension_parse_mid(char *buf, int len, int id,
 		char *sdes_item, int sdes_len) {
 	char *ext = NULL;
@@ -323,6 +387,15 @@ int janus_rtp_header_extension_parse_rid(char *buf, int len, int id,
 	return 0;
 }
 
+/**
+ * @brief 解析 abs-send-time RTP 扩展
+ * 
+ * @param buf 
+ * @param len 
+ * @param id 
+ * @param abs_ts 
+ * @return int 
+ */
 int janus_rtp_header_extension_parse_abs_sent_time(char *buf, int len, int id, uint32_t *abs_ts) {
 	char *ext = NULL;
 	if(janus_rtp_header_extension_find(buf, len, id, NULL, NULL, &ext) < 0)
@@ -340,6 +413,15 @@ int janus_rtp_header_extension_parse_abs_sent_time(char *buf, int len, int id, u
 	return 0;
 }
 
+/**
+ * @brief 设置 abs-send-time RTP 扩展
+ * 
+ * @param buf 
+ * @param len 
+ * @param id 
+ * @param abs_ts 
+ * @return int 
+ */
 int janus_rtp_header_extension_set_abs_send_time(char *buf, int len, int id, uint32_t abs_ts) {
 	char *ext = NULL;
 	if(janus_rtp_header_extension_find(buf, len, id, NULL, NULL, &ext) < 0)
@@ -354,6 +436,15 @@ int janus_rtp_header_extension_set_abs_send_time(char *buf, int len, int id, uin
 	return 0;
 }
 
+/**
+ * @brief 解析传输范围的序列号
+ * 
+ * @param buf 
+ * @param len 
+ * @param id 
+ * @param transSeqNum 
+ * @return int 
+ */
 int janus_rtp_header_extension_parse_transport_wide_cc(char *buf, int len, int id, uint16_t *transSeqNum) {
 	char *ext = NULL;
 	if(janus_rtp_header_extension_find(buf, len, id, NULL, NULL, &ext) < 0)
@@ -374,6 +465,15 @@ int janus_rtp_header_extension_parse_transport_wide_cc(char *buf, int len, int i
 	return 0;
 }
 
+/**
+ * @brief 解析传输范围的序列号
+ * 
+ * @param buf 
+ * @param len 
+ * @param id 
+ * @param transSeqNum 
+ * @return int 
+ */
 int janus_rtp_header_extension_set_transport_wide_cc(char *buf, int len, int id, uint16_t transSeqNum) {
 	char *ext = NULL;
 	if(janus_rtp_header_extension_find(buf, len, id, NULL, NULL, &ext) < 0)
@@ -388,6 +488,15 @@ int janus_rtp_header_extension_set_transport_wide_cc(char *buf, int len, int id,
 	return 0;
 }
 
+/**
+ * @brief 将 RTP 扩展的 ID 替换为不同的 ID（例如，在成功 rtx 后将 repaired-rtp-stream-id 转换为 rtp-stream-id）
+ * 
+ * @param buf 
+ * @param len 
+ * @param id 
+ * @param new_id 
+ * @return int 
+ */
 int janus_rtp_header_extension_replace_id(char *buf, int len, int id, int new_id) {
 	if(!buf || len < 12)
 		return -1;
@@ -439,8 +548,16 @@ void janus_rtp_switching_context_reset(janus_rtp_switching_context *context) {
 	memset(context, 0, sizeof(*context));
 }
 
+/**
+ * @brief 如果需要，使用上下文信息来补偿音频源偏斜
+ * 
+ * @param header 
+ * @param context 
+ * @param now 
+ * @return int 
+ */
 int janus_rtp_skew_compensate_audio(janus_rtp_header *header, janus_rtp_switching_context *context, gint64 now) {
-	/* Reset values if a new ssrc has been detected */
+	/* Reset values if a new ssrc has been detected 如果检测到新的 ssrc，则重置值*/
 	if (context->a_new_ssrc) {
 		JANUS_LOG(LOG_VERB, "audio skew SSRC=%"SCNu32" resetting status\n", context->a_last_ssrc);
 		context->a_reference_time = now;
@@ -555,6 +672,14 @@ int janus_rtp_skew_compensate_audio(janus_rtp_header *header, janus_rtp_switchin
 	return exit_status;
 }
 
+/**
+ * @brief 如果需要，使用上下文信息来补偿视频源偏斜
+ * 
+ * @param header 
+ * @param context 
+ * @param now 
+ * @return int 
+ */
 int janus_rtp_skew_compensate_video(janus_rtp_header *header, janus_rtp_switching_context *context, gint64 now) {
 	/* Reset values if a new ssrc has been detected */
 	if (context->v_new_ssrc) {
@@ -669,6 +794,14 @@ int janus_rtp_skew_compensate_video(janus_rtp_header *header, janus_rtp_switchin
 	return exit_status;
 }
 
+/**
+ * @brief 如果需要，使用上下文信息更新数据包的 RTP 标头
+ * 
+ * @param header 
+ * @param context 
+ * @param video 
+ * @param step 
+ */
 void janus_rtp_header_update(janus_rtp_header *header, janus_rtp_switching_context *context, gboolean video, int step) {
 	if(header == NULL || context == NULL)
 		return;
@@ -1006,6 +1139,14 @@ void janus_rtp_simulcasting_context_reset(janus_rtp_simulcasting_context *contex
 	context->templayer = -1;
 }
 
+/**
+ * @brief 准备联播信息（rids 和/或 SSRC）
+ * 
+ * @param simulcast 
+ * @param rid_ext_id 
+ * @param ssrcs 
+ * @param rids 
+ */
 void janus_rtp_simulcasting_prepare(json_t *simulcast, int *rid_ext_id, uint32_t *ssrcs, char **rids) {
 	if(simulcast == NULL)
 		return;

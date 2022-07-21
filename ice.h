@@ -9,7 +9,11 @@
  * plugins by means of the incoming_rtp and incoming_rtcp callbacks. Packets
  * to be sent to peers are relayed by peers invoking the relay_rtp and
  * relay_rtcp core callbacks instead.
- *
+ * ICE 进程的实现（基于 libnice）。 该代码处理整个 ICE 过程，
+ * 从候选者的收集到虚拟通道 RTP 和 RTCP 的最终设置都可以传输。 
+ * 通过incoming_rtp 和incoming_rtcp 回调将来自对等点的传入RTP 和RTCP 数据包转发到相关插件。
+ * 要发送到对等点的数据包由调用relay_rtp 和relay_rtcp 核心回调的对等点进行中继。
+ * 
  * \ingroup protocols
  * \ref protocols
  */

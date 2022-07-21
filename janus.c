@@ -10,6 +10,10 @@
  * or not. The core also takes care of bridging peers and plugins
  * accordingly, in terms of both messaging and real-time media transfer
  * via WebRTC.
+ * Janus 核心的实现。 此代码负责服务器初始化（命令行/配置）和设置，
+ * 并利用可用的传输插件（默认为 HTTP、WebSockets、RabbitMQ，如果已编译）
+ * 和 Janus 协议（基于 JSON 的协议）与 应用程序，无论它们是否基于 Web。 
+ * 在通过 WebRTC 的消息传递和实时媒体传输方面，核心还相应地负责桥接peers和插件。
  *
  * \ingroup core
  * \ref core
