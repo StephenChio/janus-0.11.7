@@ -38,23 +38,23 @@ participant->sdp = offer_sdp;
 
 ```c
 if(ice_handle->agent == NULL) {
-			/* We still need to configure the WebRTC stuff: negotiate RFC4588 by default 
-			如果ICE代理为空，说明我们需要进行一些webRTC的配置，默认遵循RFC4588协议
-			*/
-			janus_flags_set(&ice_handle->webrtc_flags, JANUS_ICE_HANDLE_WEBRTC_RFC4588_RTX);
-			/* Process SDP in order to setup ICE locally (this is going to result in an answer from the browser) 
-			为了设置本地ICE，我们会处理SDP，成功之后会返回answer给客户端
-			*/
-			janus_mutex_lock(&ice_handle->mutex);
-			if(janus_ice_setup_local(ice_handle, 0, audio, video, data, 1) < 0) {
-				/*设置本地ICE出错*/
-				JANUS_LOG(LOG_ERR, "[%"SCNu64"] Error setting ICE locally\n", ice_handle->handle_id);
-				janus_sdp_destroy(parsed_sdp);
-				janus_mutex_unlock(&ice_handle->mutex);
-				return NULL;
-			}
-			janus_mutex_unlock(&ice_handle->mutex);
-		} 
+	/* We still need to configure the WebRTC stuff: negotiate RFC4588 by default 
+	如果ICE代理为空，说明我们需要进行一些webRTC的配置，默认遵循RFC4588协议
+	*/
+	janus_flags_set(&ice_handle->webrtc_flags, JANUS_ICE_HANDLE_WEBRTC_RFC4588_RTX);
+	/* Process SDP in order to setup ICE locally (this is going to result in an answer from the browser) 
+	为了设置本地ICE，我们会处理SDP，成功之后会返回answer给客户端
+	*/
+	janus_mutex_lock(&ice_handle->mutex);
+	if(janus_ice_setup_local(ice_handle, 0, audio, video, data, 1) < 0) {
+		/*设置本地ICE出错*/
+		JANUS_LOG(LOG_ERR, "[%"SCNu64"] Error setting ICE locally\n", ice_handle->handle_id);
+		janus_sdp_destroy(parsed_sdp);
+		janus_mutex_unlock(&ice_handle->mutex);
+		return NULL;
+	}
+	janus_mutex_unlock(&ice_handle->mutex);
+} 
 ```
 
 在Janus内部有一个和插件相对应的ICE代理，所有跟这个插件相关的ICE数据传输都跟这个ICE代理有关，所有我们每为session加载一个插件，都是在添加一个ICE代理来实现我们的数据处理需求（例如转发到房间用户，转发到服务器（级联））
@@ -256,21 +256,19 @@ void janus_videoroom_incoming_rtp(janus_plugin_session *handle, janus_plugin_rtp
 	如果这是一个音频数据包并且我们正在进行通话检测，请检查音频级别扩展*/
 	if (!video && videoroom->audiolevel_event && participant->audio_active && !participant->audio_muted)
 	{
-				if (audio_dBov_avg < audio_level_average)
-				{
-					/* Participant talking, should we notify all participants? 参与者在说话，我们是否通知其他人？*/
-				}
-				else
-				{
-					/* Participant not talking anymore, should we notify all participants? 参与者没有在说话，我们是否通知其他人？*/
-				}
-				
-				/* Only notify in case of state changes 只有状态改变的时候通知*/
-				if (notify_talk_event)
-				{
-                    
-				}
-			}
+		if (audio_dBov_avg < audio_level_average)
+		{
+			/* Participant talking, should we notify all participants? 参与者在说话，我们是否通知其他人？*/
+		}
+		else
+		{
+	/* Participant not talking anymore, should we notify all participants? 参与者没有在说话，我们是否通知其他人？*/
+		}
+			
+		/* Only notify in case of state changes 只有状态改变的时候通知*/
+		if (notify_talk_event)
+		{
+                  
 		}
 	}
 
