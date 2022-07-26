@@ -4030,10 +4030,10 @@ void janus_ice_setup_remote_candidates(janus_ice_handle *handle, guint stream_id
 }
 
 /**
- * @brief 设置本地Description（offer）
+ * @brief 设置本地Description
  * 
  * @param handle 
- * @param offer 0 代表 offer 1代表 answer
+ * @param offer 是否已经设置了offer
  * @param audio 
  * @param video 
  * @param data 
@@ -4097,7 +4097,7 @@ int janus_ice_setup_local(janus_ice_handle *handle, int offer, int audio, int vi
 	NICE_COMPATIBILITY_RFC5245 仅在较新版本的 libnice 中可用  */
 	/* 如果开启了ICE LITE, handle的角色标志成controlled(受控制), 
 	 * 如果没有开启ICE LITE ，在收到offer 的时候，！offer = 1 handle的角色标志成controlling (控制) 
-	 * 如果没有开启ICE LITE ，  在收到answer的时候，！offer = 0 handle的角色标志成controlled (受控制)
+	 * 如果没有开启ICE LITE ，在收到answer的时候，！offer = 0 handle的角色标志成controlled (受控制)
 	 */
 	handle->controlling = janus_ice_lite_enabled ? FALSE : !offer;
 	JANUS_LOG(LOG_INFO, "[%"SCNu64"] Creating ICE agent (ICE %s mode, %s)\n", handle->handle_id,

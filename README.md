@@ -1,5 +1,556 @@
+# Janus源码分析
+
+## 1.从哪里来到哪里去
+
+首先，我们都很清楚，音视频数据都是从客户端来到服务器的，服务器和客户端之间是通过ICE协议进行网络数据传输，那么我们先看看，ICE通信通道是如何建立起来的。
+
+目前我们只参考服务端的实现，客户端的逻辑也是对称的（基本相同）
+
+对WebRTC有一定了解的小伙伴都知道，我们和ICE的互动在设置本地Description的时候正式开始，我们看到源码:
+
+## janus_videoroom_handler（在janus_videoroom.c）
+
+```c
+janus_sdp *answer = janus_sdp_generate_answer(...);
+...
+    
+//生成answer返回给publisher之后，用answer再生成一个offer，该offer用来给那些想订阅该publisher的订阅者使用
+offer = janus_sdp_generate_offer(...);
+...
+/* Generate an SDP string we can send back to the publisher 生成一个 SDP 字符串，我们可以将其发送回发布者 */
+char *answer_sdp = janus_sdp_write(answer);
+/* Generate an SDP string we can offer subscribers later on 生成一个 SDP 字符串，我们稍后可以提供给订阅者 */
+char *offer_sdp = janus_sdp_write(offer);
+...
+json_t *jsep = json_pack("{ssss}", "type", type, "sdp", answer_sdp);
+int res = gateway->push_event(msg->handle, &janus_videoroom_plugin, msg->transaction, event, jsep);
+/* Store the participant's SDP for interested subscribers 为感兴趣的订阅者存储参与者的 SDP*/
+participant->sdp = offer_sdp;
+```
+
+当janus收到offer的时候会把生成answer的任务交给对应的插件（如videoroom，streaming）
+
+生成了answer之后，会把事件通过push_event重新回调给janus.c进行处理，同时再利用该answer生成另一个offer，如果有人需要订阅该流，可以把offer发送给订阅者。
+
+那么我们回到janus.c当videoroom根据offer生成完answer之后，会回到janus.c，去设置本地ICE（answer回通过异步事件返回给客户端）
+
+## janus_plugin_handle_sdp（在janus.c）
+
+```c
+if(ice_handle->agent == NULL) {
+			/* We still need to configure the WebRTC stuff: negotiate RFC4588 by default 
+			如果ICE代理为空，说明我们需要进行一些webRTC的配置，默认遵循RFC4588协议
+			*/
+			janus_flags_set(&ice_handle->webrtc_flags, JANUS_ICE_HANDLE_WEBRTC_RFC4588_RTX);
+			/* Process SDP in order to setup ICE locally (this is going to result in an answer from the browser) 
+			为了设置本地ICE，我们会处理SDP，成功之后会返回answer给客户端
+			*/
+			janus_mutex_lock(&ice_handle->mutex);
+			if(janus_ice_setup_local(ice_handle, 0, audio, video, data, 1) < 0) {
+				/*设置本地ICE出错*/
+				JANUS_LOG(LOG_ERR, "[%"SCNu64"] Error setting ICE locally\n", ice_handle->handle_id);
+				janus_sdp_destroy(parsed_sdp);
+				janus_mutex_unlock(&ice_handle->mutex);
+				return NULL;
+			}
+			janus_mutex_unlock(&ice_handle->mutex);
+		} 
+```
+
+在Janus内部有一个和插件相对应的ICE代理，所有跟这个插件相关的ICE数据传输都跟这个ICE代理有关，所有我们每为session加载一个插件，都是在添加一个ICE代理来实现我们的数据处理需求（例如转发到房间用户，转发到服务器（级联））
+
+我们看到上面的janus_ice_setup_local函数，这个和网页端设置localDescription是类似的。
+
+但是不一样的是，我们没有在janus中找到设置远端Description的方法，因为对于Janus来说，它是一个中转站，它只会在收到answer的时候创建一个ICE代理跟客户端进行数据转发。而Janus所提供给其他人的offer也是在这个时候生成的，并不需要重新设置ICE。本质上Janus不会是发起者，它对于每一端客户端都是接受者。它只是在内部把来自某人的ICE数据转发到需要该ICE数据的ICE通道。
+
+## janus_ice_setup_local
+
+```c
+/**
+ * @brief 设置本地Description
+ * @param offer 是否已经设置了offer
+ */
+int janus_ice_setup_local(janus_ice_handle *handle, int offer, int audio, int video, int data, int trickle) {
+	/*判断ICE核心handle是否可用*/
+	if(!handle || g_atomic_int_get(&handle->destroyed))
+		return -1;
+	/*判断ICE核心handle是否已经存在ICE代理*/
+	if(janus_flags_is_set(&handle->webrtc_flags, JANUS_ICE_HANDLE_WEBRTC_HAS_AGENT)) {
+		JANUS_LOG(LOG_WARN, "[%"SCNu64"] Agent already exists?\n", handle->handle_id);
+		return -2;
+	}
+	g_atomic_int_set(&handle->closepc, 0);
+	/*libnice创建一个ICE代理*/
+	handle->agent = g_object_new(NICE_TYPE_AGENT,
+		"compatibility", NICE_COMPATIBILITY_DRAFT19,
+		"main-context", handle->mainctx,
+		"reliable", FALSE,
+		"full-mode", janus_ice_lite_enabled ? FALSE : TRUE,
+		"keepalive-conncheck", janus_ice_keepalive_connchecks ? TRUE : FALSE,
+		NULL);
+	handle->agent_created = janus_get_monotonic_time();
+	handle->srtp_errors_count = 0;
+	handle->last_srtp_error = 0;
+    /*设置代理的配置，例如角色控制状态，candidate收集完成的回调函数，组件状态改变的回调函数*/
+	g_object_set(G_OBJECT(handle->agent), "upnp", FALSE, NULL);
+	g_object_set(G_OBJECT(handle->agent), "controlling-mode", handle->controlling, NULL);
+	g_signal_connect (G_OBJECT (handle->agent), "candidate-gathering-done",
+		G_CALLBACK (janus_ice_cb_candidate_gathering_done), handle);
+	g_signal_connect (G_OBJECT (handle->agent), "component-state-changed",
+		G_CALLBACK (janus_ice_cb_component_state_changed), handle);
+	/*是否定义了使用TCP进行ICE连接*/
+		G_CALLBACK (janus_ice_cb_new_selected_pair), handle);
+		g_signal_connect (G_OBJECT (handle->agent), "new-candidate-full",
+			G_CALLBACK (janus_ice_cb_new_local_candidate), handle);
+	g_signal_connect (G_OBJECT (handle->agent), "new-remote-candidate-full",
+		G_CALLBACK (janus_ice_cb_new_remote_candidate), handle);
+
+	/* Add all local addresses, except those in the ignore list 
+	添加所有本地地址，除了我们需要忽略的那些
+	*/
+	/*添加地址到ICE代理*/
+	nice_agent_add_local_address (handle->agent, &addr_local);
+	/* If this is our first offer, let's generate some mids 如果这是我们的第一个offer，生成一些mids 
+	当我们没有设置过offer的时候，设置一些信息*/
+	if(!offer) {
+		if(audio) {
+			if(handle->audio_mid == NULL)
+				handle->audio_mid = g_strdup("audio");
+			if(handle->stream_mid == NULL)
+				handle->stream_mid = handle->audio_mid;
+		}
+		if(video) {
+			if(handle->video_mid == NULL)
+				handle->video_mid = g_strdup("video");
+			if(handle->stream_mid == NULL)
+				handle->stream_mid = handle->video_mid;
+		}
+	}
+	/* Now create an ICE stream for all the media we'll handle
+	现在为了所有我们处理的媒体生成一个ICE stream
+	 */
+	handle->stream_id = nice_agent_add_stream(handle->agent, 1);
+	/*初始化一个ICE stream*/
+	janus_ice_stream *stream = g_malloc0(sizeof(janus_ice_stream));
+	/* FIXME By default, if we're being called we're DTLS clients, but this may be changed by ICE...
+	如果我们接受offer，那么我们是接收端，反之我们是客户端 */
+	stream->dtls_role = offer ? JANUS_DTLS_ROLE_CLIENT : JANUS_DTLS_ROLE_ACTPASS;
+	/*初始化ICE streamn结束*/
+	handle->stream = stream;
+	/*初始化ICE 组件*/
+	janus_ice_component *component = g_malloc0(sizeof(janus_ice_component));
+	janus_refcount_init(&component->ref, janus_ice_component_free);
+	/*把ICE stream加载到ICE组件中*/
+	component->stream = stream;
+	janus_refcount_increase(&stream->ref);
+	/*把ICE组件stream id为ICE stream Id*/
+	component->stream_id = stream->stream_id;
+	component->component_id = 1;
+	janus_mutex_init(&component->mutex);
+	/*把ICE 组件加载到ICE stream中*/
+	stream->component = component;
+	nice_agent_attach_recv(handle->agent, handle->stream_id, 1, g_main_loop_get_context(handle->mainloop), janus_ice_cb_nice_recv, component);
+	return 0;
+}
+
+```
+
+janus_ice_setup_local主要做的就是创建一个ICE代理，并为代理传入一些回调函数，在合适的时候被执行。
+
+```c
+g_signal_connect (G_OBJECT (handle->agent), "candidate-gathering-done",
+		G_CALLBACK (janus_ice_cb_candidate_gathering_done), handle);
+```
+
+我们在ICE收集完candidate之后会执行janus_ice_cb_candidate_gathering_done函数
+
+```c
+g_signal_connect (G_OBJECT (handle->agent), "component-state-changed",
+		G_CALLBACK (janus_ice_cb_component_state_changed), handle);
+```
+
+我们在ICE的组件状态改变之后会执行janus_ice_cb_component_state_changed函数
+
+```c
+g_signal_connect (G_OBJECT (handle->agent), "new-candidate-full",
+			G_CALLBACK (janus_ice_cb_new_local_candidate), handle);
+```
+
+我们在ICE获取新的完整candidate之后会执行janus_ice_cb_new_local_candidate，可以把candidate收集起来发送给客户端（trickle）
+
+```c
+nice_agent_attach_recv(handle->agent, handle->stream_id, 1, g_main_loop_get_context(handle->mainloop), janus_ice_cb_nice_recv, component);
+```
+
+我们在ICE收到数据的时候会执行janus_ice_cb_nice_recv函数
+
+## janus_ice_cb_nice_recv
+
+```c
+/**
+ * @brief 从ICE收到数据包
+ * 
+ * @param agent 
+ * @param stream_id 
+ * @param component_id 
+ * @param len 
+ * @param buf 
+ * @param ice 
+ */
+static void janus_ice_cb_nice_recv(NiceAgent *agent, guint stream_id, guint component_id, guint len, gchar *buf, gpointer ice) {
+    // 省略一些代码
+	if(janus_is_dtls(buf) || (!janus_is_rtp(buf, len) && !janus_is_rtcp(buf, len))) {
+		/* This is DTLS: either handshake stuff, or data coming from SCTP DataChannels 
+		这是 DTLS：要么是握手的东西，要么是来自 SCTP 数据通道的数据 */
+		janus_dtls_srtp_incoming_msg(component->dtls, buf, len);
+		// 省略一些代码
+		return;
+	}
+	/* Not DTLS... RTP or RTCP? (http://tools.ietf.org/html/rfc5761#section-4) 
+	不是DTLS数据，判断是RTP还是RTCP */
+	if(janus_is_rtp(buf, len)) {
+		plugin->incoming_rtp(handle->app_handle, &rtp);
+	} else if(janus_is_rtcp(buf, len)) {
+		/* This is RTCP 如果是RTCP数据 暂不在此分析*/
+		return;
+	} else {
+		/* 不是RTP 也不是RTCP 数据，可能是一些其他数据*/
+		return;
+	}
+}
+```
+
+janus_ice_cb_nice_recv函数会把收到的数据包进行判断，到底是dtls，rtp还是rtcp数据，代码只处理上述三种数据，我们这里只关注rtp数据
+
+janus_ice_cb_nice_recv在完成一系列的判断和设置之后，会调用该handle上插件的incoming_rtp函数，代码中如下：
+
+```c
+plugin->incoming_rtp(handle->app_handle, &rtp);
+```
+
+那么根据handle插件的不同，他们就会去到不同的插件进行处理，我们这里以videoroom为例
+
+videoroom使用janus_videoroom_incoming_rtp函数来实现了incoming_rtp
+
+## janus_videoroom_incoming_rtp
+
+```c
+/**
+ * @brief 处理对方的传入RTP包
+ *
+ * @param handle
+ * @param pkt
+ */
+void janus_videoroom_incoming_rtp(janus_plugin_session *handle, janus_plugin_rtp *pkt)
+{
+	// 省略一些判断
+	/*获取session下的发布者*/
+	janus_videoroom_publisher *participant = janus_videoroom_session_get_publisher_nodebug(session);
+	// 省略一些判断
+	janus_videoroom *videoroom = participant->room;
+
+	gboolean video = pkt->video;
+	char *buf = pkt->buffer;
+	uint16_t len = pkt->length;
+	/* In case this is an audio packet and we're doing talk detection, check the audio level extension
+	如果这是一个音频数据包并且我们正在进行通话检测，请检查音频级别扩展*/
+	if (!video && videoroom->audiolevel_event && participant->audio_active && !participant->audio_muted)
+	{
+				if (audio_dBov_avg < audio_level_average)
+				{
+					/* Participant talking, should we notify all participants? 参与者在说话，我们是否通知其他人？*/
+				}
+				else
+				{
+					/* Participant not talking anymore, should we notify all participants? 参与者没有在说话，我们是否通知其他人？*/
+				}
+				
+				/* Only notify in case of state changes 只有状态改变的时候通知*/
+				if (notify_talk_event)
+				{
+                    
+				}
+			}
+		}
+	}
+
+	if ((!video && participant->audio_active && !participant->audio_muted) || (video && participant->video_active && !participant->video_muted))
+	{
+		//音频或者视频
+		janus_rtp_header *rtp = (janus_rtp_header *)buf;
+		int sc = video ? 0 : -1;
+		if (video && (participant->ssrc[0] != 0 || participant->rid[0] != NULL))
+		{
+		GHashTableIter iter;
+		gpointer value;
+        //是否有rtp_forward
+		g_hash_table_iter_init(&iter, participant->rtp_forwarders);
+		/* 遍历用 于转发 rtp 数据包的 udp 套接字*/
+		while (participant->udp_sock > 0 && g_hash_table_iter_next(&iter, NULL, &value))
+		{
+			janus_videoroom_rtp_forwarder *rtp_forward = (janus_videoroom_rtp_forwarder *)value;
+			if (rtp_forward->is_data || (video && !rtp_forward->is_video) || (!video && rtp_forward->is_video))
+				continue;
+			/* First of all, check if we're simulcasting and if we need to forward or ignore this frame
+			首先，检查我们是否在联播，是否需要转发或忽略此帧*/
+			if (video && !rtp_forward->simulcast && rtp_forward->substream != sc)
+			{
+				continue;
+			}
+			else if (video && rtp_forward->simulcast)
+			{
+				/* This is video and we're simulcasting, check if we need to forward this frame
+				这是视频，正在联播，请检查是否需要转发此帧*/
+				if (!janus_rtp_simulcasting_context_process_rtp(&rtp_forward->sim_context,
+																buf, len, participant->ssrc, participant->rid, participant->vcodec, &rtp_forward->context))
+					continue;
+			}
+			检查这是 RTP 还是 SRTP 转发器 */
+			if (!rtp_forward->is_srtp)
+			{
+				/* Plain RTP 普通RTP转发 */
+				if (sendto(participant->udp_sock, buf, len, 0, address, addrlen) < 0)
+			}
+			else
+			{
+				/* SRTP: check if we already encrypted the packet before
+				SRTP：检查我们之前是否已经加密过数据包 */
+				if (rtp_forward->srtp_ctx->slen == 0)
+				{
+					/*如果没有解密秘钥*/
+					
+					}
+				}
+				if (rtp_forward->srtp_ctx->slen > 0)
+				{
+					/*如果有解密秘钥*/
+					if (sendto(participant->udp_sock, rtp_forward->srtp_ctx->sbuf, rtp_forward->srtp_ctx->slen, 0, address, addrlen) < 0)
+				}
+			}
+		}
+		/* Save the frame if we're recording 保存关键帧 */
+		if (!video || (participant->ssrc[0] == 0 && participant->rid[0] == NULL))
+		{
+			janus_recorder_save_frame(video ? participant->vrc : participant->arc, buf, len);
+		}
+		else
+		{
+			/* We're simulcasting, save the best video quality 我们正在联播，保存最好的视频质量 */
+			gboolean save = janus_rtp_simulcasting_context_process_rtp(&participant->rec_simctx, buf, len, participant->ssrc, participant->rid, participant->vcodec, &participant->rec_ctx);
+			if (save)
+			{
+				/*录制 */
+			}
+		}
+		/* Done, relay it 转发 */
+		janus_videoroom_rtp_relay_packet packet;
+		if (video && videoroom->do_svc)
+		/* Go: some viewers may decide to drop the packet, but that's up to them
+		一些观众可能会决定丢弃数据包，但这取决于他们*/
+            
+		g_slist_foreach(participant->subscribers, janus_videoroom_relay_rtp_packet, &packet);
+
+		/* Check if we need to send any REMB, FIR or PLI back to this publisher
+		检查我们是否需要将任何 REMB、FIR 或 PLI 发送回此发布者 */
+		if (video && participant->video_active && !participant->video_muted)
+		{
+			/* Generate FIR/PLI too, if needed 生产FIR/PLI 请求关键帧，如果需要*/
+			if (video && participant->video_active && !participant->video_muted && (videoroom->fir_freq > 0))
+			{
+				// fir_freq 常规通过 FIR 请求关键帧的频率（0=禁用）单位秒
+				if ((now - participant->fir_latest) >= ((gint64)videoroom->fir_freq * G_USEC_PER_SEC))
+				{
+					/* FIXME We send a FIR every tot seconds FIXME 我们每 t 秒发送一次 FIR */
+					//通过pli 请求关键帧
+					janus_videoroom_reqpli(participant, "Regular keyframe request");
+				}
+			}
+		}
+	}
+	janus_videoroom_publisher_dereference_nodebug(participant);
+}
+```
+
+janus_videoroom_incoming_rtp主要做了下面一些事情：
+
+1.如果传来了音频数据，分析发布者是否处于讲话状态，如果状态发生改变，则通知房间里所有人
+
+2.判断该发布者是否存在rtp_forward转发
+
+3.判断rtp是否加密，如果加密，判断我们是否有加解密秘钥
+
+4.进行rtp_forward转发
+
+5.判断发布者音视频是否需要录制，如果需要则进行录制
+
+6.遍历该发布者的订阅者，调用janus_videoroom_relay_rtp_packet，为他们每一个转发rtp
+
+7.根据设置，决定是否选择向发布者请求关键帧
+
+
+
+## janus_videoroom_relay_rtp_packet
+
+```c
+/* Helper to quickly relay RTP packets from publishers to subscribers
+快速将 RTP 数据包从发布者转发到订阅者 */
+static void janus_videoroom_relay_rtp_packet(gpointer data, gpointer user_data)
+{
+	janus_videoroom_rtp_relay_packet *packet = (janus_videoroom_rtp_relay_packet *)user_data;
+	// 省略
+	janus_videoroom_subscriber *subscriber = (janus_videoroom_subscriber *)data;
+	// 省略
+	janus_videoroom_session *session = subscriber->session;
+	// 省略
+	/* Make sure there hasn't been a publisher switch by checking the SSRC
+	通过检查 SSRC 确保没有发布者切换 */
+	if (packet->is_video)
+	{
+		/* Check if this subscriber is subscribed to this medium 检查此订阅者是否订阅了此媒体 */
+		// 省略
+		/* Check if there's any SVC info to take into account
+		检查是否有任何 SVC 信息需要考虑 */
+		// 省略
+			//处理普通视频
+			/* Send the packet 发送视频包*/
+			if (gateway != NULL)
+			{
+				janus_plugin_rtp rtp = {.video = packet->is_video, .buffer = (char *)packet->data, .length = packet->length, .extensions = packet->extensions};
+				gateway->relay_rtp(session->handle, &rtp);
+			}
+		}
+	}
+	else
+	{
+		/* Send the packet 发送音频包*/
+		if (gateway != NULL)
+		{
+			janus_plugin_rtp rtp = {.video = packet->is_video, .buffer = (char *)packet->data, .length = packet->length, .extensions = packet->extensions};
+			gateway->relay_rtp(session->handle, &rtp);
+		}
+	}
+
+	return;
+}
+```
+
+进入到janus_videoroom_relay_rtp_packet之后，根据每一个不同订阅者它所期待的设置，我们在前面会做一大批处理，当然这不是我们现在讨论的重点，最后我们可以简单的把该函数看成处理两个核心的内容，就是通过调用gateway->relay_rtp(session->handle, &rtp);发送视频包，和发送音频包。
+
+那么很显然，任务重心又从插件回到了janus核心本身。
+
+## janus_plugin_relay_rtp
+
+```c
+/**
+ * @brief 插件转发rtp数据
+ * 
+ * @param plugin_session 
+ * @param packet 
+ */
+void janus_plugin_relay_rtp(janus_plugin_session *plugin_session, janus_plugin_rtp *packet) {
+	if((plugin_session < (janus_plugin_session *)0x1000) || g_atomic_int_get(&plugin_session->stopped) ||
+			packet == NULL || packet->buffer == NULL || packet->length < 1)
+		return;
+	janus_ice_handle *handle = (janus_ice_handle *)plugin_session->gateway_handle;
+	if(!handle || janus_flags_is_set(&handle->webrtc_flags, JANUS_ICE_HANDLE_WEBRTC_STOP)
+			|| janus_flags_is_set(&handle->webrtc_flags, JANUS_ICE_HANDLE_WEBRTC_ALERT))
+		return;
+	janus_ice_relay_rtp(handle, packet);
+}
+```
+
+## janus_ice_relay_rtp
+
+```c
+/**
+ * @brief ICE转发RTP数据
+ * 
+ * @param handle 
+ * @param packet 
+ */
+void janus_ice_relay_rtp(janus_ice_handle *handle, janus_plugin_rtp *packet) {
+    //省略
+	janus_ice_queue_packet(handle, pkt);
+	 //省略
+}
+```
+
+## janus_ice_queue_packet
+
+```c
+/**
+ * @brief 入队RTP/RTCP包 供ICE传输
+ * 
+ * @param handle 
+ * @param pkt 
+ */
+static void janus_ice_queue_packet(janus_ice_handle *handle, janus_ice_queued_packet *pkt) {
+	/* TODO: There is a potential race condition where the "queued_packets"
+	 * could get released between the condition and pushing the packet.
+	 存在潜在的竞争条件，其中“queued_packets”可能在推送数据包之间被释放  */
+	if(handle->queued_packets != NULL) {
+		g_async_queue_push(handle->queued_packets, pkt);
+		g_main_context_wakeup(handle->mainctx);
+	} else {
+		janus_ice_free_queued_packet(pkt);
+	}
+}
+```
+
+## janus_ice_outgoing_traffic_dispatch
+
+```c
+/**
+ * @brief 传出流量的分配处理
+ * 
+ * @param source 
+ * @param callback 
+ * @param user_data 
+ * @return gboolean 
+ */
+static gboolean janus_ice_outgoing_traffic_dispatch(GSource *source, GSourceFunc callback, gpointer user_data) {
+	janus_ice_outgoing_traffic *t = (janus_ice_outgoing_traffic *)source;
+	int ret = G_SOURCE_CONTINUE;
+	janus_ice_queued_packet *pkt = NULL;
+	while((pkt = g_async_queue_try_pop(t->handle->queued_packets)) != NULL) {
+		if(janus_ice_outgoing_traffic_handle(t->handle, pkt) == G_SOURCE_REMOVE)
+			ret = G_SOURCE_REMOVE;
+	}
+	return ret;
+}
+
+```
+
+## janus_ice_outgoing_traffic_handle
+
+```c
+/**
+ * @brief 用于传出的流量处理
+ * 
+ * @param handle 
+ * @param pkt 
+ * @return gboolean 
+ */
+static gboolean janus_ice_outgoing_traffic_handle(janus_ice_handle *handle, janus_ice_queued_packet *pkt) {
+    //省略
+	/* RTP or data */
+	if(pkt->type == JANUS_ICE_PACKET_AUDIO || pkt->type == JANUS_ICE_PACKET_VIDEO) {
+	/* RTP */
+		int video = (pkt->type == JANUS_ICE_PACKET_VIDEO);
+		if(pkt->encrypted) {
+		janus_rtp_header *header = (janus_rtp_header *)pkt->data;
+		int sent = nice_agent_send(handle->agent, stream->stream_id, component->component_id, pkt->length, (const gchar *)pkt->data);
+            }
+        }
+     //省略
+}
+```
+
+
+
 Janus WebRTC Server
 ===================
+
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-brightgreen.svg)](COPYING)
 ![janus-ci](https://github.com/meetecho/janus-gateway/workflows/janus-ci/badge.svg)
 [![Coverity Scan Build Status](https://scan.coverity.com/projects/13265/badge.svg)](https://scan.coverity.com/projects/meetecho-janus-gateway)
@@ -60,9 +611,9 @@ All of those libraries are usually available on most of the most common distribu
 所有这些库通常在大多数最常见的发行版上都可用。 例如，在最近的 Fedora 上安装这些库非常简单
     
 	yum install libmicrohttpd-devel jansson-devel \
-       openssl-devel libsrtp-devel sofia-sip-devel glib2-devel \
-       opus-devel libogg-devel libcurl-devel pkgconfig gengetopt \
-       libconfig-devel libtool autoconf automake
+	   openssl-devel libsrtp-devel sofia-sip-devel glib2-devel \
+	   opus-devel libogg-devel libcurl-devel pkgconfig gengetopt \
+	   libconfig-devel libtool autoconf automake
 
 Notice that you may have to `yum install epel-release` as well if you're attempting an installation on a CentOS machine instead.
 
@@ -296,7 +847,7 @@ Note that the `configure.ac` is coded to use openssl in base. If you wish to use
 请注意，`configure.ac` 被编码为在 base 中使用 openssl。 如果您希望从端口或任何其他 ssl 使用 openssl，您必须相应地更改 `configure.ac`。
 
 	pkg install libsrtp2 libusrsctp jansson libnice libmicrohttpd libwebsockets curl opus sofia-sip libogg jansson libnice libconfig \
-        libtool gmake autoconf autoconf-wrapper glib gengetopt
+	    libtool gmake autoconf autoconf-wrapper glib gengetopt
 
 
 ### Building on MacOS
@@ -336,15 +887,15 @@ or on the command line:
 或通过命令行参数：
 
 	<installdir>/bin/janus --help
-
+	
 	Usage: janus [OPTIONS]...
-
+	
 	-h, --help                    Print help and exit
 	-V, --version                 Print version and exit
 	-b, --daemon                  Launch Janus in background as a daemon
-                                  (default=off)
+	                              (default=off)
 	-p, --pid-file=path           Open the specified PID file when starting Janus
-                                  (default=none)
+	                              (default=none)
 	-N, --disable-stdout          Disable stdout based logging  (default=off)
 	-L, --log-file=path           Log to the specified file (default=stdout only)
 	-H  --cwd-path                Working directory for Janus daemon process
@@ -357,70 +908,70 @@ or on the command line:
 	-k, --cert-key=filename       DTLS certificate key
 	-K, --cert-pwd=text           DTLS certificate key passphrase (if needed)
 	-S, --stun-server=address:port
-                                  STUN server(:port) to use, if needed (e.g.,
-                                  Janus behind NAT, default=none)
+	                              STUN server(:port) to use, if needed (e.g.,
+	                              Janus behind NAT, default=none)
 	-1, --nat-1-1=ip              Public IP to put in all host candidates,
-                                  assuming a 1:1 NAT is in place (e.g., Amazon
-                                  EC2 instances, default=none)
+	                              assuming a 1:1 NAT is in place (e.g., Amazon
+	                              EC2 instances, default=none)
 	-2, --keep-private-host       When nat-1-1 is used (e.g., Amazon EC2
-                                  instances), don't remove the private host,
-                                  but keep both to simulate STUN  (default=off)
+	                              instances), don't remove the private host,
+	                              but keep both to simulate STUN  (default=off)
 	-E, --ice-enforce-list=list   Comma-separated list of the only interfaces to
-                                  use for ICE gathering; partial strings are
-                                  supported (e.g., eth0 or eno1,wlan0,
-                                  default=none)
+	                              use for ICE gathering; partial strings are
+	                              supported (e.g., eth0 or eno1,wlan0,
+	                              default=none)
 	-X, --ice-ignore-list=list    Comma-separated list of interfaces or IP
-                                  addresses to ignore for ICE gathering;
-                                  partial strings are supported (e.g.,
-                                  vmnet8,192.168.0.1,10.0.0.1 or
-                                  vmnet,192.168., default=vmnet)
+	                              addresses to ignore for ICE gathering;
+	                              partial strings are supported (e.g.,
+	                              vmnet8,192.168.0.1,10.0.0.1 or
+	                              vmnet,192.168., default=vmnet)
 	-6, --ipv6-candidates         Whether to enable IPv6 candidates or not
-                                  (experimental)  (default=off)
+	                              (experimental)  (default=off)
 	-O, --ipv6-link-local         Whether IPv6 link-local candidates should be
-                                  gathered as well  (default=off)
+	                              gathered as well  (default=off)
 	-l, --libnice-debug           Whether to enable libnice debugging or not
-                                  (default=off)
+	                              (default=off)
 	-f, --full-trickle            Do full-trickle instead of half-trickle
-                                  (default=off)
+	                              (default=off)
 	-I, --ice-lite                Whether to enable the ICE Lite mode or not
-                                  (default=off)
+	                              (default=off)
 	-T, --ice-tcp                 Whether to enable ICE-TCP or not (warning: only
-                                  works with ICE Lite)
-                                  (default=off)
+	                              works with ICE Lite)
+	                              (default=off)
 	-Q, --min-nack-queue=number   Minimum size of the NACK queue (in ms) per user
-                                  for retransmissions, no matter the RTT
+	                              for retransmissions, no matter the RTT
 	-t, --no-media-timer=number   Time (in s) that should pass with no media
-                                  (audio or video) being received before Janus
-                                  notifies you about this
+	                              (audio or video) being received before Janus
+	                              notifies you about this
 	-W, --slowlink-threshold=number
-                                  Number of lost packets (per s) that should
-                                  trigger a 'slowlink' Janus API event to users
-                                  (default=0, feature disabled)
+	                              Number of lost packets (per s) that should
+	                              trigger a 'slowlink' Janus API event to users
+	                              (default=0, feature disabled)
 	-r, --rtp-port-range=min-max  Port range to use for RTP/RTCP (only available
 								  if the installed libnice supports it)
 	-B, --twcc-period=number      How often (in ms) to send TWCC feedback back to
-                                  senders, if negotiated (default=200ms)
+	                              senders, if negotiated (default=200ms)
 	-n, --server-name=name        Public name of this Janus instance
-                                  (default=MyJanusInstance)
+	                              (default=MyJanusInstance)
 	-s, --session-timeout=number  Session timeout value, in seconds (default=60)
 	-m, --reclaim-session-timeout=number
-                                  Reclaim session timeout value, in seconds
-                                  (default=0)
+	                              Reclaim session timeout value, in seconds
+	                              (default=0)
 	-d, --debug-level=1-7         Debug/logging level (0=disable debugging,
-                                  7=maximum debug level; default=4)
+	                              7=maximum debug level; default=4)
 	-D, --debug-timestamps        Enable debug/logging timestamps  (default=off)
 	-o, --disable-colors          Disable color in the logging  (default=off)
 	-M, --debug-locks             Enable debugging of locks/mutexes (very
-                                  verbose!)  (default=off)
+	                              verbose!)  (default=off)
 	-a, --apisecret=randomstring  API secret all requests need to pass in order
-                                  to be accepted by Janus (useful when wrapping
-                                  Janus API requests in a server, none by
-                                  default)
+	                              to be accepted by Janus (useful when wrapping
+	                              Janus API requests in a server, none by
+	                              default)
 	-A, --token-auth              Enable token-based authentication for all
-                                  requests  (default=off)
+	                              requests  (default=off)
 	-e, --event-handlers          Enable event handlers  (default=off)
 	-w, --no-webrtc-encryption    Disable WebRTC encryption, so no DTLS or SRTP
-                                  (only for debugging!)  (default=off)
+	                              (only for debugging!)  (default=off)
 
 
 Options passed through the command line have the precedence on those specified in the configuration file. To start the server, simply run:
